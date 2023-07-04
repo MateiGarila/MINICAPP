@@ -11,6 +11,7 @@ import com.example.mini_cap.R;
 
 public class SessionActivity extends AppCompatActivity {
 
+    //Declaration of all UI elements
     protected TextView mainTextView, statusTextView;
     protected RecyclerView displayUser;
     protected Button startStop, addUser, editUser;
@@ -20,6 +21,7 @@ public class SessionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
+        //Attaching the UI elements to their respective objects
         mainTextView = findViewById(R.id.sessionActivityTextView);
         statusTextView = findViewById(R.id.sessionStatusTextView);
         displayUser = findViewById(R.id.sessionUserDisplayRV);
