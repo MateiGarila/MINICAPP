@@ -1,14 +1,20 @@
 package com.example.mini_cap.controller;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.widget.Toast;
 
+import androidx.annotation.Discouraged;
 import androidx.annotation.Nullable;
 
 import com.example.mini_cap.model.User;
+
+import java.lang.annotation.Documented;
+import java.util.ArrayList;
 
 public class DBHelper extends SQLiteOpenHelper {
 
@@ -41,6 +47,11 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
+    /**
+     * Method for inserting a user in the database
+     * @param user
+     * @return
+     */
     public long insertUser(User user){
 
         //Anything goes wrong and we see -1. This is what is causing the issue
@@ -66,7 +77,44 @@ public class DBHelper extends SQLiteOpenHelper {
         return id;
     }
 
+    /**
+     * Method used to fetch all users stored in the database
+     * @return ArrayList<User> of all available users
+     */
+    public ArrayList<User> getAllUsers(){
 
+        ArrayList<User> users = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = null;
+
+        try{
+
+            cursor = db.query(Dict.TABLE_USER, null, null, null, null, null, null);
+
+            if(cursor != null){
+                if(cursor.moveToFirst()){
+                    do{
+                        @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_USER_ID));
+                        @SuppressLint("Range") String surName = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_USER_SURNAME));
+                        @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_USER_NAME));
+                        @SuppressLint("Range") int age = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_USER_AGE));
+                        @SuppressLint("Range") String skinTone = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_USER_SKINTONE));
+
+                        users.add(new User(id, surName, name, age, skinTone));
+
+                    }while(cursor.moveToNext());
+                }
+            }
+
+        }catch (Exception e){
+            Toast.makeText(context, "DB Fetch Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }finally {
+            db.close();
+        }
+
+        return users;
+    }
 
     /**
      * In case of database update
