@@ -43,17 +43,6 @@ public class SessionActivity extends AppCompatActivity {
         //Temporary until we figure out a better way to navigate - Mat
         mainTextView.setOnClickListener(v -> finish());
 
-        //dbHelper.insertUser(new User(45, "Snow", "Jon", 27, "pale"));
-        //dbHelper.insertUser(new User(72, "Smith", "Jack", 54, "dark"));
-        User user = dbHelper.getUser(2);
-
-        addUser.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                statusTextView.setText(user.toString());
-            }
-        });
-
     }
 
 
