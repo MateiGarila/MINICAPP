@@ -8,22 +8,27 @@
 
     <TextView
         android:id="@+id/sessionActivityTextView"
-        android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:textSize="32sp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:minHeight="48dp"
         android:text="@string/session_activity"
+        android:textSize="32sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/sessionStatusTextView"
-        android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:textSize="20sp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         android:minHeight="48dp"
         android:text="@string/session_status_not_started"
+        android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="@+id/sessionActivityTextView"
         app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView"
         app:layout_constraintTop_toBottomOf="@+id/sessionActivityTextView" />
