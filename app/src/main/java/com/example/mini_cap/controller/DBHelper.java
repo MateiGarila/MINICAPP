@@ -1,10 +1,14 @@
 package com.example.mini_cap.controller;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+
+import com.example.mini_cap.model.User;
 
 public class DBHelper extends SQLiteOpenHelper {
 
@@ -36,6 +40,33 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_USER_TABLE);
 
     }
+
+    public long insertUser(User user){
+
+        //Anything goes wrong and we see -1. This is what is causing the issue
+        long id = -1;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        //In this case we do not insert an id as the database will take care of it
+        contentValues.put(Dict.COLUMN_USER_SURNAME, user.getSurname());
+        contentValues.put(Dict.COLUMN_USER_NAME, user.getName());
+        contentValues.put(Dict.COLUMN_USER_AGE, user.getAge());
+        contentValues.put(Dict.COLUMN_USER_SKINTONE, user.getSkinTone());
+
+        try{
+            id = db.insertOrThrow(Dict.TABLE_USER, null, contentValues);
+        }catch(Exception e){
+            Toast.makeText(context, "DB Insert Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }finally {
+            db.close();
+        }
+
+        return id;
+    }
+
+
 
     /**
      * In case of database update
