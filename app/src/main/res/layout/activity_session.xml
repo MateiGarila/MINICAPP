@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".view.SessionActivity">
+
+    <TextView
+        android:id="@+id/sessionActivityTextView"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:textSize="32sp"
+        android:minHeight="48dp"
+        android:text="@string/session_activity"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/sessionStatusTextView"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:textSize="20sp"
+        android:minHeight="48dp"
+        android:text="@string/session_status_not_started"
+        app:layout_constraintEnd_toEndOf="@+id/sessionActivityTextView"
+        app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView"
+        app:layout_constraintTop_toBottomOf="@+id/sessionActivityTextView" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/sessionUserDisplayRV"
+        android:layout_width="360dp"
+        android:layout_height="580dp"
+        app:layout_constraintBottom_toTopOf="@+id/startStopSessionBTN"
+        app:layout_constraintEnd_toEndOf="@+id/sessionStatusTextView"
+        app:layout_constraintHorizontal_bias="0.49"
+        app:layout_constraintStart_toStartOf="@+id/sessionStatusTextView"
+        app:layout_constraintTop_toBottomOf="@+id/sessionStatusTextView"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/startStopSessionBTN"
+        android:layout_width="270dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="584dp"
+        android:text="@string/start_session_text"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/sessionActivityTextView"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView"
+        app:layout_constraintTop_toBottomOf="@+id/sessionActivityTextView"
+        app:layout_constraintVertical_bias="0.824" />
+
+    <Button
+        android:id="@+id/editUserBTN"
+        android:layout_width="170dp"
+        android:layout_height="60dp"
+        android:text="@string/edit_user_text"
+        app:layout_constraintBottom_toTopOf="@+id/startStopSessionBTN"
+        app:layout_constraintEnd_toEndOf="@+id/sessionActivityTextView"
+        app:layout_constraintHorizontal_bias="0.892"
+        app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView"
+        app:layout_constraintTop_toBottomOf="@+id/sessionUserDisplayRV"
+        app:layout_constraintVertical_bias="0.51" />
+
+    <Button
+        android:id="@+id/addUserBTN"
+        android:layout_width="170dp"
+        android:layout_height="60dp"
+        android:text="@string/add_user_text"
+        app:layout_constraintBottom_toTopOf="@+id/startStopSessionBTN"
+        app:layout_constraintEnd_toEndOf="@+id/sessionActivityTextView"
+        app:layout_constraintHorizontal_bias="0.103"
+        app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView"
+        app:layout_constraintTop_toBottomOf="@+id/sessionUserDisplayRV"
+        app:layout_constraintVertical_bias="0.51" />
+</androidx.constraintlayout.widget.ConstraintLayout>
