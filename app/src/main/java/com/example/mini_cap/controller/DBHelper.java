@@ -69,7 +69,7 @@ public class DBHelper extends SQLiteOpenHelper {
         try{
             id = db.insertOrThrow(Dict.TABLE_USER, null, contentValues);
         }catch(Exception e){
-            Toast.makeText(context, "DB Insert Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "DB Insert Error @ insertUser(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }finally {
             db.close();
         }
@@ -105,15 +105,60 @@ public class DBHelper extends SQLiteOpenHelper {
 
                     }while(cursor.moveToNext());
                 }
+
+                cursor.close();
             }
 
         }catch (Exception e){
-            Toast.makeText(context, "DB Fetch Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "DB Fetch Error @ getAllUsers(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }finally {
             db.close();
         }
 
         return users;
+    }
+
+    /**
+     * Method used to fetch a specific user from the database
+     * @param userId id of the fetched user
+     * @return User object with the specified id
+     */
+    public User getUser(int userId) {
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = null;
+        User user = null;
+
+        try {
+
+            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_USER + " WHERE " + Dict.COLUMN_USER_ID + " = ?", new String[]{String.valueOf(userId)});
+
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    do {
+
+                        @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_USER_ID));
+                        @SuppressLint("Range") String surName = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_USER_SURNAME));
+                        @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_USER_NAME));
+                        @SuppressLint("Range") int age = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_USER_AGE));
+                        @SuppressLint("Range") String skinTone = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_USER_SKINTONE));
+
+                        user = new User(id, surName, name, age, skinTone);
+
+                    } while (cursor.moveToNext());
+                }
+
+                cursor.close();
+            }
+
+        } catch (Exception e) {
+            Toast.makeText(context, "DB Fetch Error @ getUser(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        } finally {
+            db.close();
+        }
+
+        return user;
     }
 
     /**
