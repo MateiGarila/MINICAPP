@@ -176,4 +176,53 @@ public class DBHelper extends SQLiteOpenHelper {
         onCreate(db);
 
     }
+
+    public int updateUser(int userId) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        User user = getUser(userId);
+
+        contentValues.put(Dict.COLUMN_USER_SURNAME, user.getSurname());
+        contentValues.put(Dict.COLUMN_USER_NAME, user.getName());
+        contentValues.put(Dict.COLUMN_USER_AGE, user.getAge());
+        contentValues.put(Dict.COLUMN_USER_SKINTONE, user.getSkinTone());
+
+        String selection = Dict.COLUMN_USER_ID + " = ?";
+        String[] selectionArgs = {String.valueOf(userId)};
+
+        int rowsUpdated = 0;
+
+        try{
+            rowsUpdated = db.update(Dict.TABLE_USER, contentValues, selection, selectionArgs);
+        } catch (Exception e) {
+            Toast.makeText(context, "DB Update Error @ updateUser(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        } finally {
+            db.close();
+        }
+
+        return rowsUpdated;
+
+    }
+
+    public int deleteUser(int userId) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String selection = Dict.COLUMN_USER_ID + " = ?";
+        String[] selectionArgs = {String.valueOf(userId)};
+
+        int rowsDeleted = 0;
+
+        try{
+            rowsDeleted = db.delete(Dict.TABLE_USER, selection, selectionArgs);
+        } catch (Exception e) {
+            Toast.makeText(context, "DB Delete Error @ deleteUser(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        } finally {
+            db.close();
+        }
+
+        return rowsDeleted;
+    }
 }
