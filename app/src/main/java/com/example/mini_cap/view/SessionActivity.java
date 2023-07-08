@@ -43,6 +43,14 @@ public class SessionActivity extends AppCompatActivity {
         //Temporary until we figure out a better way to navigate - Mat
         mainTextView.setOnClickListener(v -> finish());
 
+        startStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                StartSessionFragment startSessionFragment = new StartSessionFragment();
+                startSessionFragment.show(getSupportFragmentManager(), "Start Session");
+            }
+        });
+
     }
 
 
