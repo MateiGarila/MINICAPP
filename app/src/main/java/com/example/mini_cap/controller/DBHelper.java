@@ -177,17 +177,15 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
-    public int updateUser(int userId) {
+    public int updateUser(int userId, User updatedUser) {
 
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
 
-        User user = getUser(userId);
-
-        contentValues.put(Dict.COLUMN_USER_SURNAME, user.getSurname());
-        contentValues.put(Dict.COLUMN_USER_NAME, user.getName());
-        contentValues.put(Dict.COLUMN_USER_AGE, user.getAge());
-        contentValues.put(Dict.COLUMN_USER_SKINTONE, user.getSkinTone());
+        contentValues.put(Dict.COLUMN_USER_SURNAME, updatedUser.getSurname());
+        contentValues.put(Dict.COLUMN_USER_NAME, updatedUser.getName());
+        contentValues.put(Dict.COLUMN_USER_AGE, updatedUser.getAge());
+        contentValues.put(Dict.COLUMN_USER_SKINTONE, updatedUser.getSkinTone());
 
         String selection = Dict.COLUMN_USER_ID + " = ?";
         String[] selectionArgs = {String.valueOf(userId)};

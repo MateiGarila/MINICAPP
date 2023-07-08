@@ -26,6 +26,7 @@ public class SessionActivity extends AppCompatActivity implements AddSessionUser
     //Needed
     private DBHelper dbHelper;
     private final static String TAG = "SessionActivity";
+    private boolean isAddUserButtonVisible = true; // Store the initial visibility state
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,8 +54,21 @@ public class SessionActivity extends AppCompatActivity implements AddSessionUser
         });
 
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        addUser.setVisibility(isAddUserButtonVisible ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        isAddUserButtonVisible = addUser.getVisibility() == View.VISIBLE;
+    }
+
 
     public void onAddSessionUser(View view){
+        isAddUserButtonVisible = false; // Hide the button temporarily
         AddSessionUser dialog = new AddSessionUser();
         dialog.show(getSupportFragmentManager(), "AddSessionUser");
     }
