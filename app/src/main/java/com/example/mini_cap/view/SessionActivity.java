@@ -3,6 +3,7 @@ package com.example.mini_cap.view;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -52,8 +53,24 @@ public class SessionActivity extends AppCompatActivity implements AddSessionUser
                 onAddSessionUser(v);
             }
         });
-
+        editUser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle Edit Session User button click
+                Intent intent = new Intent(SessionActivity.this, EditActivity.class);
+                startActivity(intent);
+            }
+        });
+        startStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle Edit Session User button click
+                Intent intent = new Intent(SessionActivity.this, EndSessionActivity.class);
+                startActivity(intent);
+            }
+        });
     }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -67,23 +84,21 @@ public class SessionActivity extends AppCompatActivity implements AddSessionUser
     }
 
 
-    public void onAddSessionUser(View view){
+    public void onAddSessionUser(View view) {
         isAddUserButtonVisible = false; // Hide the button temporarily
         StartSessionFragment startSessionFragment = new StartSessionFragment();
         startSessionFragment.show(getSupportFragmentManager(), "Start Session");
     }
 
     @Override
-    public void onSessionUserAdded(User user){
+    public void onSessionUserAdded(User user) {
         long id = dbHelper.insertUser(user);
-        if (id != -1){
+        if (id != -1) {
             Toast.makeText(this, "Session user added successfully", Toast.LENGTH_SHORT).show();
-        }else{
+        } else {
             Toast.makeText(this, "Failed to add session user", Toast.LENGTH_SHORT).show();
 
         }
+
     }
-
-
-
 }
