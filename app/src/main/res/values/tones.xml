@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="spinnerItems">
+        <item>Fair</item>
+        <item>Medium</item>
+        <item>Light Brown</item>
+        <item>Brown</item>
+        <item>Black</item>
+    </string-array>
+</resources>
