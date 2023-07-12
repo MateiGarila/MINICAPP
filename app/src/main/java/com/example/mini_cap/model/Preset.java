@@ -1,21 +1,21 @@
 package com.example.mini_cap.model;
 
-public class PreSet {
+public class Preset {
     
-    private int UserID;
+    private int presetID;
     private String name;
     private int age;
     private String skinTone;
 
     /**
      * Public constructor for User objects
-     * @param userID
+     * @param presetID
      * @param name
      * @param age
      * @param skinTone
      */
-    public PreSet(int userID, String name, int age, String skinTone) {
-        UserID = userID;
+    public Preset(int presetID, String name, int age, String skinTone) {
+        this.presetID = presetID;
         this.name = name;
         this.age = age;
         this.skinTone = skinTone;
@@ -26,7 +26,7 @@ public class PreSet {
      * @return userID as an int
      */
     public int getUserID() {
-        return UserID;
+        return presetID;
     }
 
     /**
@@ -34,7 +34,7 @@ public class PreSet {
      * @param userID new userID value
      */
     public void setUserID(int userID) {
-        UserID = userID;
+        presetID = userID;
     }
 
     /**
@@ -92,7 +92,7 @@ public class PreSet {
     @Override
     public String toString() {
         return "User{" +
-                "UserID=" + UserID +
+                "UserID=" + presetID +
                 ", name='" + name + '\'' +
                 ", age=" + age +
                 ", skinTone='" + skinTone + '\'' +

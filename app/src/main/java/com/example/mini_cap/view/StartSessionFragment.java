@@ -20,7 +20,7 @@ import android.widget.Toast;
 
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
-import com.example.mini_cap.model.PreSet;
+import com.example.mini_cap.model.Preset;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,12 +38,12 @@ public class StartSessionFragment extends DialogFragment {
 
     private Context context;
 
-    ArrayList<PreSet> all_preSets;
+    ArrayList<Preset> all_presets;
 
 
-    public static ArrayList<PreSet> session_preSets = new ArrayList<>();
+    public static ArrayList<Preset> session_presets = new ArrayList<>();
 
-    public ArrayList<PreSet> other_preSets = new ArrayList<>();
+    public ArrayList<Preset> other_presets = new ArrayList<>();
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -75,17 +75,17 @@ public class StartSessionFragment extends DialogFragment {
         textViews.add(session_user_2);
         textViews.add(session_user_3);
 
-        all_preSets = dbHelper.getAllPreSets();
-        System.out.println("size of all users" + all_preSets.size());
-        final PreSet[] selected_preSet = {null};
-        if (all_preSets.size() >0) {
-            current_user_edit_text.setText("Main User: " + all_preSets.get(0).getName());
+        all_presets = dbHelper.getAllPresets();
+        System.out.println("size of all users" + all_presets.size());
+        final Preset[] selected_preset = {null};
+        if (all_presets.size() >0) {
+            current_user_edit_text.setText("Main User: " + all_presets.get(0).getName());
         }
 
 
-        if (all_preSets.size() > 1){
-            for (int i = 1; i < all_preSets.size(); i++){
-                other_preSets.add(all_preSets.get(i));
+        if (all_presets.size() > 1){
+            for (int i = 1; i < all_presets.size(); i++){
+                other_presets.add(all_presets.get(i));
 
             }
         }
@@ -111,21 +111,21 @@ public class StartSessionFragment extends DialogFragment {
                 previousSelectedView = view;
 
                 // Handle item click here
-                selected_preSet[0] = other_preSets.get(position);
+                selected_preset[0] = other_presets.get(position);
             }
         });
 
         delete_button_frag.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (selected_preSet[0]!= null){
-                    PreSet delete_preSet = selected_preSet[0];
-                    other_preSets.remove(selected_preSet[0]);
+                if (selected_preset[0]!= null){
+                    Preset delete_preset = selected_preset[0];
+                    other_presets.remove(selected_preset[0]);
 
-                    for (int i = 0; i < session_preSets.size(); i++){
-                        System.out.println("ids: " + session_preSets.get(i).getUserID() + " " + delete_preSet.getUserID());
-                        if (session_preSets.get(i).getUserID() == delete_preSet.getUserID()) {
-                            session_preSets.remove(i);
+                    for (int i = 0; i < session_presets.size(); i++){
+                        System.out.println("ids: " + session_presets.get(i).getUserID() + " " + delete_preset.getUserID());
+                        if (session_presets.get(i).getUserID() == delete_preset.getUserID()) {
+                            session_presets.remove(i);
                             load_session_users(textViews);
                         }
                     }
@@ -140,9 +140,9 @@ public class StartSessionFragment extends DialogFragment {
 
             @Override
             public void onClick(View v) {
-                if (selected_preSet[0]!= null){
-                    if(session_preSets.size() < 3){
-                        session_preSets.add(selected_preSet[0]);
+                if (selected_preset[0]!= null){
+                    if(session_presets.size() < 3){
+                        session_presets.add(selected_preset[0]);
                         load_session_users(textViews);
                     } else {
                         Toast.makeText(context, "You reached the limit for session users", Toast.LENGTH_SHORT).show();
@@ -169,14 +169,14 @@ public class StartSessionFragment extends DialogFragment {
         List<String> list_of_profiles = new ArrayList<>();
 
 
-        if (other_preSets.size() < 1) {
+        if (other_presets.size() < 1) {
             return;
         }
 
         String account_string = "";
 
-        for (int i = 0; i < other_preSets.size(); i++) {
-            list_of_profiles.add(account_string.concat(String.valueOf(i + 1) + ". "  + other_preSets.get(i).getName()));
+        for (int i = 0; i < other_presets.size(); i++) {
+            list_of_profiles.add(account_string.concat(String.valueOf(i + 1) + ". "  + other_presets.get(i).getName()));
         }
 
         ArrayAdapter arrayAdapter = new ArrayAdapter(context, android.R.layout.simple_list_item_1, list_of_profiles);
@@ -186,10 +186,10 @@ public class StartSessionFragment extends DialogFragment {
     }
 
     private void load_session_users(ArrayList<TextView> textViews){
-        for (int i = 0; i< session_preSets.size(); i++){
-            textViews.get(i).setText("Session User " + (i+1)  + ": " + session_preSets.get(i).getName());
+        for (int i = 0; i< session_presets.size(); i++){
+            textViews.get(i).setText("Session User " + (i+1)  + ": " + session_presets.get(i).getName());
         }
-        for (int i = session_preSets.size(); i<3; i++){
+        for (int i = session_presets.size(); i<3; i++){
             textViews.get(i).setText("Session User " + (i+1) + ": ");
         }
     }

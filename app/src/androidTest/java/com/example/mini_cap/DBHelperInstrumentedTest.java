@@ -6,7 +6,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.example.mini_cap.controller.DBHelper;
-import com.example.mini_cap.model.PreSet;
+import com.example.mini_cap.model.Preset;
 
 import org.junit.After;
 import org.junit.Before;
@@ -35,21 +35,21 @@ public class DBHelperInstrumentedTest {
     @Test
     public void testUpdateUser() {
         // Insert a test user into the database
-        PreSet preSet = new PreSet(1, "John", 25, "Fair");
+        Preset preSet = new Preset(1, "John", 25, "Fair");
         long userIdL = dbHelper.insertPreSet(preSet);
         int userId = (int) userIdL;
 
         // Update the user's details
-        PreSet updatedPreSet = new PreSet(userId, "John", 30, "Medium");
-        int rowsUpdated = dbHelper.updatePreSet(userId, updatedPreSet);
+        Preset updatedPreset = new Preset(userId, "John", 30, "Medium");
+        int rowsUpdated = dbHelper.updatePreSet(userId, updatedPreset);
 
         // Fetch the updated user from the database
-        PreSet fetchedPreSet = dbHelper.getPreSet(userId);
+        Preset fetchedPreset = dbHelper.getPreSet(userId);
 
         // Assert that the update was successful
         assertEquals(1, rowsUpdated);
-        assertEquals(updatedPreSet.getName(), fetchedPreSet.getName());
-        assertEquals(updatedPreSet.getAge(), fetchedPreSet.getAge());
-        assertEquals(updatedPreSet.getSkinTone(), fetchedPreSet.getSkinTone());
+        assertEquals(updatedPreset.getName(), fetchedPreset.getName());
+        assertEquals(updatedPreset.getAge(), fetchedPreset.getAge());
+        assertEquals(updatedPreset.getSkinTone(), fetchedPreset.getSkinTone());
     }
 }

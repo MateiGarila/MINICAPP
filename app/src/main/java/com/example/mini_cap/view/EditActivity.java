@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
-import com.example.mini_cap.model.PreSet;
+import com.example.mini_cap.model.Preset;
 
 import java.util.ArrayList;
 
@@ -51,10 +51,10 @@ public class EditActivity extends AppCompatActivity {
         nameTextView3 = findViewById(R.id.name_textview3);
         ageTextView3 = findViewById(R.id.age_textview3);
 
-        ArrayList<PreSet> all_preSets = dbHelper.getAllPreSets();
+        ArrayList<Preset> all_presets = dbHelper.getAllPresets();
 
-        while(all_preSets.size() > 3){
-            all_preSets.remove(all_preSets.size()-1);
+        while(all_presets.size() > 3){
+            all_presets.remove(all_presets.size()-1);
         }
 
         ArrayList<TextView> textViewsName = new ArrayList<>();
@@ -67,9 +67,9 @@ public class EditActivity extends AppCompatActivity {
         textViewsAge.add(ageTextView2);
         textViewsAge.add(ageTextView3);
 
-        for(int i = 0; i< all_preSets.size(); i++){
-            textViewsName.get(i).setText("Name: "  + all_preSets.get(i).getName());
-            textViewsAge.get(i).setText("Age: " +String.valueOf(all_preSets.get(i).getAge()));
+        for(int i = 0; i< all_presets.size(); i++){
+            textViewsName.get(i).setText("Name: "  + all_presets.get(i).getName());
+            textViewsAge.get(i).setText("Age: " +String.valueOf(all_presets.get(i).getAge()));
         }
 
         nameTextView1.setOnClickListener(new View.OnClickListener() {

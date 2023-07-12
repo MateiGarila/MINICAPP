@@ -10,7 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
-import com.example.mini_cap.model.PreSet;
+import com.example.mini_cap.model.Preset;
 
 import java.util.ArrayList;
 
@@ -46,10 +46,10 @@ public class DBHelper extends SQLiteOpenHelper {
 
     /**
      * Method for inserting a preset in the database
-     * @param preSet
+     * @param preset
      * @return
      */
-    public long insertPreSet(PreSet preSet){
+    public long insertPreSet(Preset preset){
 
         //Anything goes wrong and we see -1. This is what is causing the issue
         long id = -1;
@@ -58,14 +58,14 @@ public class DBHelper extends SQLiteOpenHelper {
         ContentValues contentValues = new ContentValues();
 
         //In this case we do not insert an id as the database will take care of it
-        contentValues.put(Dict.COLUMN_PRESET_NAME, preSet.getName());
-        contentValues.put(Dict.COLUMN_PRESET_AGE, preSet.getAge());
-        contentValues.put(Dict.COLUMN_PRESET_SKINTONE, preSet.getSkinTone());
+        contentValues.put(Dict.COLUMN_PRESET_NAME, preset.getName());
+        contentValues.put(Dict.COLUMN_PRESET_AGE, preset.getAge());
+        contentValues.put(Dict.COLUMN_PRESET_SKINTONE, preset.getSkinTone());
 
         try{
             id = db.insertOrThrow(Dict.TABLE_PRESET, null, contentValues);
         }catch(Exception e){
-            Toast.makeText(context, "DB Insert Error @ insertPreSet(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "DB Insert Error @ insertPreset(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }finally {
             db.close();
         }
@@ -75,11 +75,11 @@ public class DBHelper extends SQLiteOpenHelper {
 
     /**
      * Method used to fetch all presets stored in the database
-     * @return ArrayList<PreSet> of all available Presets
+     * @return ArrayList<Preset> of all available Presets
      */
-    public ArrayList<PreSet> getAllPreSets(){
+    public ArrayList<Preset> getAllPresets(){
 
-        ArrayList<PreSet> preSets = new ArrayList<>();
+        ArrayList<Preset> presets = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor cursor = null;
@@ -96,7 +96,7 @@ public class DBHelper extends SQLiteOpenHelper {
                         @SuppressLint("Range") int age = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_PRESET_AGE));
                         @SuppressLint("Range") String skinTone = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_PRESET_SKINTONE));
 
-                        preSets.add(new PreSet(id, name, age, skinTone));
+                        presets.add(new Preset(id, name, age, skinTone));
 
                     }while(cursor.moveToNext());
                 }
@@ -105,29 +105,29 @@ public class DBHelper extends SQLiteOpenHelper {
             }
 
         }catch (Exception e){
-            Toast.makeText(context, "DB Fetch Error @ getAllPreSets(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "DB Fetch Error @ getAllPresets(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }finally {
             db.close();
         }
 
-        return preSets;
+        return presets;
     }
 
     /**
-     * Method used to fetch a specific PreSet from the database
-     * @param preSetId id of the fetched PreSet
-     * @return PreSet object with the specified id
+     * Method used to fetch a specific Preset from the database
+     * @param presetId id of the fetched Preset
+     * @return Preset object with the specified id
      */
-    public PreSet getPreSet(int preSetId) {
+    public Preset getPreSet(int presetId) {
 
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor cursor = null;
-        PreSet preSet = null;
+        Preset preset = null;
 
         try {
 
-            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_PRESET + " WHERE " + Dict.COLUMN_PRESET_ID + " = ?", new String[]{String.valueOf(preSetId)});
+            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_PRESET + " WHERE " + Dict.COLUMN_PRESET_ID + " = ?", new String[]{String.valueOf(presetId)});
 
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
@@ -138,7 +138,7 @@ public class DBHelper extends SQLiteOpenHelper {
                         @SuppressLint("Range") int age = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_PRESET_AGE));
                         @SuppressLint("Range") String skinTone = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_PRESET_SKINTONE));
 
-                        preSet = new PreSet(id,name, age, skinTone);
+                        preset = new Preset(id,name, age, skinTone);
 
                     } while (cursor.moveToNext());
                 }
@@ -152,27 +152,33 @@ public class DBHelper extends SQLiteOpenHelper {
             db.close();
         }
 
-        return preSet;
+        return preset;
     }
 
-    public int updatePreSet(int preSetId, PreSet updatedPreSet) {
+    /**
+     * Method used to update a specific preset from the database
+     * @param presetId the ID of the preset to be updated
+     * @param updatedPreset new values for the updated preset
+     * @return
+     */
+    public int updatePreset(int presetId, Preset updatedPreset) {
 
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
 
-        contentValues.put(Dict.COLUMN_PRESET_NAME, updatedPreSet.getName());
-        contentValues.put(Dict.COLUMN_PRESET_AGE, updatedPreSet.getAge());
-        contentValues.put(Dict.COLUMN_PRESET_SKINTONE, updatedPreSet.getSkinTone());
+        contentValues.put(Dict.COLUMN_PRESET_NAME, updatedPreset.getName());
+        contentValues.put(Dict.COLUMN_PRESET_AGE, updatedPreset.getAge());
+        contentValues.put(Dict.COLUMN_PRESET_SKINTONE, updatedPreset.getSkinTone());
 
         String selection = Dict.COLUMN_PRESET_ID + " = ?";
-        String[] selectionArgs = {String.valueOf(preSetId)};
+        String[] selectionArgs = {String.valueOf(presetId)};
 
         int rowsUpdated = 0;
 
         try{
             rowsUpdated = db.update(Dict.TABLE_PRESET, contentValues, selection, selectionArgs);
         } catch (Exception e) {
-            Toast.makeText(context, "DB Update Error @ updatePreSet(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "DB Update Error @ updatePreset(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
         } finally {
             db.close();
         }
@@ -181,19 +187,24 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
-    public int deletePreSet(int preSetId) {
+    /**
+     * This method is used to remove a preset from the database
+     * @param presetId the ID of the preset about to be deleted
+     * @return
+     */
+    public int deletePreset(int presetId) {
 
         SQLiteDatabase db = this.getWritableDatabase();
 
         String selection = Dict.COLUMN_PRESET_ID + " = ?";
-        String[] selectionArgs = {String.valueOf(preSetId)};
+        String[] selectionArgs = {String.valueOf(presetId)};
 
         int rowsDeleted = 0;
 
         try{
             rowsDeleted = db.delete(Dict.TABLE_PRESET, selection, selectionArgs);
         } catch (Exception e) {
-            Toast.makeText(context, "DB Delete Error @ deletePreSet(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "DB Delete Error @ deletePreset(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
         } finally {
             db.close();
         }

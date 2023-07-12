@@ -3,24 +3,20 @@ package com.example.mini_cap.view;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.mini_cap.R;
-import com.example.mini_cap.controller.AddSessionUser;
 import com.example.mini_cap.controller.DBHelper;
-import com.example.mini_cap.model.PreSet;
 
 public class SessionActivity extends AppCompatActivity  {
 
     //Declaration of all UI elements
     protected TextView mainTextView, statusTextView;
     protected RecyclerView displayUser;
-    protected Button startStop, addUser, editUser;
+    protected Button startStop, addPreset, editUser;
 
     //Needed
     private DBHelper dbHelper;
@@ -39,11 +35,19 @@ public class SessionActivity extends AppCompatActivity  {
         statusTextView = findViewById(R.id.sessionStatusTextView);
         displayUser = findViewById(R.id.sessionUserDisplayRV);
         startStop = findViewById(R.id.startStopSessionBTN);
-        addUser = findViewById(R.id.addUserBTN);
+        addPreset = findViewById(R.id.addUserBTN);
         editUser = findViewById(R.id.editUserBTN);
 
         //Temporary until we figure out a better way to navigate - Mat
         mainTextView.setOnClickListener(v -> finish());
+
+        addPreset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AddPresetFragment fragment = new AddPresetFragment();
+                fragment.show(getSupportFragmentManager(), "CreatePreset");
+            }
+        });
 
     }
 
