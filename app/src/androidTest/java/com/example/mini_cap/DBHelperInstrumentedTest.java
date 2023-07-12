@@ -4,10 +4,9 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.example.mini_cap.controller.DBHelper;
-import com.example.mini_cap.model.User;
+import com.example.mini_cap.model.PreSet;
 
 import org.junit.After;
 import org.junit.Before;
@@ -36,22 +35,21 @@ public class DBHelperInstrumentedTest {
     @Test
     public void testUpdateUser() {
         // Insert a test user into the database
-        User user = new User(1, "John", "Doe", 25, "Fair");
-        long userIdL = dbHelper.insertUser(user);
+        PreSet preSet = new PreSet(1, "John", 25, "Fair");
+        long userIdL = dbHelper.insertPreSet(preSet);
         int userId = (int) userIdL;
 
         // Update the user's details
-        User updatedUser = new User(userId, "John", "Smith", 30, "Medium");
-        int rowsUpdated = dbHelper.updateUser(userId, updatedUser);
+        PreSet updatedPreSet = new PreSet(userId, "John", 30, "Medium");
+        int rowsUpdated = dbHelper.updatePreSet(userId, updatedPreSet);
 
         // Fetch the updated user from the database
-        User fetchedUser = dbHelper.getUser(userId);
+        PreSet fetchedPreSet = dbHelper.getPreSet(userId);
 
         // Assert that the update was successful
         assertEquals(1, rowsUpdated);
-        assertEquals(updatedUser.getSurname(), fetchedUser.getSurname());
-        assertEquals(updatedUser.getName(), fetchedUser.getName());
-        assertEquals(updatedUser.getAge(), fetchedUser.getAge());
-        assertEquals(updatedUser.getSkinTone(), fetchedUser.getSkinTone());
+        assertEquals(updatedPreSet.getName(), fetchedPreSet.getName());
+        assertEquals(updatedPreSet.getAge(), fetchedPreSet.getAge());
+        assertEquals(updatedPreSet.getSkinTone(), fetchedPreSet.getSkinTone());
     }
 }

@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.os.Bundle;
 import android.widget.Spinner;
@@ -15,7 +14,7 @@ import android.widget.Toast;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.mini_cap.R;
-import com.example.mini_cap.model.User;
+import com.example.mini_cap.model.PreSet;
 
 public class AddSessionUser extends DialogFragment {
     private EditText surname;
@@ -26,7 +25,7 @@ public class AddSessionUser extends DialogFragment {
 
 
     public interface AddSessionUserListener{
-        void onSessionUserAdded(User user);
+        void onSessionUserAdded(PreSet preSet);
     }
 
     private AddSessionUserListener listener;
@@ -86,8 +85,8 @@ public class AddSessionUser extends DialogFragment {
             Toast.makeText(getActivity(), "Please enter a valid age", Toast.LENGTH_SHORT).show();
         }else{
 
-            User sessionUser = new User(1, surnameString, nameString, ageInt, selectedSkinTone);
-            listener.onSessionUserAdded(sessionUser);
+            PreSet sessionPreSet = new PreSet(1, nameString, ageInt, selectedSkinTone);
+            listener.onSessionUserAdded(sessionPreSet);
             dismiss();
         }
 
