@@ -1,112 +1,47 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingLeft="16dp"
-    android:paddingTop="16dp"
-    android:paddingRight="16dp"
-    android:paddingBottom="16dp"
-    tools:context=".view.EditActivity">
+    tools:context=".view.MainActivity">
 
     <TextView
-        android:id="@+id/CurrentUsers_textview1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Current Users: "
+        android:id="@+id/topText"
+        android:layout_width="380dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/edit_activity_header"
         android:textSize="20sp"
-        android:layout_marginBottom="20dp"/>
-
-    <TextView
-        android:id="@+id/name_textview1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Name: "
-        android:textSize="18sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/age_textview1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Age: " />
-
-    <TextView
-        android:id="@+id/skintone_textview1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Skintone: "
-        android:layout_marginBottom="10dp"/>
-
-    <TextView
-        android:id="@+id/name_textview2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Name: "
-        android:textSize="18sp"
-        android:textStyle="bold"
-        />
-
-    <TextView
-        android:id="@+id/age_textview2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Age: " />
-
-    <TextView
-        android:id="@+id/skintone_textview2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Skintone: "
-        android:layout_marginBottom="10dp"/>
-
-    <TextView
-        android:id="@+id/name_textview3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Name: "
-        android:textSize="18sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/age_textview3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Age: " />
-
-    <TextView
-        android:id="@+id/skintone_textview3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Skintone: " />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.551"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.023" />
 
     <Button
-        android:id="@+id/cancel_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Cancel"
-        android:visibility="gone" />
+        android:id="@+id/backBTN"
+        android:layout_width="190dp"
+        android:layout_height="55dp"
+        android:text="@string/backBTN"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.071"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/listOfPresets"
+        app:layout_constraintVertical_bias="0.448" />
 
-    <Button
-        android:id="@+id/submit_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Submit"
-        android:visibility="gone" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/listOfPresets"
+        android:layout_width="380dp"
+        android:layout_height="580dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.727"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/topText" />
 
-    <Button
-        android:id="@+id/delete_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Delete"
-        android:visibility="gone" />
-
-    <Button
-        android:id="@+id/modify_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Modify"
-        android:visibility="gone" />
-
-</LinearLayout>
-
+</androidx.constraintlayout.widget.ConstraintLayout>

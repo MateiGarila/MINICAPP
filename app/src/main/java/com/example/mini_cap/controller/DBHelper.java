@@ -6,6 +6,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 public class DBHelper extends SQLiteOpenHelper {
 
     private Context context;
+    private final String TAG = "DBHelper";
 
     /**
      * Database constructor
@@ -166,6 +168,7 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
 
+        Log.d(TAG, "Made it in update Preset");
         contentValues.put(Dict.COLUMN_PRESET_NAME, updatedPreset.getName());
         contentValues.put(Dict.COLUMN_PRESET_AGE, updatedPreset.getAge());
         contentValues.put(Dict.COLUMN_PRESET_SKINTONE, updatedPreset.getSkinTone());

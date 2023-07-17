@@ -10,104 +10,43 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <Button
-            android:id="@+id/frag_delete_button_id"
-            android:layout_width="137dp"
+        <TextView
+            android:id="@+id/selectPresetTextView"
+            android:layout_width="375dp"
             android:layout_height="50dp"
-            android:text="Delete User"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/all_users_listview_id"
-            app:layout_constraintHorizontal_bias="0.044"
-            app:layout_constraintStart_toStartOf="@+id/all_users_listview_id"
-            app:layout_constraintTop_toBottomOf="@+id/all_users_listview_id"
-            app:layout_constraintVertical_bias="0.065" />
-
-        <Button
-            android:id="@+id/frag_start_button_id"
-            android:layout_width="137dp"
-            android:layout_height="48dp"
-            android:text=" Add User"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/all_users_listview_id"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toEndOf="@+id/frag_delete_button_id"
-            app:layout_constraintTop_toBottomOf="@+id/all_users_listview_id"
-            app:layout_constraintVertical_bias="0.064" />
-
-        <TextView
-            android:id="@+id/current_user_id"
-            android:layout_width="327dp"
-            android:layout_height="30dp"
-            android:text="Main User: "
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            android:gravity="left"
+            android:text="@string/select_preset_title"
+            android:textSize="25sp"
+            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.4"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.048" />
-
-        <TextView
-            android:id="@+id/session_user_2_id"
-            android:layout_width="331dp"
-            android:layout_height="34dp"
-            android:text="Session User 2:"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/session_user_1_id"
-            app:layout_constraintStart_toStartOf="@+id/session_user_1_id"
-            app:layout_constraintTop_toBottomOf="@+id/current_user_id"
-            app:layout_constraintVertical_bias="0.093" />
-
-        <TextView
-            android:id="@+id/session_user_3_id"
-            android:layout_width="331dp"
-            android:layout_height="34dp"
-            android:text="Session User 3:"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/session_user_2_id"
-            app:layout_constraintStart_toStartOf="@+id/session_user_2_id"
-            app:layout_constraintTop_toBottomOf="@+id/current_user_id"
-            app:layout_constraintVertical_bias="0.165" />
-
-        <TextView
-            android:id="@+id/session_user_1_id"
-            android:layout_width="331dp"
-            android:layout_height="34dp"
-            android:text="Session User 1: "
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/current_user_id"
-            app:layout_constraintStart_toStartOf="@+id/current_user_id"
-            app:layout_constraintTop_toBottomOf="@+id/current_user_id"
-            app:layout_constraintVertical_bias="0.022" />
-
-        <ListView
-            android:id="@+id/all_users_listview_id"
-            android:layout_width="293dp"
-            android:layout_height="307dp"
-            android:layout_marginBottom="4dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/session_user_3_id"
-            app:layout_constraintStart_toStartOf="@+id/session_user_3_id"
-            app:layout_constraintTop_toBottomOf="@+id/session_user_3_id"
-            app:layout_constraintVertical_bias="0.142" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
-            android:id="@+id/frag_cancel_button_id"
-            android:layout_width="36dp"
-            android:layout_height="30dp"
+            android:id="@+id/closeImgBTN"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            app:layout_constraintBottom_toBottomOf="@+id/current_user_id"
-            app:layout_constraintEnd_toEndOf="@+id/current_user_id"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="@+id/current_user_id"
-            app:layout_constraintTop_toTopOf="@+id/current_user_id"
-            app:layout_constraintVertical_bias="1.0" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewPresets"
+            android:layout_width="375dp"
+            android:layout_height="250dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintEnd_toEndOf="@+id/selectPresetTextView"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/selectPresetTextView" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

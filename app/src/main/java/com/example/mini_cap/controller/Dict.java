@@ -11,4 +11,7 @@ public class Dict {
     public static final String COLUMN_PRESET_AGE = "age";
     public static final String COLUMN_PRESET_SKINTONE = "skinTone";
 
+    public static final int CREATE_PRESET = 1;
+    public static final int EDIT_PRESET = 2;
+
 }

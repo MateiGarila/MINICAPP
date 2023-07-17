@@ -14,9 +14,6 @@
         android:theme="@style/Theme.MINICAP"
         tools:targetApi="31">
         <activity
-            android:name=".view.ModifyActivity"
-            android:exported="false" />
-        <activity
             android:name=".view.EditActivity"
             android:exported="false" />
         <activity

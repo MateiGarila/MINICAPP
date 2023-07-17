@@ -1,6 +1,11 @@
 package com.example.mini_cap.model;
 
-public class Preset {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
+
+public class Preset implements Parcelable {
     
     private int presetID;
     private String name;
@@ -21,19 +26,38 @@ public class Preset {
         this.skinTone = skinTone;
     }
 
+    protected Preset(Parcel in) {
+        presetID = in.readInt();
+        name = in.readString();
+        age = in.readInt();
+        skinTone = in.readString();
+    }
+
+    public static final Creator<Preset> CREATOR = new Creator<Preset>() {
+        @Override
+        public Preset createFromParcel(Parcel in) {
+            return new Preset(in);
+        }
+
+        @Override
+        public Preset[] newArray(int size) {
+            return new Preset[size];
+        }
+    };
+
     /**
      * Standard getter
-     * @return userID as an int
+     * @return presetID as an int
      */
-    public int getUserID() {
+    public int getPresetID() {
         return presetID;
     }
 
     /**
      * Standard setter
-     * @param userID new userID value
+     * @param userID new presetID value
      */
-    public void setUserID(int userID) {
+    public void setPresetID(int userID) {
         presetID = userID;
     }
 
@@ -97,5 +121,18 @@ public class Preset {
                 ", age=" + age +
                 ", skinTone='" + skinTone + '\'' +
                 '}';
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeInt(presetID);
+        dest.writeString(name);
+        dest.writeInt(age);
+        dest.writeString(skinTone);
     }
 }

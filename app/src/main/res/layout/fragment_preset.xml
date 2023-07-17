@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".view.AddPresetFragment">
+    tools:context=".view.PresetFragment">
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -28,7 +28,7 @@
 
         <EditText
             android:id="@+id/presetName"
-            android:layout_width="400dp"
+            android:layout_width="375dp"
             android:layout_height="60dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
@@ -43,7 +43,7 @@
 
         <EditText
             android:id="@+id/presetAge"
-            android:layout_width="400dp"
+            android:layout_width="375dp"
             android:layout_height="60dp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
@@ -56,7 +56,7 @@
 
         <Spinner
             android:id="@+id/presetSkinTone"
-            android:layout_width="400dp"
+            android:layout_width="375dp"
             android:layout_height="60dp"
             app:layout_constraintEnd_toEndOf="@+id/presetAge"
             app:layout_constraintStart_toStartOf="@+id/presetAge"
@@ -66,10 +66,13 @@
             android:id="@+id/presetCancelBTN"
             android:layout_width="170dp"
             android:layout_height="60dp"
+            android:layout_marginStart="4dp"
             android:layout_marginTop="8dp"
             android:text="@string/cancelBTN"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="@+id/presetSkinTone"
-            app:layout_constraintTop_toBottomOf="@+id/presetSkinTone" />
+            app:layout_constraintTop_toBottomOf="@+id/presetSkinTone"
+            app:layout_constraintVertical_bias="0.0" />
 
         <Button
             android:id="@+id/presetConfirmBTN"
@@ -77,8 +80,12 @@
             android:layout_height="60dp"
             android:layout_marginTop="8dp"
             android:text="@string/confirmBTN"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/presetSkinTone"
-            app:layout_constraintTop_toBottomOf="@+id/presetSkinTone" />
+            app:layout_constraintHorizontal_bias="0.741"
+            app:layout_constraintStart_toEndOf="@+id/presetCancelBTN"
+            app:layout_constraintTop_toBottomOf="@+id/presetSkinTone"
+            app:layout_constraintVertical_bias="0.0" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>
