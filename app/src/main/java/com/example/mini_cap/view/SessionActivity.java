@@ -85,7 +85,6 @@ public class SessionActivity extends AppCompatActivity implements AddSessionUser
 
 
     public void onAddSessionUser(View view) {
-        isAddUserButtonVisible = false; // Hide the button temporarily
 
             isAddUserButtonVisible = false; // Hide the button temporarily
             AddSessionUser dialog = new AddSessionUser();
