@@ -10,11 +10,11 @@
     <!--Below this line you will find all the Strings related to the SessionActivity-->
     <string name="session_activity">Session Activity</string>
     <string name="session_status_not_started">Currently no session started</string>
-    <string name="session_status_started_no_number_user">Current session of</string>
+    <string name="session_status_started_no_number_preset">Current session of</string>
     <string name="start_session_text">Start session</string>
     <string name="end_session_text">End session</string>
-    <string name="add_user_text">Add Preset</string>
-    <string name="edit_user_text">Edit Preset</string>
+    <string name="add_preset_text">Add Preset</string>
+    <string name="edit_preset_text">Edit Preset</string>
     <string name="select_preset_title">Select a preset</string>
 
     <!--Below this line you will find all the Strings related to the PresetFragment-->

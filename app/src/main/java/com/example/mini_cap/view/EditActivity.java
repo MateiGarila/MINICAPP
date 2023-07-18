@@ -48,6 +48,9 @@ public class EditActivity extends AppCompatActivity implements SelectListener {
 
     }
 
+    /**
+     * This method is used to set up the RecyclerView in the EditActivity
+     */
     public void setRecyclerView(){
 
         ArrayList<Preset> presets =  dbHelper.getAllPresets();
@@ -56,6 +59,12 @@ public class EditActivity extends AppCompatActivity implements SelectListener {
         listOfPresets.setAdapter(customEditAdapter);
     }
 
+    /**
+     * This method is used to set the onClick functionality for each item in the RecyclerView
+     * @param preset that has been clicked
+     *
+     *        ~~Double check if this is still being used~~
+     */
     public void onItemClicked(Preset preset){
 
         PresetFragment fragment = new PresetFragment();

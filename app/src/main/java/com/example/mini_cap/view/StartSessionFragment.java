@@ -38,11 +38,27 @@ public class StartSessionFragment extends DialogFragment implements SelectListen
     private DBHelper dbHelper;
     private CustomStartAdapter customStartAdapter;
 
-
+    /**
+     * Required empty public constructor
+     */
     public StartSessionFragment() {
-        // Required empty public constructor
+
     }
 
+    /**
+     * The onCreateView which inflates the layout and determines the context which the fragment
+     * was called from and manages the view accordingly
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -67,7 +83,9 @@ public class StartSessionFragment extends DialogFragment implements SelectListen
         return view;
 
     }
-
+    /**
+     * This method sets up the RecyclerView in the fragment by populating it with the available strings
+     */
     public void setUpRecyclerView(){
 
         ArrayList<Preset> presets = dbHelper.getAllPresets();

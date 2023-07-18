@@ -13,7 +13,7 @@ public class Preset implements Parcelable {
     private String skinTone;
 
     /**
-     * Public constructor for User objects
+     * Public constructor for Preset objects
      * @param presetID
      * @param name
      * @param age
@@ -55,10 +55,10 @@ public class Preset implements Parcelable {
 
     /**
      * Standard setter
-     * @param userID new presetID value
+     * @param presetID new presetID value
      */
-    public void setPresetID(int userID) {
-        presetID = userID;
+    public void setPresetID(int presetID) {
+        presetID = presetID;
     }
 
     /**
@@ -111,12 +111,12 @@ public class Preset implements Parcelable {
 
     /**
      * Standard toString method
-     * @return User object as a String
+     * @return Preset object as a String
      */
     @Override
     public String toString() {
-        return "User{" +
-                "UserID=" + presetID +
+        return "Preset {" +
+                "PresetID=" + presetID +
                 ", name='" + name + '\'' +
                 ", age=" + age +
                 ", skinTone='" + skinTone + '\'' +

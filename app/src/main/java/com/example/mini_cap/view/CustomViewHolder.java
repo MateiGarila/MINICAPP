@@ -9,6 +9,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mini_cap.R;
 
+/**
+ * This class is used to fetch and identify each item in the recyclerview_session_preset layout file
+ */
 public class CustomViewHolder extends RecyclerView.ViewHolder {
 
     public CardView cardView;
