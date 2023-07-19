@@ -46,7 +46,7 @@ public class StartSessionFragment extends DialogFragment {
 
     public static ArrayList<User> session_users = new ArrayList<>();
 
-    public static ArrayList<User> other_users = new ArrayList<>();
+    public ArrayList<User> other_users = new ArrayList<>();
 
     @Override
     public void onAttach(@NonNull Context context) {

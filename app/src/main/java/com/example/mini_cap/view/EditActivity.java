@@ -11,7 +11,11 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mini_cap.R;
+import com.example.mini_cap.controller.DBHelper;
+import com.example.mini_cap.model.User;
 import com.example.mini_cap.view.ModifyActivity;
+
+import java.util.ArrayList;
 
 public class EditActivity extends AppCompatActivity {
     private Button cancelButton;
@@ -25,10 +29,14 @@ public class EditActivity extends AppCompatActivity {
     private TextView nameTextView3;
     private TextView ageTextView3;
 
+    private DBHelper dbHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
+
+        dbHelper = new DBHelper(getBaseContext());
 
         modifyButton = findViewById(R.id.modify_button);
         cancelButton = findViewById(R.id.cancel_button);
@@ -43,6 +51,31 @@ public class EditActivity extends AppCompatActivity {
 
         nameTextView3 = findViewById(R.id.name_textview3);
         ageTextView3 = findViewById(R.id.age_textview3);
+
+        ArrayList<User> all_users = dbHelper.getAllUsers();
+
+        while(all_users.size() > 3){
+            all_users.remove(all_users.size()-1);
+        }
+
+        ArrayList<TextView> textViewsName = new ArrayList<>();
+        textViewsName.add(nameTextView1);
+        textViewsName.add(nameTextView2);
+        textViewsName.add(nameTextView3);
+
+        ArrayList<TextView> textViewsAge = new ArrayList<>();
+        textViewsAge.add(ageTextView1);
+        textViewsAge.add(ageTextView2);
+        textViewsAge.add(ageTextView3);
+
+        for(int i = 0; i<all_users.size();i++){
+            textViewsName.get(i).setText("Name: " +all_users.get(i).getSurname() + ", " + all_users.get(i).getName());
+            textViewsAge.get(i).setText("Age: " +String.valueOf(all_users.get(i).getAge()));
+        }
+        
+        
+        
+
 
         nameTextView1.setOnClickListener(new View.OnClickListener() {
             @Override

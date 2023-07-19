@@ -65,8 +65,8 @@ public class SessionActivity extends AppCompatActivity implements AddSessionUser
             @Override
             public void onClick(View v) {
                 // Handle Edit Session User button click
-                Intent intent = new Intent(SessionActivity.this, EndSessionActivity.class);
-                startActivity(intent);
+                StartSessionFragment start_session_frag = new StartSessionFragment();
+                start_session_frag.show(getSupportFragmentManager(), "Start Session Dialog");
             }
         });
     }
@@ -86,8 +86,11 @@ public class SessionActivity extends AppCompatActivity implements AddSessionUser
 
     public void onAddSessionUser(View view) {
         isAddUserButtonVisible = false; // Hide the button temporarily
-        StartSessionFragment startSessionFragment = new StartSessionFragment();
-        startSessionFragment.show(getSupportFragmentManager(), "Start Session");
+
+            isAddUserButtonVisible = false; // Hide the button temporarily
+            AddSessionUser dialog = new AddSessionUser();
+            dialog.show(getSupportFragmentManager(), "AddSessionUser");
+
     }
 
     @Override
@@ -99,6 +102,15 @@ public class SessionActivity extends AppCompatActivity implements AddSessionUser
             Toast.makeText(this, "Failed to add session user", Toast.LENGTH_SHORT).show();
 
         }
+
+        startStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+
 
     }
 }
