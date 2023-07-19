@@ -12,6 +12,7 @@ import androidx.annotation.Discouraged;
 import androidx.annotation.Nullable;
 
 import com.example.mini_cap.model.User;
+import com.example.mini_cap.model.Stats;
 
 import java.lang.annotation.Documented;
 import java.util.ArrayList;
@@ -44,6 +45,14 @@ public class DBHelper extends SQLiteOpenHelper {
                 Dict.COLUMN_USER_SKINTONE + " TEXT NOT NULL)";
 
         db.execSQL(CREATE_USER_TABLE);
+
+        //Create stats table
+        String CREATE_STATS_TABLE = "CREATE TABLE " + Dict.TABLE_STATS + " (" +
+                Dict.COLUMN_LOGID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                Dict.COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
+                Dict.COLUMN_EXPOSURE + " TEXT NOT NULL)";
+
+        db.execSQL(CREATE_STATS_TABLE);
 
     }
 
@@ -177,6 +186,12 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
+    /**
+     * Function for updating an already entered user in the db
+     * @param userId ID for the user to be updated
+     * @param updatedUser user object containing updated user information
+     * @return int for rows updated, if non-zero update was successful
+     */
     public int updateUser(int userId, User updatedUser) {
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -204,6 +219,11 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
+    /**
+     * Function for deleting a user in the db
+     * @param userId ID for the user to be deleted
+     * @return int for rows deleted, if non-zero delete was successful
+     */
     public int deleteUser(int userId) {
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -223,4 +243,92 @@ public class DBHelper extends SQLiteOpenHelper {
 
         return rowsDeleted;
     }
+
+    /**
+     * Function for inserting new stats into the db
+     * @param stats
+     * @return
+     */
+
+    public long insertStats(Stats stats){
+
+        // If -1 is returned, function did not insert stats into db.
+        long id = -1;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        // ID is incremented by the db instead of inserted
+        contentValues.put(Dict.COLUMN_TIMESTAMP, stats.getTimestamp());
+        contentValues.put(Dict.COLUMN_EXPOSURE, stats.getExposure());
+
+        try{
+            id = db.insertOrThrow(Dict.TABLE_STATS, null, contentValues);
+        }catch(Exception e){
+            Toast.makeText(context, "DB Insert Error @ insertStats(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }finally{
+            db.close();
+        }
+
+    return id;
+    }
+    /**
+     * Function for returning Stats for a given hour on a given date
+     * @param timestamp must be in form "dd/MM/yyyy HH:mm:ss"
+     * @return Stats object with data for timestamp entered
+      */
+
+    public Stats getStatsForHour(String timestamp) {
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = null;
+        Stats stats = null;
+
+        try{
+            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS + " WHERE " + Dict.COLUMN_TIMESTAMP + " = ?", new String[]{String.valueOf(timestamp)});
+
+            if (cursor != null){
+                if (cursor.moveToFirst()){
+                    do{
+                        @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_LOGID));
+                        @SuppressLint("Range") float exposure = cursor.getFloat(cursor.getColumnIndex(Dict.COLUMN_EXPOSURE));
+
+                        stats = new Stats(id, exposure, timestamp);
+                    } while(cursor.moveToNext());
+                }
+
+                cursor.close();
+            }
+        }catch (Exception e){
+            Toast.makeText(context, "DB Fetch Error @ getStatsForHour(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }finally{
+            db.close();
+        }
+
+        return stats;
+
+    }
+
+    /**
+     * Function for returning the UV exposure for a specified day
+     * @param date must be in form "dd/MM/yyyy", hour is concatenated to date string to create full timestamp
+     * @return array of hourly UV exposure floats for specified day
+     */
+
+    public float[] getExposureForDay(String date){
+
+        float[] dailyExposure = new float[11];
+
+        for(int i = 8; i<19; i++){
+            int index = i - 8;
+            @SuppressLint("DefaultLocale") String timestamp = String.format("%s %02d:00:00", date, i);
+            dailyExposure[index] = getStatsForHour(timestamp).getExposure();
+        }
+
+        return dailyExposure;
+
+    }
+
+
 }
