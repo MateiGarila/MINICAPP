@@ -2,5 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="item_selected_color">#D9D9D9</color>
+    <color name="item_selected_color">#B1C8F1</color>
+    <color name="button_grey">#DADADA</color>
+    <color name="stats_color"> #88B0F6</color>
 </resources>
