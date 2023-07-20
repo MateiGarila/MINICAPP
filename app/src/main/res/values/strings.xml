@@ -6,6 +6,7 @@
     <string name="cancelBTN">Cancel</string>
     <string name="editBTN">Edit</string>
     <string name="backBTN">Back</string>
+    <string name="deleteBTN">Delete</string>
 
     <!--Below this line you will find all the Strings related to the SessionActivity-->
     <string name="session_activity">Session Activity</string>

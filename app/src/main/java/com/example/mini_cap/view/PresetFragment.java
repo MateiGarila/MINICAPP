@@ -26,7 +26,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
     protected TextView presetTextView;
     protected EditText presetName, presetAge;
     protected Spinner skinToneSpinner;
-    protected Button cancelBTN, confirmBTN;
+    protected Button cancelBTN, confirmBTN, deleteBTN;
     private DBHelper dbHelper;
 
     /**
@@ -65,6 +65,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
         skinToneSpinner = view.findViewById(R.id.presetSkinTone);
         cancelBTN = view.findViewById(R.id.presetCancelBTN);
         confirmBTN = view.findViewById(R.id.presetConfirmBTN);
+        deleteBTN = view.findViewById(R.id.deleteBTN);
 
         setUpSpinner();
 
@@ -78,6 +79,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
                 case 1:
                     //CREATE_PRESET
                     confirmBTN.setText(R.string.confirmBTN);
+                    deleteBTN.setVisibility(View.GONE);
                     break;
                 case 2:
                     //EDIT_PRESET
@@ -86,6 +88,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
                     int spinnerIndex = getIndexForValue(skinToneSpinner, presetToEdit.getSkinTone());
                     skinToneSpinner.setSelection(spinnerIndex);
                     confirmBTN.setText(R.string.editBTN);
+                    deleteBTN.setVisibility(View.VISIBLE);
                     break;
                 default:
                     Toast.makeText(getContext(), "switch oopsie onCreateView", Toast.LENGTH_SHORT).show();
@@ -99,6 +102,12 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
         int finalPresetID = presetID;
         confirmBTN.setOnClickListener(v -> {
             presetManipulation(finalPresetContext, finalPresetID);
+        });
+
+        deleteBTN.setOnClickListener(v -> {
+            dbHelper.deletePreset(finalPresetID);
+            ((EditActivity)getActivity()).setRecyclerView();
+            dismiss();
         });
 
         return view;
