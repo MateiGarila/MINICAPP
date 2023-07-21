@@ -9,10 +9,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
 import com.example.mini_cap.controller.Dict;
+import com.example.mini_cap.model.Preset;
 
 public class SessionActivity extends AppCompatActivity  {
 
@@ -24,7 +26,7 @@ public class SessionActivity extends AppCompatActivity  {
     //Needed
     private DBHelper dbHelper;
     private final static String TAG = "SessionActivity";
-    private boolean isAddUserButtonVisible = true; // Store the initial visibility state
+    private final boolean isCreate = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +50,7 @@ public class SessionActivity extends AppCompatActivity  {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "Add Preset PRESSED");
-                PresetFragment fragment = PresetFragment.newInstance(null, Dict.CREATE_PRESET);
+                PresetFragment fragment = PresetFragment.newInstance(null, isCreate);
                 fragment.show(getSupportFragmentManager(), "CreatePreset");
 
             }
@@ -72,9 +74,13 @@ public class SessionActivity extends AppCompatActivity  {
 
     }
 
-    public void toEditActivity(){
+    protected void toEditActivity(){
         Intent intent = new Intent(this, EditActivity.class);
         startActivity(intent);
+    }
+
+    public void startSession(Preset preset){
+        Toast.makeText(this, "I got called from fragment: " + preset.getName(), Toast.LENGTH_SHORT).show();
     }
 
 }

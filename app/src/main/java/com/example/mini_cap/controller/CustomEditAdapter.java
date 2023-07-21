@@ -24,6 +24,7 @@ public class CustomEditAdapter extends RecyclerView.Adapter<CustomViewHolder> {
     private Context context;
     private ArrayList<Preset> presets;
     private static final String TAG = "EditActivity";
+    private final boolean isCreate = false;
     private SelectListener selectListener;
 
     /**
@@ -71,7 +72,7 @@ public class CustomEditAdapter extends RecyclerView.Adapter<CustomViewHolder> {
             public void onClick(View v) {
 
                 //selectListener.onItemClicked(preset);
-                PresetFragment presetFragment = PresetFragment.newInstance(preset, Dict.EDIT_PRESET);
+                PresetFragment presetFragment = PresetFragment.newInstance(preset, isCreate);
                 presetFragment.show(((AppCompatActivity) context).getSupportFragmentManager(), "EditPreset");
             }
         });

@@ -96,6 +96,8 @@ public class StartSessionFragment extends DialogFragment implements SelectListen
 
     @Override
     public void onItemClicked(Preset preset) {
+        //Toast.makeText(getContext(), "testing: " + preset.getName(), Toast.LENGTH_SHORT).show();
+        ((SessionActivity)getActivity()).startSession(preset);
         dismiss();
     }
 }

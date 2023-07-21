@@ -57,7 +57,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
         View view = inflater.inflate(R.layout.fragment_preset, container, false);
 
         dbHelper = new DBHelper(getContext());
-        int presetContext = 0;
+        boolean presetContext = false;
         int presetID = 0;
         presetTextView = view.findViewById(R.id.addPresetTextView);
         presetName = view.findViewById(R.id.presetName);
@@ -71,36 +71,53 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
 
         // Retrieve the object from the arguments
         if(getArguments() != null){
+
+            presetContext = getArguments().getBoolean("context");
             Preset presetToEdit = getArguments().getParcelable("preset");
-            if(presetToEdit != null)
+
+            if(presetToEdit != null){
                 presetID = presetToEdit.getPresetID();
-            presetContext = getArguments().getInt("context");
-            switch (presetContext){
-                case 1:
-                    //CREATE_PRESET
-                    confirmBTN.setText(R.string.confirmBTN);
-                    deleteBTN.setVisibility(View.GONE);
-                    break;
-                case 2:
-                    //EDIT_PRESET
-                    presetName.setText(presetToEdit.getName());
-                    presetAge.setText(String.valueOf(presetToEdit.getAge()));
-                    int spinnerIndex = getIndexForValue(skinToneSpinner, presetToEdit.getSkinTone());
-                    skinToneSpinner.setSelection(spinnerIndex);
-                    confirmBTN.setText(R.string.editBTN);
-                    deleteBTN.setVisibility(View.VISIBLE);
-                    break;
-                default:
-                    Toast.makeText(getContext(), "switch oopsie onCreateView", Toast.LENGTH_SHORT).show();
-                    break;
             }
+
+            if (presetContext) {
+                confirmBTN.setText(R.string.confirmBTN);
+                deleteBTN.setVisibility(View.GONE);
+            }else {
+                presetName.setText(presetToEdit.getName());
+                presetAge.setText(String.valueOf(presetToEdit.getAge()));
+                int spinnerIndex = getIndexForValue(skinToneSpinner, presetToEdit.getSkinTone());
+                skinToneSpinner.setSelection(spinnerIndex);
+                confirmBTN.setText(R.string.editBTN);
+                deleteBTN.setVisibility(View.VISIBLE);
+            }
+
+//            switch (presetContext){
+//                case 1:
+//                    //CREATE_PRESET
+//                    confirmBTN.setText(R.string.confirmBTN);
+//                    deleteBTN.setVisibility(View.GONE);
+//                    break;
+//                case 2:
+//                    //EDIT_PRESET
+//                    presetName.setText(presetToEdit.getName());
+//                    presetAge.setText(String.valueOf(presetToEdit.getAge()));
+//                    int spinnerIndex = getIndexForValue(skinToneSpinner, presetToEdit.getSkinTone());
+//                    skinToneSpinner.setSelection(spinnerIndex);
+//                    confirmBTN.setText(R.string.editBTN);
+//                    deleteBTN.setVisibility(View.VISIBLE);
+//                    break;
+//                default:
+//                    Toast.makeText(getContext(), "switch oopsie onCreateView", Toast.LENGTH_SHORT).show();
+//                    break;
+//            }
         }
 
         cancelBTN.setOnClickListener(v -> dismiss());
 
-        int finalPresetContext = presetContext;
         int finalPresetID = presetID;
+        boolean finalPresetContext = presetContext;
         confirmBTN.setOnClickListener(v -> {
+            //THIS CAUSES ERROR FOR ADD PRESET ON HARDWARE
             presetManipulation(finalPresetContext, finalPresetID);
         });
 
@@ -146,7 +163,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
      * @param presetContext integer used to differentiate 'create' and 'edit' preset
      * @param presetID is needed for the edit and delete (not implemented yet) functionalities
      */
-    private void presetManipulation(int presetContext, int presetID){
+    private void presetManipulation(boolean presetContext, int presetID){
 
         if(!(presetName.getText().toString().isEmpty())){
 
@@ -157,16 +174,13 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
                 String skinTone = skinToneSpinner.getSelectedItem().toString();
                 Preset preset = new Preset(0, name, age, skinTone);
 
-                if(presetContext == 1){
+                if(presetContext) {
                     dbHelper.insertPreSet(preset);
-                } else if (presetContext == 2) {
+                }else{
                     dbHelper.updatePreset(presetID, preset);
                     ((EditActivity)getActivity()).setRecyclerView();
-                }else {
-                    Toast.makeText(getContext(), "PresetContext not supported", Toast.LENGTH_SHORT).show();
                 }
                 dismiss();
-
             }else{
                 Toast.makeText(getContext(), "Please include an age for your preset", Toast.LENGTH_SHORT).show();
             }
@@ -179,16 +193,16 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
      * This method is used to pass data from the activity to the fragment by passing arguments
      * @param preset is used when the user wants to edit their presets, this is not needed (can be
      *               null) when creating a preset
-     * @param contextIdentifier is used to determine which context the fragment was called from,
-     *                          this is NEEDED all contexts can be found in the Dict file
+     * @param isCreate is used to determine which context the fragment was called from,
+     *                          this is NEEDED
      * @return the PresetFragment with added context and preset
      */
-    public static PresetFragment newInstance(Preset preset, int contextIdentifier){
+    public static PresetFragment newInstance(Preset preset, boolean isCreate){
 
         PresetFragment fragment = new PresetFragment();
         Bundle args = new Bundle();
         args.putParcelable("preset", (Parcelable) preset);
-        args.putInt("context", contextIdentifier);
+        args.putBoolean("context", isCreate);
         fragment.setArguments(args);
         return  fragment;
     }
