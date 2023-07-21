@@ -6,15 +6,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.Discouraged;
 import androidx.annotation.Nullable;
 
 import com.example.mini_cap.model.User;
 import com.example.mini_cap.model.Stats;
 
-import java.lang.annotation.Documented;
 import java.util.ArrayList;
 
 public class DBHelper extends SQLiteOpenHelper {
@@ -181,7 +180,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         //drop existing tables
         db.execSQL("DROP TABLE IF EXISTS " + Dict.TABLE_USER);
-        //db.execSQL("DROP TABLE IF EXISTS " + Dict.);
+        db.execSQL("DROP TABLE IF EXISTS " + Dict.TABLE_STATS);
         onCreate(db);
 
     }
@@ -300,6 +299,13 @@ public class DBHelper extends SQLiteOpenHelper {
 
                 cursor.close();
             }
+
+            // Check if the cursor is empty, set stats to zero if no records are found.
+            if (stats == null) {
+                // Assuming the Stats constructor takes 0 values for id and exposure as well.
+                stats = new Stats(0, 0.0f, timestamp);
+            }
+
         }catch (Exception e){
             Toast.makeText(context, "DB Fetch Error @ getStatsForHour(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }finally{
@@ -313,7 +319,7 @@ public class DBHelper extends SQLiteOpenHelper {
     /**
      * Function for returning the UV exposure for a specified day
      * @param date must be in form "dd/MM/yyyy", hour is concatenated to date string to create full timestamp
-     * @return array of hourly UV exposure floats for specified day
+     * @return array of hourly UV exposure floats for specified day from 8 am to 6 pm
      */
 
     public float[] getExposureForDay(String date){
@@ -329,6 +335,5 @@ public class DBHelper extends SQLiteOpenHelper {
         return dailyExposure;
 
     }
-
 
 }
