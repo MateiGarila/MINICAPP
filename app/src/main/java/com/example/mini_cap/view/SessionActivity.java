@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -13,21 +14,20 @@ import android.widget.Toast;
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.AddSessionUser;
 import com.example.mini_cap.controller.DBHelper;
-import com.example.mini_cap.model.User;
+import com.example.mini_cap.controller.Dict;
+import com.example.mini_cap.model.Preset;
 
-import java.util.ArrayList;
-
-public class SessionActivity extends AppCompatActivity implements AddSessionUser.AddSessionUserListener {
+public class SessionActivity extends AppCompatActivity  {
 
     //Declaration of all UI elements
     protected TextView mainTextView, statusTextView;
     protected RecyclerView displayUser;
-    protected Button startStop, addUser, editUser;
+    protected Button startStopBTN, addPresetBTN, editPresetBTN;
 
     //Needed
     private DBHelper dbHelper;
     private final static String TAG = "SessionActivity";
-    private boolean isAddUserButtonVisible = true; // Store the initial visibility state
+    private final boolean isCreate = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,76 +40,48 @@ public class SessionActivity extends AppCompatActivity implements AddSessionUser
         mainTextView = findViewById(R.id.sessionActivityTextView);
         statusTextView = findViewById(R.id.sessionStatusTextView);
         displayUser = findViewById(R.id.sessionUserDisplayRV);
-        startStop = findViewById(R.id.startStopSessionBTN);
-        addUser = findViewById(R.id.addUserBTN);
-        editUser = findViewById(R.id.editUserBTN);
+        startStopBTN = findViewById(R.id.startStopSessionBTN);
+        addPresetBTN = findViewById(R.id.addUserBTN);
+        editPresetBTN = findViewById(R.id.editUserBTN);
 
         //Temporary until we figure out a better way to navigate - Mat
         mainTextView.setOnClickListener(v -> finish());
 
-        addUser.setOnClickListener(new View.OnClickListener() {
+        addPresetBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onAddSessionUser(v);
-            }
-        });
-        editUser.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Handle Edit Session User button click
-                Intent intent = new Intent(SessionActivity.this, EditActivity.class);
-                startActivity(intent);
-            }
-        });
-        startStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Handle Edit Session User button click
-                StartSessionFragment start_session_frag = new StartSessionFragment();
-                start_session_frag.show(getSupportFragmentManager(), "Start Session Dialog");
-            }
-        });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        addUser.setVisibility(isAddUserButtonVisible ? View.VISIBLE : View.INVISIBLE);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        isAddUserButtonVisible = addUser.getVisibility() == View.VISIBLE;
-    }
-
-
-    public void onAddSessionUser(View view) {
-
-            isAddUserButtonVisible = false; // Hide the button temporarily
-            AddSessionUser dialog = new AddSessionUser();
-            dialog.show(getSupportFragmentManager(), "AddSessionUser");
-
-    }
-
-    @Override
-    public void onSessionUserAdded(User user) {
-        long id = dbHelper.insertUser(user);
-        if (id != -1) {
-            Toast.makeText(this, "Session user added successfully", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Failed to add session user", Toast.LENGTH_SHORT).show();
-
-        }
-
-        startStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                Log.d(TAG, "Add Preset PRESSED");
+                PresetFragment fragment = PresetFragment.newInstance(null, isCreate);
+                fragment.show(getSupportFragmentManager(), "CreatePreset");
 
             }
         });
 
+        editPresetBTN.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toEditActivity();
+            }
+        });
 
+        startStopBTN.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "Start Session PRESSED");
+                StartSessionFragment fragment = new StartSessionFragment();
+                fragment.show(getSupportFragmentManager(), "StartSession");
+            }
+        });
 
     }
+
+    protected void toEditActivity(){
+        Intent intent = new Intent(this, EditActivity.class);
+        startActivity(intent);
+    }
+
+    public void startSession(Preset preset){
+        Toast.makeText(this, "I got called from fragment: " + preset.getName(), Toast.LENGTH_SHORT).show();
+    }
+
 }

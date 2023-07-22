@@ -1,59 +1,64 @@
 package com.example.mini_cap.model;
 
-public class User {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
+
+public class Preset implements Parcelable {
     
-    private int UserID;
-    private String surname;
+    private int presetID;
     private String name;
     private int age;
     private String skinTone;
 
     /**
-     * Public constructor for User objects
-     * @param userID
-     * @param surname
+     * Public constructor for Preset objects
+     * @param presetID
      * @param name
      * @param age
      * @param skinTone
      */
-    public User(int userID, String surname, String name, int age, String skinTone) {
-        UserID = userID;
-        this.surname = surname;
+    public Preset(int presetID, String name, int age, String skinTone) {
+        this.presetID = presetID;
         this.name = name;
         this.age = age;
         this.skinTone = skinTone;
     }
 
+    protected Preset(Parcel in) {
+        presetID = in.readInt();
+        name = in.readString();
+        age = in.readInt();
+        skinTone = in.readString();
+    }
+
+    public static final Creator<Preset> CREATOR = new Creator<Preset>() {
+        @Override
+        public Preset createFromParcel(Parcel in) {
+            return new Preset(in);
+        }
+
+        @Override
+        public Preset[] newArray(int size) {
+            return new Preset[size];
+        }
+    };
+
     /**
      * Standard getter
-     * @return userID as an int
+     * @return presetID as an int
      */
-    public int getUserID() {
-        return UserID;
+    public int getPresetID() {
+        return presetID;
     }
 
     /**
      * Standard setter
-     * @param userID new userID value
+     * @param presetID new presetID value
      */
-    public void setUserID(int userID) {
-        UserID = userID;
-    }
-
-    /**
-     * Standard getter
-     * @return surname as a String
-     */
-    public String getSurname() {
-        return surname;
-    }
-
-    /**
-     * Standard setter
-     * @param surname new surname value
-     */
-    public void setSurname(String surname) {
-        this.surname = surname;
+    public void setPresetID(int presetID) {
+        presetID = presetID;
     }
 
     /**
@@ -106,16 +111,28 @@ public class User {
 
     /**
      * Standard toString method
-     * @return User object as a String
+     * @return Preset object as a String
      */
     @Override
     public String toString() {
-        return "User{" +
-                "UserID=" + UserID +
-                ", surname='" + surname + '\'' +
+        return "Preset {" +
+                "PresetID=" + presetID +
                 ", name='" + name + '\'' +
                 ", age=" + age +
                 ", skinTone='" + skinTone + '\'' +
                 '}';
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeInt(presetID);
+        dest.writeString(name);
+        dest.writeInt(age);
+        dest.writeString(skinTone);
     }
 }
