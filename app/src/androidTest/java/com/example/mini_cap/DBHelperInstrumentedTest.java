@@ -36,7 +36,7 @@ public class DBHelperInstrumentedTest {
     public void testUpdateUser() {
         // Insert a test user into the database
         Preset preSet = new Preset(1, "John", 25, "Fair");
-        long userIdL = dbHelper.insertPreSet(preSet);
+        long userIdL = dbHelper.insertPreset(preSet);
         int userId = (int) userIdL;
 
         // Update the user's details

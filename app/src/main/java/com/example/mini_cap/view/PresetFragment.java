@@ -73,59 +73,47 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
         if(getArguments() != null){
 
             presetContext = getArguments().getBoolean("context");
-            Preset presetToEdit = getArguments().getParcelable("preset");
 
-            if(presetToEdit != null){
-                presetID = presetToEdit.getPresetID();
-            }
+            if(presetContext){
 
-            if (presetContext) {
+                Toast.makeText(getContext(), "I am creating a preset", Toast.LENGTH_SHORT).show();
                 confirmBTN.setText(R.string.confirmBTN);
                 deleteBTN.setVisibility(View.GONE);
-            }else {
+
+                confirmBTN.setOnClickListener(v -> {
+                    //Please check insertPreset(Preset preset) comments
+                    createPreset();
+                });
+
+            }else{
+
+                Preset presetToEdit = getArguments().getParcelable("preset");
                 presetName.setText(presetToEdit.getName());
                 presetAge.setText(String.valueOf(presetToEdit.getAge()));
                 int spinnerIndex = getIndexForValue(skinToneSpinner, presetToEdit.getSkinTone());
                 skinToneSpinner.setSelection(spinnerIndex);
                 confirmBTN.setText(R.string.editBTN);
                 deleteBTN.setVisibility(View.VISIBLE);
+                Toast.makeText(getContext(), "I am editing a preset: " + presetToEdit.getName(), Toast.LENGTH_SHORT).show();
+
+                confirmBTN.setOnClickListener(v -> {
+                    editPreset(presetToEdit.getPresetID());
+                    dismiss();
+                });
+
+                deleteBTN.setOnClickListener(v -> {
+                    dbHelper.deletePreset(presetToEdit.getPresetID());
+                    ((EditActivity)getActivity()).setRecyclerView();
+                    dismiss();
+                });
+
             }
 
-//            switch (presetContext){
-//                case 1:
-//                    //CREATE_PRESET
-//                    confirmBTN.setText(R.string.confirmBTN);
-//                    deleteBTN.setVisibility(View.GONE);
-//                    break;
-//                case 2:
-//                    //EDIT_PRESET
-//                    presetName.setText(presetToEdit.getName());
-//                    presetAge.setText(String.valueOf(presetToEdit.getAge()));
-//                    int spinnerIndex = getIndexForValue(skinToneSpinner, presetToEdit.getSkinTone());
-//                    skinToneSpinner.setSelection(spinnerIndex);
-//                    confirmBTN.setText(R.string.editBTN);
-//                    deleteBTN.setVisibility(View.VISIBLE);
-//                    break;
-//                default:
-//                    Toast.makeText(getContext(), "switch oopsie onCreateView", Toast.LENGTH_SHORT).show();
-//                    break;
-//            }
+        }else{
+            Toast.makeText(getContext(), "No arguments were passed", Toast.LENGTH_SHORT).show();
         }
 
         cancelBTN.setOnClickListener(v -> dismiss());
-
-        int finalPresetID = presetID;
-        boolean finalPresetContext = presetContext;
-        confirmBTN.setOnClickListener(v -> {
-            //THIS CAUSES ERROR FOR ADD PRESET ON HARDWARE
-            presetManipulation(finalPresetContext, finalPresetID);
-        });
-
-        deleteBTN.setOnClickListener(v -> {
-            dbHelper.deletePreset(finalPresetID);
-            ((EditActivity)getActivity()).setRecyclerView();
-            dismiss();
-        });
 
         return view;
     }
@@ -159,35 +147,64 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
     }
 
     /**
-     * This method uses the passed 'presetContext' to determine which DB operation to perform
-     * @param presetContext integer used to differentiate 'create' and 'edit' preset
-     * @param presetID is needed for the edit and delete (not implemented yet) functionalities
+     * This method calls userDataValidation and edits a selected preset
+     * @param presetID the preset to be edited
      */
-    private void presetManipulation(boolean presetContext, int presetID){
+    public void editPreset(int presetID){
+
+        if(userDataValidation()){
+
+            String name = presetName.getText().toString();
+            int age = Integer.parseInt(presetAge.getText().toString());
+            String skinTone = skinToneSpinner.getSelectedItem().toString();
+            Preset preset = new Preset(0, name, age, skinTone);
+
+            dbHelper.updatePreset(presetID, preset);
+            ((EditActivity)getActivity()).setRecyclerView();
+
+        }
+    }
+
+    /**
+     * This method calls userDataValidation and creates a preset
+     */
+    public void createPreset(){
+
+        if(userDataValidation()){
+
+            String name = presetName.getText().toString();
+            int age = Integer.parseInt(presetAge.getText().toString());
+            String skinTone = skinToneSpinner.getSelectedItem().toString();
+            Preset preset = new Preset(0, name, age, skinTone);
+
+            dbHelper.insertPreset(preset);
+
+            dismiss();
+        }
+    }
+
+    /**
+     * This method verifies that all preset fields are not empty
+     * @return true if all fields are not empty else false
+     */
+    public boolean userDataValidation(){
 
         if(!(presetName.getText().toString().isEmpty())){
 
             if(!(presetAge.getText().toString().isEmpty())){
 
-                String name = presetName.getText().toString();
-                int age = Integer.parseInt(presetAge.getText().toString());
-                String skinTone = skinToneSpinner.getSelectedItem().toString();
-                Preset preset = new Preset(0, name, age, skinTone);
+                return true;
 
-                if(presetContext) {
-                    dbHelper.insertPreSet(preset);
-                }else{
-                    dbHelper.updatePreset(presetID, preset);
-                    ((EditActivity)getActivity()).setRecyclerView();
-                }
-                dismiss();
             }else{
                 Toast.makeText(getContext(), "Please include an age for your preset", Toast.LENGTH_SHORT).show();
             }
         }else{
             Toast.makeText(getContext(), "Your preset needs a name.", Toast.LENGTH_SHORT).show();
         }
+
+        return false;
     }
+
 
     /**
      * This method is used to pass data from the activity to the fragment by passing arguments
