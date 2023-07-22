@@ -76,7 +76,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
 
             if(presetContext){
 
-                Toast.makeText(getContext(), "I am creating a preset", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getContext(), "I am creating a preset", Toast.LENGTH_SHORT).show();
                 confirmBTN.setText(R.string.confirmBTN);
                 deleteBTN.setVisibility(View.GONE);
 
@@ -94,7 +94,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
                 skinToneSpinner.setSelection(spinnerIndex);
                 confirmBTN.setText(R.string.editBTN);
                 deleteBTN.setVisibility(View.VISIBLE);
-                Toast.makeText(getContext(), "I am editing a preset: " + presetToEdit.getName(), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getContext(), "I am editing a preset: " + presetToEdit.getName(), Toast.LENGTH_SHORT).show();
 
                 confirmBTN.setOnClickListener(v -> {
                     editPreset(presetToEdit.getPresetID());

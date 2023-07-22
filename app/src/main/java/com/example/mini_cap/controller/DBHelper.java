@@ -63,10 +63,6 @@ public class DBHelper extends SQLiteOpenHelper {
         contentValues.put(Dict.COLUMN_PRESET_NAME, preset.getName());
         contentValues.put(Dict.COLUMN_PRESET_AGE, preset.getAge());
         contentValues.put(Dict.COLUMN_PRESET_SKINTONE, preset.getSkinTone());
-        //Alright this is not supposed to happen, but our old 'user' table still exists somehow
-        //and since the old 'surname' field was set to NOT NULL it is STILL ASKING for it
-        //and if the below line is not present THEN IT WILL CRASH THE APP
-        contentValues.put("surname", "test");
 
         try{
             id = db.insertOrThrow(Dict.TABLE_PRESET, null, contentValues);
