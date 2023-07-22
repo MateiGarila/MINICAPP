@@ -40,4 +40,26 @@
         app:layout_constraintStart_toStartOf="@+id/mainTextView"
         app:layout_constraintTop_toBottomOf="@+id/toSessionActivity" />
 
+    <Button
+        android:id="@+id/connectBTN"
+        android:layout_width="206dp"
+        android:layout_height="47dp"
+        android:layout_marginTop="68dp"
+        android:text="Connect to sensor"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toStatsActivity"
+        app:layout_constraintVertical_bias="0.788" />
+
+    <TextView
+        android:id="@+id/sensorTextView"
+        android:layout_width="223dp"
+        android:layout_height="51dp"
+        android:text="TextView"
+        app:layout_constraintBottom_toTopOf="@+id/connectBTN"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toStatsActivity" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
