@@ -7,4 +7,15 @@
     <string name="end_session_text">End session</string>
     <string name="add_user_text">Add User</string>
     <string name="edit_user_text">Edit User</string>
+
+    <string name="sensor_bluetooth_exception">Bluetooth is off or unsupported.</string>
+    <string name="sensor_scan_start">Scanning for sensor..</string>
+    <string name="sensor_scan_timeout">No sensor found.</string>
+    <string name="sensor_connection_initiated">Connecting to %1$s..</string>
+    <string name="sensor_connection_connecting">Connecting %1$d%%..</string>
+    <string name="sensor_connection_established">Connection established!</string>
+    <string name="sensor_connection_disconnected">Disconnected.</string>
+    <string name="sensor_connection_failed_retry">Connection lost. Please retry.</string>
+    <string name="sensor_connection_failed_noretry">Connection lost. Incompatible hardware?</string>
+    <string name="sensor_record_format">Current UV Index: %1$.1f. Illuminance: %2$.1flux.</string>
 </resources>

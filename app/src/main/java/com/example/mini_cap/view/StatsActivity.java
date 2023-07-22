@@ -5,13 +5,17 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
+import com.example.mini_cap.controller.SensorController;
 import com.example.mini_cap.model.Stats;
+import com.example.mini_cap.view.helper.IntentDataHelper;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.Legend;
@@ -30,9 +34,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
-import app.uvtracker.data.type.Record;
+import app.uvtracker.sensor.pii.event.EventHandler;
+import app.uvtracker.sensor.pii.event.IEventListener;
 
-public class  StatsActivity extends AppCompatActivity {
+public class  StatsActivity extends AppCompatActivity implements IEventListener {
     private LineChart line_chart;
     private Button prev_week;
     private Button day1;
@@ -65,8 +70,18 @@ public class  StatsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stats);
+        // Get sensor and register event handler
+        SensorController sensorController = IntentDataHelper.readSensorController();
+        if(sensorController == null) {
+            // Sensor is not connected!
+            Toast.makeText(this, "Please first connect to a sensor.", Toast.LENGTH_SHORT).show();
+            this.finish();
+            return;
+        }
+        sensorController.registerListener(this);
+
         //"dd/MM/yyyy HH:mm:ss"
-        dbHelper = new DBHelper(getBaseContext());
+        dbHelper = new DBHelper(this);
         Stats stats1 = new Stats(1, 3.0F, "19/07/2023 08:00:00");
         Stats stats2 = new Stats(2, 4.0F, "19/07/2023 09:00:00");
         Stats stats3 = new Stats(3, 4.5F, "19/07/2023 10:00:00");
@@ -462,10 +477,15 @@ public class  StatsActivity extends AppCompatActivity {
 
     }
 
-    public void setCurrentUVIndex (Record record){
-        String uvIndex = String.format("%.1f", record.uvIndex);
-        currentUVIndex.setText("Current UV Index: " + uvIndex);
+    @EventHandler
+    protected void onRealTimeData(@NonNull SensorController.RealTimeDataEvent event) {
+        this.setCurrentUVIndex(event.toString());
     }
+
+    public void setCurrentUVIndex(@NonNull String message){
+        currentUVIndex.setText(message);
+    }
+
 }
 
 
