@@ -10,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.example.mini_cap.R;
+import com.example.mini_cap.controller.DBHelper;
+import com.example.mini_cap.model.Stats;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.Legend;
@@ -27,7 +29,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
+
+import app.uvtracker.data.type.Record;
 
 public class  StatsActivity extends AppCompatActivity {
     private LineChart line_chart;
@@ -47,16 +50,54 @@ public class  StatsActivity extends AppCompatActivity {
     public int selectedColor;
     private int previousSelectedPosition;
     private Button previousSelectedButton;
-
+    private DBHelper dbHelper;
     private TextView date_text_view;
 
     private TextView curr_time_text_view;
+
+    private  TextView currentUVIndex;
+
+    //private String currentSelectedDate;
+    private  LineDataSet dataSet;
 
     public ArrayList<String> curr_week_list;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stats);
+        //"dd/MM/yyyy HH:mm:ss"
+        dbHelper = new DBHelper(getBaseContext());
+        Stats stats1 = new Stats(1, 3.0F, "19/07/2023 08:00:00");
+        Stats stats2 = new Stats(2, 4.0F, "19/07/2023 09:00:00");
+        Stats stats3 = new Stats(3, 4.5F, "19/07/2023 10:00:00");
+        Stats stats4 = new Stats(4, 5.3F, "19/07/2023 11:00:00");
+        Stats stats5 = new Stats(5, 3.4F, "19/07/2023 12:00:00");
+        Stats stats6 = new Stats(6, 6.0F, "19/07/2023 13:00:00");
+        Stats stats7 = new Stats(7, 7.5F, "19/07/2023 14:00:00");
+        Stats stats8 = new Stats(8, 11.2F, "19/07/2023 15:00:00");
+        Stats stats9 = new Stats(9, 8.0F, "19/07/2023 16:00:00");
+        Stats stats10 = new Stats(10, 5.0F, "19/07/2023 17:00:00");
+        Stats stats11 = new Stats(11, 6.2F, "19/07/2023 18:00:00");
+        Stats stats12 = new Stats(12, 3.0F, "19/07/2023 19:00:00");
+        Stats stats13 = new Stats(13, 3.2F, "19/07/2023 20:00:00");
+
+        dbHelper.insertStats(stats1);
+        dbHelper.insertStats(stats2);
+        dbHelper.insertStats(stats3);
+        dbHelper.insertStats(stats4);
+        dbHelper.insertStats(stats5);
+        dbHelper.insertStats(stats6);
+        dbHelper.insertStats(stats7);
+        dbHelper.insertStats(stats8);
+        dbHelper.insertStats(stats9);
+        dbHelper.insertStats(stats10);
+        dbHelper.insertStats(stats11);
+        dbHelper.insertStats(stats12);
+        dbHelper.insertStats(stats13);
+
+
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMMM d' 'yyyy");
+        DateTimeFormatter outputFormatterForDB = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         LocalDate current_date = LocalDate.now();
         previousSelectedPosition = -1;
@@ -86,23 +127,34 @@ public class  StatsActivity extends AppCompatActivity {
         menu_buttons.add(day6);
         menu_buttons.add(day7);
 
-        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMMM d' 'yyyy");
+        //set UV index realtime text for this textview
+        currentUVIndex = findViewById(R.id.uvindex_id);
+
+
         date_text_view.setText(current_date.format(outputFormatter));
         curr_week_list = getWeekDays(current_date, curr_week);
         set_menu_text(menu_buttons, curr_week_list);
 
         ArrayList<String> x_axis_values = set_x_axis_values();
 
-        ArrayList<Float> y_axis_values = new ArrayList<>(Arrays.asList(1.5f, 2.8f, 3.2f, 4.7f, 12.0f, 10.f, 5.3f, 8f, 3f, 4f));
+        ArrayList<Float> y_axis_values = new ArrayList<>();
+
+        float[] uv_values_float = dbHelper.getExposureForDay(current_date.format(outputFormatterForDB ));
+        for (float value : uv_values_float) {
+            y_axis_values.add(value);
+        }
+
+
+
 
         ArrayList<Entry> dataPoints = new ArrayList<>();
         for (int i = 0; i < y_axis_values.size(); i++) {
             dataPoints.add(new Entry(i, y_axis_values.get(i)));
         }
-        System.out.println("current week: " + curr_week_list);
+
 
         // Create a LineDataSet and configure the appearance if needed
-        LineDataSet dataSet = new LineDataSet(dataPoints, "");
+        dataSet = new LineDataSet(dataPoints, "");
         dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
         dataSet.setDrawValues(false); // Set to false to hide the values on data points
         dataSet.setLineWidth(4f); // Set line width to 4
@@ -188,7 +240,7 @@ public class  StatsActivity extends AppCompatActivity {
             }
         });
         // Refresh the chart
-        line_chart.invalidate();
+
 
 
         next_week.setOnClickListener(new View.OnClickListener() {
@@ -198,8 +250,14 @@ public class  StatsActivity extends AppCompatActivity {
                 curr_week_list = getWeekDays(current_date, curr_week);
                 set_menu_text(menu_buttons, curr_week_list);
                 if (previousSelectedPosition != -1) {
-                    date_text_view.setText(setDateTextView(curr_week_list.get(previousSelectedPosition)));
+                    String selectedDate = curr_week_list.get(previousSelectedPosition);
+                    date_text_view.setText(setDateTextView(selectedDate));
+                    createDataSet(selectedDate);
+                    LineData lineData = new LineData(dataSet);
+                    line_chart.setData(lineData);
+
                 }
+
             }
         });
 
@@ -233,13 +291,14 @@ public class  StatsActivity extends AppCompatActivity {
         // Set the text of each button to the corresponding day
         for (int i = 0; i < buttons.size(); i++) {
             String[] parts = curr_week.get(i).split("-");
-            buttons.get(i).setText(parts[0]);
+            int dayOfMonth = Integer.parseInt(parts[0]);
+            buttons.get(i).setText(String.valueOf(dayOfMonth));
         }
     }
 
     public static ArrayList<String> getWeekDays(LocalDate currentDate, int currentWeek) {
         ArrayList<String> weekDays = new ArrayList<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-M-yy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
         // Find the Sunday of the current week
         LocalDate sunday = currentDate.with(DayOfWeek.SUNDAY);
@@ -264,24 +323,44 @@ public class  StatsActivity extends AppCompatActivity {
 
         clickedButton.setBackgroundColor(selectedColor);
         previousSelectedButton = clickedButton;
-        date_text_view.setText(setDateTextView(curr_week_list.get(selectedIndex)));
 
         // Handle item click here
         System.out.println("Selected button: " + clickedButton.getText());
 
         previousSelectedPosition = selectedIndex;
+        line_chart.invalidate();
+
+        date_text_view.setText(setDateTextView(curr_week_list.get(selectedIndex)));
+        String selectedDate = curr_week_list.get(previousSelectedPosition);
+        ArrayList<Float> y_axis_values = new ArrayList<>();
+        float[] uv_values_float = dbHelper.getExposureForDay("19/07/2023");
+        //System.out.println("uv values:" + uv_values_float);
+        for (float value : uv_values_float) {
+            System.out.println("uv value" + value);
+            y_axis_values.add(value);
+        }
+
+        date_text_view.setText(setDateTextView(selectedDate));
+        createDataSet(selectedDate);
+        LineData lineData = new LineData(dataSet);
+        line_chart.setData(lineData);
     }
 
     private ArrayList<String> set_x_axis_values(){
         ArrayList<String> hoursList = new ArrayList<>();
-        for (int hour = 8; hour <= 18; hour++) {
-            String hourStr = (hour < 12) ? hour + "AM" : (hour - 12) + "PM";
+        for (int hour = 8; hour <= 20; hour++) {
+            String hourStr ="";
+            if (hour!= 12) {
+                hourStr = (hour < 12) ? hour + "AM" : (hour - 12) + "PM";
+            } else {
+                hourStr = "12PM";
+            }
             hoursList.add(hourStr);
         }
         return hoursList;
     }
     public static String setDateTextView(String inputDate) {
-        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("d-M-yy");
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         LocalDate date = LocalDate.parse(inputDate, inputFormatter);
 
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMMM d' 'yyyy");
@@ -289,7 +368,106 @@ public class  StatsActivity extends AppCompatActivity {
 
         return formattedDate;
     }
+
+    public void createDataSet(String selectedDate){
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+        LocalDate date = LocalDate.parse(selectedDate, inputFormatter);
+        ArrayList<Float> y_axis_values = new ArrayList<>();
+        float[] uv_values_float = dbHelper.getExposureForDay(date.format(outputFormatter ));
+
+
+        //System.out.println("uv values:" + uv_values_float);
+        for (float value : uv_values_float) {
+            System.out.println("uv value" + value);
+            y_axis_values.add(value);
+        }
+
+
+        ArrayList<Entry> dataPoints = new ArrayList<>();
+        for (int i = 0; i < y_axis_values.size(); i++) {
+            dataPoints.add(new Entry(i, y_axis_values.get(i)));
+        }
+
+        dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
+        dataSet.setDrawValues(false); // Set to false to hide the values on data points
+        dataSet.setLineWidth(4f); // Set line width to 4
+        dataSet.setCircleRadius(8f);
+        dataSet = new LineDataSet(dataPoints, "");
+        dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
+        dataSet.setDrawValues(false); // Set to false to hide the values on data points
+        dataSet.setLineWidth(4f); // Set line width to 4
+        dataSet.setCircleRadius(8f);
+        line_chart.setDrawGridBackground(true);
+        line_chart.setGridBackgroundColor(Color.TRANSPARENT); // Transparent background color
+
+        XAxis xAxis = line_chart.getXAxis();
+        xAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines
+
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // Move X-axis to the bottom
+        xAxis.setTextSize(12f);
+        xAxis.setDrawAxisLine(false);
+
+
+        YAxis leftYAxis = line_chart.getAxisLeft();
+        leftYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
+        leftYAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines on the left side
+
+        YAxis rightYAxis = line_chart.getAxisRight();
+        rightYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
+        rightYAxis.setGridColor(Color.TRANSPARENT);
+
+
+        // Hide the description label
+        Description description = line_chart.getDescription();
+        description.setEnabled(false);
+
+        // Hide the dataset label in the legend
+        Legend legend = line_chart.getLegend();
+        legend.setEnabled(false);
+//        line_chart.setDrawGridBackground(true);
+//        line_chart.setGridBackgroundColor(Color.TRANSPARENT); // Transparent background color
+//
+//        XAxis xAxis = line_chart.getXAxis();
+//        xAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines
+//        xAxis.setValueFormatter(new IndexAxisValueFormatter(x_axis_values));
+//        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // Move X-axis to the bottom
+//        xAxis.setTextSize(12f);
+//        xAxis.setDrawAxisLine(false);
+//
+//
+//        YAxis leftYAxis = line_chart.getAxisLeft();
+//        leftYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
+//        leftYAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines on the left side
+//
+//        YAxis rightYAxis = line_chart.getAxisRight();
+//        rightYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
+//        rightYAxis.setGridColor(Color.TRANSPARENT);
+
+
+//        // Hide the description label
+//        Description description = line_chart.getDescription();
+//        description.setEnabled(false);
+
+        // Hide the dataset label in the legend
+//        Legend legend = line_chart.getLegend();
+//        legend.setEnabled(false);
+//
+//
+//
+//        // Add the LineDataSet to LineData and set it to your LineChart
+//        LineData lineData = new LineData(dataSet);
+//        line_chart.setData(lineData);
+
+    }
+
+    public void setCurrentUVIndex (Record record){
+        String uvIndex = String.format("%.1f", record.uvIndex);
+        currentUVIndex.setText("Current UV Index: " + uvIndex);
+    }
 }
+
 
 
 //        public static ArrayList<String> getWeekDays(LocalDate currentDate) {
