@@ -12,7 +12,6 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 
 import com.example.mini_cap.model.Preset;
-import com.example.mini_cap.model.User;
 import com.example.mini_cap.model.Stats;
 
 import java.util.ArrayList;
@@ -174,23 +173,6 @@ public class DBHelper extends SQLiteOpenHelper {
      * @return
      */
     public int updatePreset(int presetId, Preset updatedPreset) {
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
-        //drop existing tables
-        db.execSQL("DROP TABLE IF EXISTS " + Dict.TABLE_USER);
-        db.execSQL("DROP TABLE IF EXISTS " + Dict.TABLE_STATS);
-        onCreate(db);
-
-    }
-
-    /**
-     * Function for updating an already entered user in the db
-     * @param userId ID for the user to be updated
-     * @param updatedUser user object containing updated user information
-     * @return int for rows updated, if non-zero update was successful
-     */
-    public int updateUser(int userId, User updatedUser) {
 
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -247,7 +229,6 @@ public class DBHelper extends SQLiteOpenHelper {
      * @param stats
      * @return
      */
-
     public long insertStats(Stats stats){
 
         // If -1 is returned, function did not insert stats into db.
@@ -275,7 +256,6 @@ public class DBHelper extends SQLiteOpenHelper {
      * @param timestamp must be in form "dd/MM/yyyy HH:mm:ss"
      * @return Stats object with data for timestamp entered
       */
-
     public Stats getStatsForHour(String timestamp) {
 
         SQLiteDatabase db = this.getReadableDatabase();
@@ -320,7 +300,6 @@ public class DBHelper extends SQLiteOpenHelper {
      * @param date must be in form "dd/MM/yyyy", hour is concatenated to date string to create full timestamp
      * @return array of hourly UV exposure floats for specified day from 8 am to 6 pm
      */
-
     public float[] getExposureForDay(String date){
 
         float[] dailyExposure = new float[11];
@@ -332,6 +311,22 @@ public class DBHelper extends SQLiteOpenHelper {
         }
 
         return dailyExposure;
+
+    }
+
+    /**
+     * This method is called when upgrading the database
+     * @param db The database.
+     * @param oldVersion The old database version.
+     * @param newVersion The new database version.
+     */
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+        //drop existing tables
+        db.execSQL("DROP TABLE IF EXISTS " + Dict.TABLE_USER);
+        db.execSQL("DROP TABLE IF EXISTS " + Dict.TABLE_STATS);
+        onCreate(db);
 
     }
 

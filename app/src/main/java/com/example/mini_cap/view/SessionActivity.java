@@ -12,7 +12,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mini_cap.R;
-import com.example.mini_cap.controller.AddSessionUser;
 import com.example.mini_cap.controller.DBHelper;
 import com.example.mini_cap.controller.Dict;
 import com.example.mini_cap.model.Preset;
