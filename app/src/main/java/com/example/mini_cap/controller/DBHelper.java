@@ -27,6 +27,7 @@ public class DBHelper extends SQLiteOpenHelper {
      */
     public DBHelper(@Nullable Context context) {
         super(context, Dict.DATABASE_NAME, null, Dict.DATABASE_VERSION);
+        this.context = context;
     }
 
     /**
@@ -306,8 +307,16 @@ public class DBHelper extends SQLiteOpenHelper {
 
         for(int i = 8; i<19; i++){
             int index = i - 8;
-            @SuppressLint("DefaultLocale") String timestamp = String.format("%s %02d:00:00", date, i);
-            dailyExposure[index] = getStatsForHour(timestamp).getExposure();
+            @SuppressLint("DefaultLocale")
+            String timestamp = String.format("%s %02d:00:00", date, i);
+            {
+                Stats stats = getStatsForHour(timestamp);
+                if(stats != null)
+                    dailyExposure[index] = stats.getExposure();
+                else
+                    dailyExposure[index] = Float.NaN;
+            }
+
         }
 
         return dailyExposure;
