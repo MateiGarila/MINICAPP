@@ -3,31 +3,53 @@ package com.example.mini_cap.view;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mini_cap.R;
-import com.example.mini_cap.controller.AddSessionUser;
 import com.example.mini_cap.controller.DBHelper;
-import com.example.mini_cap.model.User;
+import com.example.mini_cap.controller.Dict;
+import com.example.mini_cap.model.Preset;
 
-import java.util.ArrayList;
-
-public class SessionActivity extends AppCompatActivity implements AddSessionUser.AddSessionUserListener {
+public class SessionActivity extends AppCompatActivity  {
+    private EditText userInputEditText; // to simulate notification
+    private Button NotificationButton;// to simulate notification
 
     //Declaration of all UI elements
     protected TextView mainTextView, statusTextView;
     protected RecyclerView displayUser;
-    protected Button startStop, addUser, editUser;
+    protected Button startStopBTN, addPresetBTN, editPresetBTN;
 
     //Needed
     private DBHelper dbHelper;
     private final static String TAG = "SessionActivity";
-    private boolean isAddUserButtonVisible = true; // Store the initial visibility state
+    private final boolean isCreate = true;
+
+    private static final String NOTIFICATION_CHANNEL_ID = "UV_INDEX_NOTIFICATION_CHANNEL";
+    private static final int NOTIFICATION_ID = 1;
+
+    private final BroadcastReceiver uvNotificationReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int uvIndex = intent.getIntExtra("uvIndex", 1);
+            showUVNotification(uvIndex);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,76 +62,173 @@ public class SessionActivity extends AppCompatActivity implements AddSessionUser
         mainTextView = findViewById(R.id.sessionActivityTextView);
         statusTextView = findViewById(R.id.sessionStatusTextView);
         displayUser = findViewById(R.id.sessionUserDisplayRV);
-        startStop = findViewById(R.id.startStopSessionBTN);
-        addUser = findViewById(R.id.addUserBTN);
-        editUser = findViewById(R.id.editUserBTN);
+        startStopBTN = findViewById(R.id.startStopSessionBTN);
+        addPresetBTN = findViewById(R.id.addUserBTN);
+        editPresetBTN = findViewById(R.id.editUserBTN);
+
+        userInputEditText = findViewById(R.id.user_input_edit_text);// notification
+        NotificationButton = findViewById(R.id.SendNotification); // notification
 
         //Temporary until we figure out a better way to navigate - Mat
         mainTextView.setOnClickListener(v -> finish());
 
-        addUser.setOnClickListener(new View.OnClickListener() {
+        addPresetBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onAddSessionUser(v);
+                Log.d(TAG, "Add Preset PRESSED");
+                PresetFragment fragment = PresetFragment.newInstance(null, isCreate);
+                fragment.show(getSupportFragmentManager(), "CreatePreset");
+
             }
         });
-        editUser.setOnClickListener(new View.OnClickListener() {
+
+        editPresetBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Handle Edit Session User button click
-                Intent intent = new Intent(SessionActivity.this, EditActivity.class);
-                startActivity(intent);
+                toEditActivity();
             }
         });
-        startStop.setOnClickListener(new View.OnClickListener() {
+
+        startStopBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Handle Edit Session User button click
-                StartSessionFragment start_session_frag = new StartSessionFragment();
-                start_session_frag.show(getSupportFragmentManager(), "Start Session Dialog");
+                Log.d(TAG, "Start Session PRESSED");
+                StartSessionFragment fragment = new StartSessionFragment();
+                fragment.show(getSupportFragmentManager(), "StartSession");
             }
         });
+        NotificationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String userInput = userInputEditText.getText().toString();
+                if (isValidInput(userInput)) {
+                    int uvIndex = Integer.parseInt(userInput);
+                    showUVNotification(uvIndex);
+                } else {
+                    // Handle invalid input, e.g., show a toast
+                }
+            }
+        });
+
+        createNotificationChannel();
+
+        // Register the broadcast receiver
+        IntentFilter filter = new IntentFilter("UV_NOTIFICATION_ACTION");
+        registerReceiver(uvNotificationReceiver, filter);
+
+        // Schedule repeated notifications every 2 hours
+        scheduleRepeatingNotifications();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        addUser.setVisibility(isAddUserButtonVisible ? View.VISIBLE : View.INVISIBLE);
+    protected void onDestroy() {
+        // Unregister the broadcast receiver to avoid memory leaks
+        unregisterReceiver(uvNotificationReceiver);
+        super.onDestroy();
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        isAddUserButtonVisible = addUser.getVisibility() == View.VISIBLE;
+    private boolean isValidInput(String input) {
+        try {
+            int number = Integer.parseInt(input);
+            return number >= 1;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
-
-    public void onAddSessionUser(View view) {
-
-            isAddUserButtonVisible = false; // Hide the button temporarily
-            AddSessionUser dialog = new AddSessionUser();
-            dialog.show(getSupportFragmentManager(), "AddSessionUser");
-
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channelName = "UV Index Notifications";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, importance);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
     }
 
-    @Override
-    public void onSessionUserAdded(User user) {
-        long id = dbHelper.insertUser(user);
-        if (id != -1) {
-            Toast.makeText(this, "Session user added successfully", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Failed to add session user", Toast.LENGTH_SHORT).show();
-
+    private void showUVNotification(int uvIndex) {
+        String notificationMessage;
+        switch (uvIndex) {
+            case 1:
+            case 2:
+                notificationMessage = "Low risk of UV exposure, don't forget to wear sunscreen.";
+                break;
+            case 3:
+            case 4:
+            case 5:
+                notificationMessage = "Moderate risk of UV exposure. Please wear sunscreen.";
+                break;
+            case 6:
+            case 7:
+                notificationMessage = "High risk of skin damage. Wear sunscreen and seek shade.";
+                break;
+            case 8:
+            case 9:
+            case 10:
+                notificationMessage = "Very High Risk! Wear sunscreen, seek shade or stay indoors.";
+                break;
+            default:
+                notificationMessage = "Extreme Risk! Stay indoors. If not possible then wear protective clothing, sunscreen and sunglasses, and seek shade.";
+                break;
         }
 
-        startStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        Notification notification = createNotification(notificationMessage);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.notify(NOTIFICATION_ID, notification);
+        }
+    }
 
-            }
-        });
+    private Notification createNotification(String contentText) {
+        Intent notificationIntent = new Intent(this, SessionActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                NOTIFICATION_ID,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
 
+        return new Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
+                .setContentTitle("UV Index Alert")
+                .setContentText(contentText)
+                .setSmallIcon(R.mipmap.ic_launcher) // Set an appropriate app icon here
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .build();
+    }
 
+    private void scheduleRepeatingNotifications() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent notificationIntent = new Intent(this, UVNotificationReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                NOTIFICATION_ID,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
 
+        // Schedule repeating notifications every 2 hours
+        // can be modify for the demo for 5000 milliseconds
+        long repeatInterval = 2 * 60 * 60 * 1000; // 2 hours in milliseconds,
+        if (alarmManager != null) {
+            alarmManager.setRepeating(
+                    AlarmManager.RTC_WAKEUP,
+                    System.currentTimeMillis() + repeatInterval,
+                    repeatInterval,
+                    pendingIntent
+            );
+        }
+
+    }
+
+    protected void toEditActivity(){
+        Intent intent = new Intent(this, EditActivity.class);
+        startActivity(intent);
+    }
+
+    public void startSession(Preset preset){
+        Toast.makeText(this, "I got called from fragment: " + preset.getName(), Toast.LENGTH_SHORT).show();
     }
 }

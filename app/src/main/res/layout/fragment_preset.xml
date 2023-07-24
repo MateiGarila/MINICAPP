@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".view.PresetFragment">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/addPresetTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
+            android:text="@string/add_preset_fragment"
+            android:textSize="25dp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <EditText
+            android:id="@+id/presetName"
+            android:layout_width="375dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:digits="qwertzuiopasdfghjklyxcvbnmQWERTZUIOPASDFGHJKLYXCVBNM"
+            android:ems="10"
+            android:hint="@string/preset_name_hint"
+            android:inputType="text"
+            app:layout_constraintEnd_toEndOf="@+id/addPresetTextView"
+            app:layout_constraintStart_toStartOf="@+id/addPresetTextView"
+            app:layout_constraintTop_toBottomOf="@+id/addPresetTextView" />
+
+        <EditText
+            android:id="@+id/presetAge"
+            android:layout_width="375dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:ems="10"
+            android:inputType="number"
+            android:hint="@string/preset_age_hint"
+            app:layout_constraintEnd_toEndOf="@+id/presetName"
+            app:layout_constraintStart_toStartOf="@+id/presetName"
+            app:layout_constraintTop_toBottomOf="@+id/presetName" />
+
+        <Spinner
+            android:id="@+id/presetSkinTone"
+            android:layout_width="375dp"
+            android:layout_height="60dp"
+            app:layout_constraintEnd_toEndOf="@+id/presetAge"
+            app:layout_constraintStart_toStartOf="@+id/presetAge"
+            app:layout_constraintTop_toBottomOf="@+id/presetAge" />
+
+        <Button
+            android:id="@+id/presetCancelBTN"
+            android:layout_width="170dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/cancelBTN"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/presetSkinTone"
+            app:layout_constraintTop_toBottomOf="@+id/presetSkinTone"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <Button
+            android:id="@+id/presetConfirmBTN"
+            android:layout_width="170dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/confirmBTN"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/presetSkinTone"
+            app:layout_constraintHorizontal_bias="0.741"
+            app:layout_constraintStart_toEndOf="@+id/presetCancelBTN"
+            app:layout_constraintTop_toBottomOf="@+id/presetSkinTone"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <Button
+            android:id="@+id/deleteBTN"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="100dp"
+            android:text="@string/deleteBTN"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/presetConfirmBTN"
+            app:layout_constraintHorizontal_bias="0.513"
+            app:layout_constraintStart_toStartOf="@+id/presetCancelBTN"
+            app:layout_constraintTop_toBottomOf="@+id/presetSkinTone"
+            app:layout_constraintVertical_bias="0.0" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>
