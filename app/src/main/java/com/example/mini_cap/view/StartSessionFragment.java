@@ -1,10 +1,7 @@
 package com.example.mini_cap.view;
 
-import android.content.Context;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -12,14 +9,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.CustomStartAdapter;
@@ -28,7 +19,6 @@ import com.example.mini_cap.controller.SelectListener;
 import com.example.mini_cap.model.Preset;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class StartSessionFragment extends DialogFragment implements SelectListener {
 

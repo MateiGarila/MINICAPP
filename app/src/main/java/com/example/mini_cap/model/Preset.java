@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 
 public class Preset implements Parcelable {
     
-    private final int presetID;
+    private int presetID;
     private String name;
     private int age;
     private String skinTone;
@@ -58,7 +58,7 @@ public class Preset implements Parcelable {
      * @param presetID new presetID value
      */
     public void setPresetID(int presetID) {
-        presetID = presetID;
+        this.presetID = presetID;
     }
 
     /**
@@ -113,6 +113,7 @@ public class Preset implements Parcelable {
      * Standard toString method
      * @return Preset object as a String
      */
+    @NonNull
     @Override
     public String toString() {
         return "Preset {" +

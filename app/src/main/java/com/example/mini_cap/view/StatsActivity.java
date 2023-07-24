@@ -213,7 +213,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
             public void onValueSelected(Entry e, Highlight h) {
                 int originalColor = Color.BLUE;
                 float originalRadius = 8f;
-                dataSet.setCircleColors(new int[] { originalColor }); // Set the circle color for all data points
+                dataSet.setCircleColors(originalColor); // Set the circle color for all data points
                 dataSet.setCircleRadius(originalRadius); // Set the circle radius for all data points
 
                 // Create a new DataSet for the clicked data point
@@ -379,9 +379,8 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         LocalDate date = LocalDate.parse(inputDate, inputFormatter);
 
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMMM d' 'yyyy");
-        String formattedDate = date.format(outputFormatter);
 
-        return formattedDate;
+        return date.format(outputFormatter);
     }
 
     public void createDataSet(String selectedDate){

@@ -1,7 +1,5 @@
 package com.example.mini_cap.model;
 
-import java.time.LocalDateTime;
-
 public class Stats {
     private int LogID;
     private float exposure;

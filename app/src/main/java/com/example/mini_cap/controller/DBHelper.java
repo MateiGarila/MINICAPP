@@ -18,7 +18,7 @@ import java.util.ArrayList;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    private Context context;
+    private final Context context;
     private final String TAG = "DBHelper";
 
     /**

@@ -1,12 +1,8 @@
 package com.example.mini_cap.view;
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
-
-import com.example.mini_cap.R;
 
 
 public class UVNotificationReceiver extends BroadcastReceiver {
