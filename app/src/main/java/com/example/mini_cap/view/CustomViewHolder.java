@@ -14,8 +14,8 @@ import com.example.mini_cap.R;
  */
 public class CustomViewHolder extends RecyclerView.ViewHolder {
 
-    public CardView cardView;
-    public TextView textView;
+    public final CardView cardView;
+    public final TextView textView;
 
     public CustomViewHolder(@NonNull View itemView) {
         super(itemView);

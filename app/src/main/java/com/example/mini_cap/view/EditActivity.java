@@ -37,12 +37,7 @@ public class EditActivity extends AppCompatActivity implements SelectListener {
         listOfPresets = findViewById(R.id.listOfPresets);
         backBTN = findViewById(R.id.backBTN);
 
-        backBTN.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        backBTN.setOnClickListener(v -> finish());
 
         setRecyclerView();
 

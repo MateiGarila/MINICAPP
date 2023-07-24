@@ -92,17 +92,15 @@ public class DBHelper extends SQLiteOpenHelper {
     public ArrayList<Preset> getAllPresets(){
 
         ArrayList<Preset> presets = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursor = null;
-
-        try{
+        try (SQLiteDatabase db = this.getReadableDatabase()) {
+            Cursor cursor = null;
 
             cursor = db.query(Dict.TABLE_PRESET, null, null, null, null, null, null);
 
-            if(cursor != null){
-                if(cursor.moveToFirst()){
-                    do{
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    do {
                         @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_PRESET_ID));
                         @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_PRESET_NAME));
                         @SuppressLint("Range") int age = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_PRESET_AGE));
@@ -110,16 +108,14 @@ public class DBHelper extends SQLiteOpenHelper {
 
                         presets.add(new Preset(id, name, age, skinTone));
 
-                    }while(cursor.moveToNext());
+                    } while (cursor.moveToNext());
                 }
 
                 cursor.close();
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             Toast.makeText(context, "DB Fetch Error @ getAllPresets(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }finally {
-            db.close();
         }
 
         return presets;
@@ -134,7 +130,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursor = null;
+        Cursor cursor;
         Preset preset = null;
 
         try {
@@ -261,7 +257,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursor = null;
+        Cursor cursor;
         Stats stats = null;
 
         try{

@@ -67,14 +67,11 @@ public class CustomEditAdapter extends RecyclerView.Adapter<CustomViewHolder> {
         Preset preset = presets.get(position);
         holder.textView.setText("Preset name: " + preset.getName());
 
-        holder.cardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        holder.cardView.setOnClickListener(v -> {
 
-                //selectListener.onItemClicked(preset);
-                PresetFragment presetFragment = PresetFragment.newInstance(preset, isCreate);
-                presetFragment.show(((AppCompatActivity) context).getSupportFragmentManager(), "EditPreset");
-            }
+            //selectListener.onItemClicked(preset);
+            PresetFragment presetFragment = PresetFragment.newInstance(preset, isCreate);
+            presetFragment.show(((AppCompatActivity) context).getSupportFragmentManager(), "EditPreset");
         });
     }
 

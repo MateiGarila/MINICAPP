@@ -258,35 +258,29 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
 
 
-        next_week.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                curr_week += 1;
-                curr_week_list = getWeekDays(current_date, curr_week);
-                set_menu_text(menu_buttons, curr_week_list);
-                if (previousSelectedPosition != -1) {
-                    String selectedDate = curr_week_list.get(previousSelectedPosition);
-                    date_text_view.setText(setDateTextView(selectedDate));
-                    createDataSet(selectedDate);
-                    LineData lineData = new LineData(dataSet);
-                    line_chart.setData(lineData);
-
-                }
+        next_week.setOnClickListener(v -> {
+            curr_week += 1;
+            curr_week_list = getWeekDays(current_date, curr_week);
+            set_menu_text(menu_buttons, curr_week_list);
+            if (previousSelectedPosition != -1) {
+                String selectedDate = curr_week_list.get(previousSelectedPosition);
+                date_text_view.setText(setDateTextView(selectedDate));
+                createDataSet(selectedDate);
+                LineData lineData1 = new LineData(dataSet);
+                line_chart.setData(lineData1);
 
             }
+
         });
 
 
 
-        prev_week.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                curr_week -= 1;
-                curr_week_list = getWeekDays(current_date, curr_week);
-                set_menu_text(menu_buttons, curr_week_list);
-                if (previousSelectedPosition != -1) {
-                    date_text_view.setText(setDateTextView(curr_week_list.get(previousSelectedPosition)));
-                }
+        prev_week.setOnClickListener(v -> {
+            curr_week -= 1;
+            curr_week_list = getWeekDays(current_date, curr_week);
+            set_menu_text(menu_buttons, curr_week_list);
+            if (previousSelectedPosition != -1) {
+                date_text_view.setText(setDateTextView(curr_week_list.get(previousSelectedPosition)));
             }
         });
 

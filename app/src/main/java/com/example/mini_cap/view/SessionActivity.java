@@ -71,41 +71,27 @@ public class SessionActivity extends AppCompatActivity  {
         //Temporary until we figure out a better way to navigate - Mat
         mainTextView.setOnClickListener(v -> finish());
 
-        addPresetBTN.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "Add Preset PRESSED");
-                PresetFragment fragment = PresetFragment.newInstance(null, isCreate);
-                fragment.show(getSupportFragmentManager(), "CreatePreset");
+        addPresetBTN.setOnClickListener(v -> {
+            Log.d(TAG, "Add Preset PRESSED");
+            PresetFragment fragment = PresetFragment.newInstance(null, isCreate);
+            fragment.show(getSupportFragmentManager(), "CreatePreset");
 
-            }
         });
 
-        editPresetBTN.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                toEditActivity();
-            }
-        });
+        editPresetBTN.setOnClickListener(v -> toEditActivity());
 
-        startStopBTN.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "Start Session PRESSED");
-                StartSessionFragment fragment = new StartSessionFragment();
-                fragment.show(getSupportFragmentManager(), "StartSession");
-            }
+        startStopBTN.setOnClickListener(v -> {
+            Log.d(TAG, "Start Session PRESSED");
+            StartSessionFragment fragment = new StartSessionFragment();
+            fragment.show(getSupportFragmentManager(), "StartSession");
         });
-        NotificationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String userInput = userInputEditText.getText().toString();
-                if (isValidInput(userInput)) {
-                    int uvIndex = Integer.parseInt(userInput);
-                    showUVNotification(uvIndex);
-                } else {
-                    // Handle invalid input, e.g., show a toast
-                }
+        NotificationButton.setOnClickListener(v -> {
+            String userInput = userInputEditText.getText().toString();
+            if (isValidInput(userInput)) {
+                int uvIndex = Integer.parseInt(userInput);
+                showUVNotification(uvIndex);
+            } else {
+                // Handle invalid input, e.g., show a toast
             }
         });
 

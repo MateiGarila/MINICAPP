@@ -19,6 +19,8 @@ import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
 import com.example.mini_cap.model.Preset;
 
+import java.util.Objects;
+
 
 public class PresetFragment extends DialogFragment implements AdapterView.OnItemSelectedListener {
 
@@ -102,7 +104,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
 
                 deleteBTN.setOnClickListener(v -> {
                     dbHelper.deletePreset(presetToEdit.getPresetID());
-                    ((EditActivity)getActivity()).setRecyclerView();
+                    ((EditActivity) Objects.requireNonNull(getActivity())).setRecyclerView();
                     dismiss();
                 });
 
@@ -159,7 +161,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
             Preset preset = new Preset(0, name, age, skinTone);
 
             dbHelper.updatePreset(presetID, preset);
-            ((EditActivity)getActivity()).setRecyclerView();
+            ((EditActivity) Objects.requireNonNull(getActivity())).setRecyclerView();
 
         }
     }

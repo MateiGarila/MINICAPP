@@ -62,12 +62,7 @@ public class CustomStartAdapter extends RecyclerView.Adapter<CustomViewHolder> {
         Preset preset = presets.get(position);
         holder.textView.setText(preset.getName());
 
-        holder.cardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                selectListener.onItemClicked(preset);
-            }
-        });
+        holder.cardView.setOnClickListener(v -> selectListener.onItemClicked(preset));
     }
 
     /**

@@ -19,6 +19,7 @@ import com.example.mini_cap.controller.SelectListener;
 import com.example.mini_cap.model.Preset;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class StartSessionFragment extends DialogFragment implements SelectListener {
 
@@ -63,12 +64,7 @@ public class StartSessionFragment extends DialogFragment implements SelectListen
 
         setUpRecyclerView();
 
-        closeFragBTN.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dismiss();
-            }
-        });
+        closeFragBTN.setOnClickListener(v -> dismiss());
 
         return view;
 
@@ -87,7 +83,7 @@ public class StartSessionFragment extends DialogFragment implements SelectListen
     @Override
     public void onItemClicked(Preset preset) {
         //Toast.makeText(getContext(), "testing: " + preset.getName(), Toast.LENGTH_SHORT).show();
-        ((SessionActivity)getActivity()).startSession(preset);
+        ((SessionActivity) Objects.requireNonNull(getActivity())).startSession(preset);
         dismiss();
     }
 }
