@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 
 public class Preset implements Parcelable {
     
-    private int presetID;
+    private final int presetID;
     private String name;
     private int age;
     private String skinTone;

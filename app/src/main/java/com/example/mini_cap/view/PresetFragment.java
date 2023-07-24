@@ -218,7 +218,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
 
         PresetFragment fragment = new PresetFragment();
         Bundle args = new Bundle();
-        args.putParcelable("preset", (Parcelable) preset);
+        args.putParcelable("preset", preset);
         args.putBoolean("context", isCreate);
         fragment.setArguments(args);
         return  fragment;

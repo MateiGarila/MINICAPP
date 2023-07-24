@@ -43,7 +43,7 @@ public class SessionActivity extends AppCompatActivity  {
     private static final String NOTIFICATION_CHANNEL_ID = "UV_INDEX_NOTIFICATION_CHANNEL";
     private static final int NOTIFICATION_ID = 1;
 
-    private BroadcastReceiver uvNotificationReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver uvNotificationReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             int uvIndex = intent.getIntExtra("uvIndex", 1);
@@ -187,7 +187,7 @@ public class SessionActivity extends AppCompatActivity  {
                 this,
                 NOTIFICATION_ID,
                 notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
         return new Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
@@ -206,7 +206,7 @@ public class SessionActivity extends AppCompatActivity  {
                 this,
                 NOTIFICATION_ID,
                 notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
         // Schedule repeating notifications every 2 hours

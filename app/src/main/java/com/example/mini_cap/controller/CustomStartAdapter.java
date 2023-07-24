@@ -16,10 +16,10 @@ import java.util.ArrayList;
 
 public class CustomStartAdapter extends RecyclerView.Adapter<CustomViewHolder> {
 
-    private Context context;
-    private ArrayList<Preset> presets;
+    private final Context context;
+    private final ArrayList<Preset> presets;
     private static final String TAG = "StartSessionFragment";
-    private SelectListener selectListener;
+    private final SelectListener selectListener;
 
     /**
      * A custom adapter for the RecyclerView found in the fragment that is used to start a session

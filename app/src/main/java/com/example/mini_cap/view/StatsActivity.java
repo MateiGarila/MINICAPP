@@ -63,7 +63,7 @@ public class  StatsActivity extends AppCompatActivity {
 
         defaultColor = ContextCompat.getColor(this, R.color.button_grey);
         selectedColor = ContextCompat.getColor(this, R.color.item_selected_color);
-        line_chart = (LineChart) findViewById(R.id.line_chart);
+        line_chart = findViewById(R.id.line_chart);
 
         date_text_view = findViewById(R.id.date_text_view);
         //initialize datetime menu
