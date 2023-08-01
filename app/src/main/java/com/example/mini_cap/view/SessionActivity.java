@@ -202,32 +202,25 @@ public class SessionActivity extends AppCompatActivity  {
 
     private void showUVNotification(int uvIndex) {
         String notificationMessage;
-        switch (uvIndex) {
-            case 1:
-            case 2:
-                notificationMessage = "Low risk of UV exposure, don't forget to wear sunscreen.";
-                break;
-            case 3:
-            case 4:
-            case 5:
-                notificationMessage = "Moderate risk of UV exposure. Please wear sunscreen.";
-                break;
-            case 6:
-            case 7:
-                notificationMessage = "High risk of skin damage. Wear sunscreen and seek shade.";
-                break;
-            case 8:
-            case 9:
-            case 10:
-                notificationMessage = "Very High Risk! Wear sunscreen, seek shade or stay indoors.";
-                break;
-            default:
-                notificationMessage = "Extreme Risk! Stay indoors. If not possible then wear protective clothing, sunscreen and sunglasses, and seek shade.";
-                break;
-        }
 
+        if(uvIndex <= 2){
+            notificationMessage = "Low risk of UV exposure, don't forget to wear sunscreen.";
+
+        } else if(uvIndex > 2 && uvIndex <= 5) {
+            notificationMessage = "Moderate risk of UV exposure. Please wear sunscreen.";
+
+        } else if(uvIndex > 5 && uvIndex <= 7) {
+            notificationMessage = "High risk of skin damage. Wear sunscreen and seek shade.";
+
+        } else if(uvIndex > 7 && uvIndex <= 10) {
+            notificationMessage = "Very High Risk! Wear sunscreen, seek shade or stay indoors.";
+        } else {
+            notificationMessage = "Extreme Risk! Stay indoors. If not possible then wear protective clothing, sunscreen and sunglasses, and seek shade.";
+        }
+        
         Notification notification = createNotification(notificationMessage);
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
         if (notificationManager != null) {
             notificationManager.notify(NOTIFICATION_ID, notification);
         }
@@ -409,14 +402,47 @@ public class SessionActivity extends AppCompatActivity  {
 
             @Override
             public void onFinish() {
+
+                String notificationMessage = notificationMessage(notificationTier);
+                Toast.makeText(getBaseContext(), notificationMessage, Toast.LENGTH_SHORT).show();
                 //Notifications go here
-                Toast.makeText(getBaseContext(), "Just finished a tier: " + notificationTier + " notification", Toast.LENGTH_SHORT).show();
-                updateTier();
+                //-->
                 timeLeftInMillis = START_TIME_IN_MILLIS;
                 countDownManager();
             }
 
         }.start();
 
+    }
+
+    private String notificationMessage(int notificationTier){
+
+        String message = "";
+
+        switch (notificationTier){
+
+            case 1:
+                message = "Timer complete! Please hydrate yourself.";
+                break;
+            case 2:
+                message = "Timer complete! Please apply sunscreen (re-apply every 2 hours)";
+                break;
+            case 3:
+                message = "Timer complete! Please hydrate yourself";
+                break;
+            case 4:
+                message = "Timer complete! Please take shelter from the sun for a timer's duration";
+                break;
+            case 5:
+                message = "Timer complete! Enjoy the sun!";
+                break;
+            default:
+                Toast.makeText(this, "An error has happened in notificationMessage", Toast.LENGTH_SHORT).show();
+                break;
+        }
+
+        updateTier();
+
+        return message;
     }
 }
