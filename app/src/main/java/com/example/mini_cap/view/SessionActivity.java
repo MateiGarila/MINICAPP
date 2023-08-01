@@ -1,7 +1,6 @@
 package com.example.mini_cap.view;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -14,6 +13,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -23,25 +23,36 @@ import android.widget.Toast;
 
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
-import com.example.mini_cap.controller.Dict;
 import com.example.mini_cap.model.Preset;
+
+import java.util.Locale;
 
 public class SessionActivity extends AppCompatActivity  {
     private EditText userInputEditText; // to simulate notification
     private Button NotificationButton;// to simulate notification
 
     //Declaration of all UI elements
-    protected TextView mainTextView, statusTextView;
-    protected RecyclerView displayUser;
-    protected Button startStopBTN, addPresetBTN, editPresetBTN;
+    protected TextView mainTextView, statusTextView, notificationTierTextView, timeRemainingTextView, timerTextView;
+    protected Button startPauseBTN, addPresetBTN, editPresetBTN, endSessionBTN;
 
     //Needed
     private DBHelper dbHelper;
     private final static String TAG = "SessionActivity";
     private final boolean isCreate = true;
-
     private static final String NOTIFICATION_CHANNEL_ID = "UV_INDEX_NOTIFICATION_CHANNEL";
     private static final int NOTIFICATION_ID = 1;
+    private static final int MAX_TIER = 5;
+
+    //Countdown timer variables
+    //For Testing purposes
+    private static final long START_TIME_IN_MILLIS = 10000;
+    private CountDownTimer countDownTimer;
+    private long timeLeftInMillis = START_TIME_IN_MILLIS;
+
+
+    private int notificationTier;
+    private boolean isSessionStarted;
+    private boolean isSessionPaused;
 
     private final BroadcastReceiver uvNotificationReceiver = new BroadcastReceiver() {
         @Override
@@ -59,17 +70,33 @@ public class SessionActivity extends AppCompatActivity  {
         dbHelper = new DBHelper(getBaseContext());
 
         //Attaching the UI elements to their respective objects
+        //TextViews
         mainTextView = findViewById(R.id.sessionActivityTextView);
         statusTextView = findViewById(R.id.sessionStatusTextView);
-        displayUser = findViewById(R.id.sessionUserDisplayRV);
-        startStopBTN = findViewById(R.id.startStopSessionBTN);
-        addPresetBTN = findViewById(R.id.addUserBTN);
+        notificationTierTextView = findViewById(R.id.notificationTierTV);
+        timeRemainingTextView = findViewById(R.id.timeRemainingTV);
+        timerTextView = findViewById(R.id.countdown);
+
+        //Buttons
+        startPauseBTN = findViewById(R.id.startPauseSessionBTN);
+        addPresetBTN = findViewById(R.id.addPresetBTN);
         editPresetBTN = findViewById(R.id.editUserBTN);
+        endSessionBTN = findViewById(R.id.endSessionBTN);
 
-        userInputEditText = findViewById(R.id.user_input_edit_text);// notification
-        NotificationButton = findViewById(R.id.SendNotification); // notification
+        // notification
+        userInputEditText = findViewById(R.id.user_input_edit_text);
+        NotificationButton = findViewById(R.id.SendNotification);
 
-        //Temporary until we figure out a better way to navigate - Mat
+        //Tier 0 is the default tier of the notification
+        notificationTier = 0;
+        isSessionStarted = false;
+        isSessionPaused = false;
+
+        //Make end session button invisible when no session is started
+        endSessionBTN.setVisibility(View.INVISIBLE);
+
+
+
         mainTextView.setOnClickListener(v -> finish());
 
         addPresetBTN.setOnClickListener(new View.OnClickListener() {
@@ -89,14 +116,39 @@ public class SessionActivity extends AppCompatActivity  {
             }
         });
 
-        startStopBTN.setOnClickListener(new View.OnClickListener() {
+        startPauseBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG, "Start Session PRESSED");
-                StartSessionFragment fragment = new StartSessionFragment();
-                fragment.show(getSupportFragmentManager(), "StartSession");
+
+                if(isSessionStarted){
+                    //Here handle what happens when the session is paused
+                    if(isSessionPaused){
+                        //if session is paused, then un-pause it
+                        continueSession();
+                    }else{
+                        //else pause session
+                        pauseSession();
+                    }
+
+                }else{
+                    //Session not started need to select Preset first
+                    StartSessionFragment fragment = new StartSessionFragment();
+                    fragment.show(getSupportFragmentManager(), "StartSession");
+                }
+
             }
         });
+
+        endSessionBTN.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //here handle what happens when a session ends
+                endSession();
+
+            }
+        });
+
         NotificationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -220,7 +272,6 @@ public class SessionActivity extends AppCompatActivity  {
                     pendingIntent
             );
         }
-
     }
 
     protected void toEditActivity(){
@@ -228,7 +279,144 @@ public class SessionActivity extends AppCompatActivity  {
         startActivity(intent);
     }
 
-    public void startSession(Preset preset){
-        Toast.makeText(this, "I got called from fragment: " + preset.getName(), Toast.LENGTH_SHORT).show();
+    public void fetchPresetStartSession(Preset preset){
+
+        //Toast.makeText(this, "I got called from fragment: " + preset.getName(), Toast.LENGTH_SHORT).show();
+        startSession(preset);
+
+    }
+
+    /**
+     * This method handles what happens at the start of a session
+     * @param preset that has been selected for the session
+     */
+    private void startSession(Preset preset){
+
+        //Toast.makeText(this, "Session Started", Toast.LENGTH_SHORT).show();
+
+        //First update UI
+        statusTextView.setText("Current session with preset: " + preset.getName());
+        updateTier();
+        startPauseBTN.setText(R.string.pause_session_text);
+        endSessionBTN.setVisibility(View.VISIBLE);
+
+        //Second update variables
+        isSessionStarted = true;
+
+        //Third purpose of method
+        countDownManager();
+
+    }
+
+    /**
+     * This method handles what happens when a session is paused
+     */
+    private void pauseSession(){
+
+        //Toast.makeText(this, "Session Paused", Toast.LENGTH_SHORT).show();
+
+        //First update UI
+        startPauseBTN.setText(R.string.continue_session_text);
+
+
+        //Second update variables
+        isSessionPaused = true;
+
+        //Third purpose of method
+        countDownTimer.cancel();
+
+    }
+
+    /**
+     * This method handles what happens when a session is continued
+     */
+    private void continueSession(){
+
+        //Toast.makeText(this, "Session Continued", Toast.LENGTH_SHORT).show();
+
+        //First update UI
+        startPauseBTN.setText(R.string.pause_session_text);
+
+        //Second update variables
+        isSessionPaused = false;
+
+        //Third purpose of method
+        countDownManager();
+
+    }
+
+    /**
+     * This method handles what happens when a session ends
+     */
+    private void endSession(){
+
+        //First update UI
+        endSessionBTN.setVisibility(View.INVISIBLE);
+        startPauseBTN.setText(R.string.start_session_text);
+        statusTextView.setText(R.string.session_status_not_started);
+        notificationTierTextView.setText(R.string.notification_tier);
+
+        //Second update variables
+        isSessionStarted = false;
+        isSessionPaused = false;
+        notificationTier = 0;
+
+        //Third purpose of method
+        countDownTimer.cancel();
+        timerTextView.setText(R.string.default_clock);
+    }
+
+    /**
+     * This method handles the display timer on SessionActivity
+     */
+    private void updateCountDownText(){
+
+        int minutes = (int) (timeLeftInMillis / 1000) / 60;
+        int seconds = (int) (timeLeftInMillis / 1000) % 60;
+
+        String timeLeftFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
+
+        timerTextView.setText(timeLeftFormatted);
+    }
+
+    /**
+     * This method handles notification tiers. Depending on the tier a different text is applied to the notification
+     */
+    private void updateTier(){
+
+        notificationTier = notificationTier + 1;
+
+        if(notificationTier > MAX_TIER){
+            notificationTier = 1;
+        }
+
+        notificationTierTextView.setText("Current notification tier: " + notificationTier);
+
+    }
+
+    /**
+     * This method manages the countdown. Since there is no countDownTimer.pause() each time the
+     * timer is paused it needs to be reset at the timeLeftInMillis
+     */
+    private void countDownManager(){
+
+        countDownTimer = new CountDownTimer(timeLeftInMillis, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                timeLeftInMillis = millisUntilFinished;
+                updateCountDownText();
+            }
+
+            @Override
+            public void onFinish() {
+                //Notifications go here
+                Toast.makeText(getBaseContext(), "Just finished a tier: " + notificationTier + " notification", Toast.LENGTH_SHORT).show();
+                updateTier();
+                timeLeftInMillis = START_TIME_IN_MILLIS;
+                countDownManager();
+            }
+
+        }.start();
+
     }
 }
