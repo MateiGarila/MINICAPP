@@ -360,7 +360,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         // In a day = (Records in an hour) * 24
         int dailyRecords = (60/interval)*1440;
         for(Stats stats : statsList){
-            avg += Float.parseFloat(stats.getExposure());
+            avg += Float.parseFloat(String.valueOf(OpticalRecord.unflatten(stats.getExposure()).uvIndex));
         }
 
         return avg/dailyRecords;
@@ -423,7 +423,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         int minuteRecords = (60/interval);
 
         for(Stats stats : statsList){
-            avg += Float.parseFloat(stats.getExposure());
+            avg += Float.parseFloat(String.valueOf(OpticalRecord.unflatten(stats.getExposure()).uvIndex));
         }
 
         return avg/minuteRecords;
