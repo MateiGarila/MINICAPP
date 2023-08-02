@@ -28,6 +28,9 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
     private Context context;
     private final String TAG = "DBHelper";
 
+    private static int interval = 10;
+    private static int offset = 8;
+
     /**
      * Database constructor
      * @param context
@@ -352,7 +355,10 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         }
 
         float avg = 0.0f;
-        int dailyRecords = 3600;
+        // For number of records in a minute = (60/record interval)
+        // In an hour = (Records in a min) * 60
+        // In a day = (Records in an hour) * 24
+        int dailyRecords = (60/interval)*1440;
         for(Stats stats : statsList){
             avg += Float.parseFloat(stats.getExposure());
         }
@@ -360,34 +366,106 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         return avg/dailyRecords;
     }
 
+    public List<Stats> getStatsBetweenTimestamps(String timestamp1, String timestamp2) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        List<Stats> statsList = new ArrayList<>();
+
+        Cursor cursor = null;
+
+        try {
+            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS +
+                            " WHERE " + Dict.COLUMN_TIMESTAMP + " >= ? AND " + Dict.COLUMN_TIMESTAMP + " < ?",
+                    new String[]{timestamp1, timestamp2});
+
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    do {
+                        @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_LOGID));
+                        @SuppressLint("Range") String exposure = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
+
+                        // Get the timestamp from the cursor
+                        @SuppressLint("Range") String timestamp = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_TIMESTAMP));
+
+                        statsList.add(new Stats(id, exposure, timestamp));
+                    } while (cursor.moveToNext());
+                }
+
+                cursor.close();
+            }
+        } catch (Exception e) {
+            Toast.makeText(context, "DB Fetch Error @ getStatsBetweenTimestamps(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        } finally {
+            db.close();
+        }
+
+        return statsList;
+    }
+
 
 
     /**
      * Function for returning the UV exposure for a specified day
-     * @param date must be in form "dd/MM/yyyy", hour is concatenated to date string to create full timestamp
+     * @param date must be in form "yyyy/mm/dd", hour is concatenated to date string to create full timestamp
+     * @return hourly avg exposure from 8 am to 6 pm
+     */
+    public float getMinuteAvg(String date, int minute, int hour){
+        int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float)interval);
+        int nextMinuteSample = Math.round((float)3600 * hour + 60 * (minute+1)/ (float)interval);
+
+        String timestamp1 = date + "-" + minuteSample;
+        String timestamp2 = date + "-" + nextMinuteSample;
+
+        List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
+
+
+        // Calculate the average exposure for the given minute range if needed
+        float avg = 0.0f;
+        int minuteRecords = (60/interval);
+
+        for(Stats stats : statsList){
+            avg += Float.parseFloat(stats.getExposure());
+        }
+
+        return avg/minuteRecords;
+    }
+
+    public float getHourlyAvg(String date, int hour){
+        float[] minuteAvgs = new float[60];
+
+        // Get minute averages for each minute in the hour
+        for (int i = 0; i < 60; i++) {
+            minuteAvgs[i] = getMinuteAvg(date, hour, i);
+        }
+
+        // Calculate the hourly average
+        float totalMinuteAvg = 0.0f;
+        for (float minuteAvg : minuteAvgs) {
+            totalMinuteAvg += minuteAvg;
+        }
+
+        float hourlyAvg = totalMinuteAvg / 60.0f;
+        return hourlyAvg;
+    }
+
+    /**
+     * Function for returning the UV exposure for a specified day
+     * @param date must be in form "yyyy/MM/dd"
      * @return array of hourly UV exposure floats for specified day from 8 am to 6 pm
      */
-//    public float[] getExposureForDay(String date){
-//
-//        float[] dailyExposure = new float[11];
-//
-//        for(int i = 8; i<19; i++){
-//            int index = i - 8;
-//            @SuppressLint("DefaultLocale")
-//            String timestamp = String.format("%s %02d:00:00", date, i);
-//            {
-//                Stats stats = getStatsForHour(timestamp);
-//                if(stats != null)
-//                    dailyExposure[index] = stats.getExposure();
-//                else
-//                    dailyExposure[index] = Float.NaN;
-//            }
-//
-//        }
-//
-//        return dailyExposure;
-//
-//    }
+    public float[] getExposureForDay(String date){
+
+        float[] dailyExposure = new float[11];
+
+        for (int i = 8; i < 19; i++) {
+            int index = i - 8;
+
+            dailyExposure[index] = getHourlyAvg(date, i);
+
+        }
+
+        return dailyExposure;
+
+    }
 
     /**
      * This method is called when upgrading the database

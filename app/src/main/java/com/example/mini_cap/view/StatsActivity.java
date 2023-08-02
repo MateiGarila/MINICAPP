@@ -81,38 +81,38 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         sensorController.registerListener(this);
 /*
         //"dd/MM/yyyy HH:mm:ss"
-        dbHelper = new DBHelper(this);
-        Stats stats1 = new Stats(1, 3.0F, "19/07/2023 08:00:00");
-        Stats stats2 = new Stats(2, 4.0F, "19/07/2023 09:00:00");
-        Stats stats3 = new Stats(3, 4.5F, "19/07/2023 10:00:00");
-        Stats stats4 = new Stats(4, 5.3F, "19/07/2023 11:00:00");
-        Stats stats5 = new Stats(5, 3.4F, "19/07/2023 12:00:00");
-        Stats stats6 = new Stats(6, 6.0F, "19/07/2023 13:00:00");
-        Stats stats7 = new Stats(7, 7.5F, "19/07/2023 14:00:00");
-        Stats stats8 = new Stats(8, 11.2F, "19/07/2023 15:00:00");
-        Stats stats9 = new Stats(9, 8.0F, "19/07/2023 16:00:00");
-        Stats stats10 = new Stats(10, 5.0F, "19/07/2023 17:00:00");
-        Stats stats11 = new Stats(11, 6.2F, "19/07/2023 18:00:00");
-        Stats stats12 = new Stats(12, 3.0F, "19/07/2023 19:00:00");
-        Stats stats13 = new Stats(13, 3.2F, "19/07/2023 20:00:00");
-
-        dbHelper.insertStats(stats1);
-        dbHelper.insertStats(stats2);
-        dbHelper.insertStats(stats3);
-        dbHelper.insertStats(stats4);
-        dbHelper.insertStats(stats5);
-        dbHelper.insertStats(stats6);
-        dbHelper.insertStats(stats7);
-        dbHelper.insertStats(stats8);
-        dbHelper.insertStats(stats9);
-        dbHelper.insertStats(stats10);
-        dbHelper.insertStats(stats11);
-        dbHelper.insertStats(stats12);
-        dbHelper.insertStats(stats13);
+//        dbHelper = new DBHelper(this);
+//        Stats stats1 = new Stats(1, 3.0F, "19/07/2023 08:00:00");
+//        Stats stats2 = new Stats(2, 4.0F, "19/07/2023 09:00:00");
+//        Stats stats3 = new Stats(3, 4.5F, "19/07/2023 10:00:00");
+//        Stats stats4 = new Stats(4, 5.3F, "19/07/2023 11:00:00");
+//        Stats stats5 = new Stats(5, 3.4F, "19/07/2023 12:00:00");
+//        Stats stats6 = new Stats(6, 6.0F, "19/07/2023 13:00:00");
+//        Stats stats7 = new Stats(7, 7.5F, "19/07/2023 14:00:00");
+//        Stats stats8 = new Stats(8, 11.2F, "19/07/2023 15:00:00");
+//        Stats stats9 = new Stats(9, 8.0F, "19/07/2023 16:00:00");
+//        Stats stats10 = new Stats(10, 5.0F, "19/07/2023 17:00:00");
+//        Stats stats11 = new Stats(11, 6.2F, "19/07/2023 18:00:00");
+//        Stats stats12 = new Stats(12, 3.0F, "19/07/2023 19:00:00");
+//        Stats stats13 = new Stats(13, 3.2F, "19/07/2023 20:00:00");
+//
+//        dbHelper.insertStats(stats1);
+//        dbHelper.insertStats(stats2);
+//        dbHelper.insertStats(stats3);
+//        dbHelper.insertStats(stats4);
+//        dbHelper.insertStats(stats5);
+//        dbHelper.insertStats(stats6);
+//        dbHelper.insertStats(stats7);
+//        dbHelper.insertStats(stats8);
+//        dbHelper.insertStats(stats9);
+//        dbHelper.insertStats(stats10);
+//        dbHelper.insertStats(stats11);
+//        dbHelper.insertStats(stats12);
+//        dbHelper.insertStats(stats13);
 */
 
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMMM d' 'yyyy");
-        DateTimeFormatter outputFormatterForDB = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter outputFormatterForDB = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
         LocalDate current_date = LocalDate.now();
         previousSelectedPosition = -1;
@@ -154,7 +154,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         ArrayList<Float> y_axis_values = new ArrayList<>();
 
-        float[] uv_values_float = dbHelper.getExposureForDay(current_date.format(outputFormatterForDB ));
+        float[] uv_values_float = dbHelper.getExposureForDay(current_date.format(outputFormatterForDB));
         for (float value : uv_values_float) {
             y_axis_values.add(value);
         }
