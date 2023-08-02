@@ -5,19 +5,19 @@ import androidx.annotation.NonNull;
 import java.util.List;
 
 import app.uvtracker.data.optical.OpticalRecord;
-import app.uvtracker.data.optical.TimedRecord;
+import app.uvtracker.data.optical.TimedOpticalRecord;
 
 public class SyncDataReceivedEvent {
 
     @NonNull
-    private final List<TimedRecord<OpticalRecord>> data;
+    private final List<TimedOpticalRecord> data;
 
-    public SyncDataReceivedEvent(@NonNull List<TimedRecord<OpticalRecord>> data) {
+    public SyncDataReceivedEvent(@NonNull List<TimedOpticalRecord> data) {
         this.data = data;
     }
 
     @NonNull
-    public List<TimedRecord<OpticalRecord>> getData() {
+    public List<TimedOpticalRecord> getData() {
         return this.data;
     }
 
