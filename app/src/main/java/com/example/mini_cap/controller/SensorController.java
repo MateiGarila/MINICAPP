@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import app.uvtracker.data.type.Record;
+import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.sensor.SensorAPI;
 import app.uvtracker.sensor.pii.ISensor;
 import app.uvtracker.sensor.pii.connection.application.event.NewSampleReceivedEvent;
@@ -215,15 +215,15 @@ public class SensorController extends EventRegistry implements IEventListener {
         private final Context context;
 
         @NonNull
-        private final Record record;
+        private final OpticalRecord record;
 
-        protected RealTimeDataEvent(@NonNull Context context, @NonNull Record record) {
+        protected RealTimeDataEvent(@NonNull Context context, @NonNull OpticalRecord record) {
             this.context = context;
             this.record = record;
         }
 
         @NonNull
-        public Record getRecord() {
+        public OpticalRecord getRecord() {
             return record;
         }
 
