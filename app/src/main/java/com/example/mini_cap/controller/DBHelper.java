@@ -22,6 +22,7 @@ import app.uvtracker.sensor.pii.event.IEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
@@ -58,11 +59,14 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
         //Create stats table
         String CREATE_STATS_TABLE = "CREATE TABLE " + Dict.TABLE_STATS + " (" +
-                Dict.COLUMN_LOGID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                Dict.COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
+                Dict.COLUMN_TIMESTAMP + " TEXT PRIMARY KEY NOT NULL, " + // Make timestamp the primary key
                 Dict.COLUMN_UVINDEX + " TEXT NOT NULL)";
 
+        String CREATE_TIMESTAMP_INDEX = "CREATE UNIQUE INDEX idx_timestamp ON " +
+                Dict.TABLE_STATS + "(" + Dict.COLUMN_TIMESTAMP + ")";
+
         db.execSQL(CREATE_STATS_TABLE);
+        db.execSQL(CREATE_TIMESTAMP_INDEX);
 
     }
 
@@ -265,14 +269,14 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         contentValues.put(Dict.COLUMN_UVINDEX, dataString);
 
         try{
-            id = db.insertOrThrow(Dict.TABLE_STATS, null, contentValues);
+            id = db.insertWithOnConflict(Dict.TABLE_STATS, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
         }catch(Exception e){
             Toast.makeText(context, "DB Insert Error @ insertStats(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }finally{
             db.close();
         }
 
-    return id;
+        return id;
     }
     /**
      * Function for returning Stats for a given hour on a given date
@@ -292,10 +296,9 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
             if (cursor != null){
                 if (cursor.moveToFirst()){
                     do{
-                        @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_LOGID));
                         @SuppressLint("Range") String exposure = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
 
-                        stats = new Stats(id, exposure, timestamp);
+                        stats = new Stats(exposure, timestamp);
                     } while(cursor.moveToNext());
                 }
 
@@ -305,7 +308,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
             // Check if the cursor is empty, set stats to zero if no records are found.
             if (stats == null) {
                 // Assuming the Stats constructor takes 0 values for id and exposure as well.
-                stats = new Stats(0, "0", timestamp);
+                stats = new Stats("0", timestamp);
             }
 
         }catch (Exception e){
@@ -327,7 +330,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         SQLiteDatabase db = this.getReadableDatabase();
         List<Stats> statsList = new ArrayList<>();
 
-        Cursor cursor = null;
+        Cursor cursor;
 
         try {
             // The SQL query to select all records where the date matches the given day
@@ -336,12 +339,11 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
                     do {
-                        @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_LOGID));
                         @SuppressLint("Range") String timestamp = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_TIMESTAMP));
                         @SuppressLint("Range") String exposure = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
 
                         // Create a Stats object and add it to the list
-                        statsList.add(new Stats(id, timestamp, exposure));
+                        statsList.add(new Stats(timestamp, exposure));
                     } while (cursor.moveToNext());
                 }
 
@@ -354,23 +356,22 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
             db.close();
         }
 
-        float avg = 0.0f;
-        // For number of records in a minute = (60/record interval)
-        // In an hour = (Records in a min) * 60
-        // In a day = (Records in an hour) * 24
-        int dailyRecords = (60/interval)*1440;
-        for(Stats stats : statsList){
-            avg += Float.parseFloat(String.valueOf(OpticalRecord.unflatten(stats.getExposure()).uvIndex));
-        }
+        float sum = 0.0f, avg;
 
-        return avg/dailyRecords;
+        for(Stats stats : statsList){
+            sum += Objects.requireNonNull(OpticalRecord.unflatten(stats.getExposure())).uvIndex;
+        }
+        int sampleCount = statsList.size();
+        avg = sum/sampleCount;
+
+        return avg;
     }
 
     public List<Stats> getStatsBetweenTimestamps(String timestamp1, String timestamp2) {
         SQLiteDatabase db = this.getReadableDatabase();
         List<Stats> statsList = new ArrayList<>();
 
-        Cursor cursor = null;
+        Cursor cursor;
 
         try {
             cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS +
@@ -380,13 +381,12 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
                     do {
-                        @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_LOGID));
                         @SuppressLint("Range") String exposure = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
 
                         // Get the timestamp from the cursor
                         @SuppressLint("Range") String timestamp = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_TIMESTAMP));
 
-                        statsList.add(new Stats(id, exposure, timestamp));
+                        statsList.add(new Stats(exposure, timestamp));
                     } while (cursor.moveToNext());
                 }
 
@@ -419,14 +419,15 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
 
         // Calculate the average exposure for the given minute range if needed
-        float avg = 0.0f;
-        int minuteRecords = (60/interval);
+        float sum = 0.0f, avg;
 
         for(Stats stats : statsList){
-            avg += Float.parseFloat(String.valueOf(OpticalRecord.unflatten(stats.getExposure()).uvIndex));
+            sum += Objects.requireNonNull(OpticalRecord.unflatten(stats.getExposure())).uvIndex;
         }
+        int sampleCount = statsList.size();
+        avg = sum/sampleCount;
 
-        return avg/minuteRecords;
+        return avg;
     }
 
     public float getHourlyAvg(String date, int hour){
@@ -443,8 +444,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
             totalMinuteAvg += minuteAvg;
         }
 
-        float hourlyAvg = totalMinuteAvg / 60.0f;
-        return hourlyAvg;
+        return totalMinuteAvg / 60.0f;
     }
 
     /**
