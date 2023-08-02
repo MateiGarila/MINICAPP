@@ -14,6 +14,9 @@ import androidx.annotation.Nullable;
 import com.example.mini_cap.model.Preset;
 import com.example.mini_cap.model.Stats;
 
+import app.uvtracker.data.optical.OpticalRecord;
+import app.uvtracker.data.optical.TimedRecord;
+
 import java.util.ArrayList;
 
 public class DBHelper extends SQLiteOpenHelper {
@@ -49,7 +52,7 @@ public class DBHelper extends SQLiteOpenHelper {
         String CREATE_STATS_TABLE = "CREATE TABLE " + Dict.TABLE_STATS + " (" +
                 Dict.COLUMN_LOGID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 Dict.COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
-                Dict.COLUMN_EXPOSURE + " TEXT NOT NULL)";
+                Dict.COLUMN_UVINDEX + " TEXT NOT NULL)";
 
         db.execSQL(CREATE_STATS_TABLE);
 
@@ -226,10 +229,10 @@ public class DBHelper extends SQLiteOpenHelper {
 
     /**
      * Function for inserting new stats into the db
-     * @param stats
+     * @param opticalRecord
      * @return
      */
-    public long insertStats(Stats stats){
+    public long insertStats(OpticalRecord opticalRecord){
 
         // If -1 is returned, function did not insert stats into db.
         long id = -1;
@@ -238,8 +241,8 @@ public class DBHelper extends SQLiteOpenHelper {
         ContentValues contentValues = new ContentValues();
 
         // ID is incremented by the db instead of inserted
-        contentValues.put(Dict.COLUMN_TIMESTAMP, stats.getTimestamp());
-        contentValues.put(Dict.COLUMN_EXPOSURE, stats.getExposure());
+        contentValues.put(Dict.COLUMN_UVINDEX, opticalRecord.uvIndex);
+        contentValues.put(Dict.COLUMN_ILLUMINANCE, opticalRecord.illuminance);
 
         try{
             id = db.insertOrThrow(Dict.TABLE_STATS, null, contentValues);
@@ -270,7 +273,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 if (cursor.moveToFirst()){
                     do{
                         @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_LOGID));
-                        @SuppressLint("Range") float exposure = cursor.getFloat(cursor.getColumnIndex(Dict.COLUMN_EXPOSURE));
+                        @SuppressLint("Range") float exposure = cursor.getFloat(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
 
                         stats = new Stats(id, exposure, timestamp);
                     } while(cursor.moveToNext());

@@ -1,44 +1,38 @@
 package com.example.mini_cap.view;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import android.content.Context;
+import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.view.View;
-import android.widget.Button;
+import android.util.Log;
+import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import android.Manifest;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.mini_cap.R;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.squareup.picasso.Picasso;
 
-import app.uvtracker.data.type.Record;
-import app.uvtracker.sensor.SensorAPI;
-import app.uvtracker.sensor.pii.ISensor;
-import app.uvtracker.sensor.pii.connection.application.event.NewSampleReceivedEvent;
-import app.uvtracker.sensor.pii.connection.shared.event.ConnectionStateChangeEvent;
-import app.uvtracker.sensor.pii.event.EventHandler;
-import app.uvtracker.sensor.pii.event.IEventListener;
-import app.uvtracker.sensor.pii.scanner.IScanner;
-import app.uvtracker.sensor.pii.scanner.event.SensorScannedEvent;
-import app.uvtracker.sensor.pii.scanner.exception.TransceiverException;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-public class MainActivity extends AppCompatActivity implements IEventListener {
+
+public class MainActivity extends AppCompatActivity implements INavigationBar, BottomNavigationView.OnItemSelectedListener {
 
     //Declaration of all UI elements
-    protected TextView mainView, sensorView;
-    protected Button sessionActivity, statsActivity, connectBTN;
-    private IScanner iScanner;
-    private ISensor iSensor;
-    private final int ENABLE_BLUETOOTH_REQUEST_CODE = 1;
+    private TextView cityNameTV, temp, uvIndex, conditionTV;
+    private ImageView currentWeather;
+    private String defaultCity = "Montreal"; // Default city
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,75 +40,52 @@ public class MainActivity extends AppCompatActivity implements IEventListener {
         setContentView(R.layout.activity_main);
 
         //Attaching the UI elements to their respective objects
-        mainView = findViewById(R.id.mainTextView);
-        sessionActivity = findViewById(R.id.toSessionActivity);
-        statsActivity = findViewById(R.id.toStatsActivity);
-        connectBTN = findViewById(R.id.connectBTN);
-        sensorView = findViewById(R.id.sensorTextView);
+        cityNameTV = findViewById(R.id.cityName);
+        temp = findViewById(R.id.temp);
+        uvIndex = findViewById(R.id.uvIndex);
+        currentWeather = findViewById(R.id.currentWeather);
+        conditionTV = findViewById(R.id.condition);
 
-        if(!hasRequiredRuntimePermissions())
-            requestRunTimePermissions();
+        getWeatherInfo(defaultCity);
 
-        if(this.iScanner == null) {
-            try {
-                this.iScanner = SensorAPI.getScanner(this);
-            } catch (TransceiverException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        bottomNavigationView.setOnItemSelectedListener(this);
 
-        this.iScanner.registerListener(this);
 
-        sessionActivity.setOnClickListener(v -> toSessionActivity());
-        statsActivity.setOnClickListener(v -> toStatsActivity());
-        connectBTN.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    }
 
-                try {
-                    iScanner.startScanning();
-                    (new Handler(Looper.getMainLooper()))
-                            .postDelayed(() -> {
-                                try {
-                                    iScanner.stopScanning();
-                                } catch (TransceiverException ignored) {
-
-                                }
-                            }, 10000);
-                } catch (TransceiverException e) {
-                    Toast.makeText(MainActivity.this, "Sensor oopsie", Toast.LENGTH_SHORT).show();
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if (resultCode == Activity.RESULT_OK) {
+                // Retrieve the city name from the SettingsActivity
+                String city = data.getStringExtra("CITY_NAME");
+                if (city != null) {
+                    // Update the cityNameTV text view with the city name
+                    cityNameTV.setText(city);
+                    getWeatherInfo(city);
                 }
             }
-        });
-
-    }
-
-    @EventHandler
-    public void onScanUpdate(SensorScannedEvent event) {
-        try {
-            iScanner.stopScanning();
-        } catch (TransceiverException e) {
-            Toast.makeText(MainActivity.this, "Sensor oopsie", Toast.LENGTH_SHORT).show();
         }
-        if(iSensor != null) return;
-        iSensor = event.getSensor();
-        iSensor.getConnection().registerListener(this);
-        iSensor.getConnection().connect();
-        Toast.makeText(MainActivity.this, "Connecting..", Toast.LENGTH_SHORT).show();
     }
 
-    @EventHandler
-    public void onSensorConnectionStatusUpdate(ConnectionStateChangeEvent event) {
-        if(event.getStage() != ConnectionStateChangeEvent.State.ESTABLISHED) return;
-        Toast.makeText(MainActivity.this, "Connection established", Toast.LENGTH_SHORT).show();
-    }
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
 
-    @EventHandler
-    public void onNewSample(NewSampleReceivedEvent event) {
-        Record record = event.getRecord();
-        float illuminance = record.illuminance;
-        float uvIndex = record.uvIndex;
-        sensorView.setText(String.format("Light: %1$.1f, UVI: %2$.2f", illuminance, uvIndex));
+        if (itemId == R.id.button_stats) {
+            toStatsActivity();
+            return true;
+        } else if (itemId == R.id.button_presets) {
+            toSessionActivity();
+            return true;
+        } else if (itemId == R.id.button_settings) {
+            toSettingsActivity();
+            return true;
+        }
+
+        return false;
     }
 
     private void toSessionActivity(){
@@ -127,34 +98,37 @@ public class MainActivity extends AppCompatActivity implements IEventListener {
         startActivity(intent);
     }
 
-    public boolean hasPermission(String permissionType) {
-        return ContextCompat.checkSelfPermission(this, permissionType) ==
-                PackageManager.PERMISSION_GRANTED;
+    private void toSettingsActivity(){
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
     }
 
-    public boolean hasRequiredRuntimePermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            return hasPermission(Manifest.permission.BLUETOOTH_SCAN) &&
-                    hasPermission(Manifest.permission.BLUETOOTH_CONNECT);
-        } else {
-            return hasPermission(Manifest.permission.ACCESS_FINE_LOCATION);
-        }
+    private void getWeatherInfo(String city){
+        String url = "https://api.weatherapi.com/v1/current.json?key=d868a85293a44ef8bb5184707230108&q=" + city + "&aqi=no";
+        Log.d("WeatherAPI", "URL: " + url); // Print URL to logcat
+        RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, response -> {
+            Log.d("WeatherAPI", "API Response: " + response.toString());
+            try{
+                String temperature = response.getJSONObject("current").getString("temp_c");
+                temp.setText(temperature+"°C");
+                String condition = response.getJSONObject("current").getJSONObject("condition").getString("text");
+                conditionTV.setText(condition);
+                String conditionIcon = response.getJSONObject("current").getJSONObject("condition").getString("icon");
+                Picasso.get().load("https:".concat(conditionIcon)).into(currentWeather);
+                String uv = response.getJSONObject("current").getString("uv");
+                uvIndex.setText("UV index: "+uv);
+
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+
+        }, error -> Toast.makeText(MainActivity.this, "Please enter valid city name", Toast.LENGTH_SHORT).show());
+        requestQueue.add(jsonObjectRequest);
     }
 
-    public void requestRunTimePermissions(){
 
-        String[] permission;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            permission = new String[] {
-                    Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.BLUETOOTH_CONNECT
-            };
-        } else {
-            permission = new String[] {
-                Manifest.permission.ACCESS_FINE_LOCATION
-            };
-        }
-        ActivityCompat.requestPermissions(this, permission, 1);
 
-    }
+
 }

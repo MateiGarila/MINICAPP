@@ -7,59 +7,80 @@
     tools:context=".view.MainActivity">
 
     <TextView
-        android:id="@+id/mainTextView"
+        android:id="@+id/cityName"
         android:layout_width="351dp"
-        android:layout_height="56dp"
-        android:text="This is the main activity's layout WIP"
+        android:layout_height="wrap_content"
+        android:text="Montreal"
         android:textSize="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.466"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.082" />
-
-    <Button
-        android:id="@+id/toSessionActivity"
-        android:layout_width="352dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="32dp"
-        android:text="To Session Activity"
-        app:layout_constraintEnd_toEndOf="@+id/mainTextView"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/mainTextView"
-        app:layout_constraintTop_toBottomOf="@+id/mainTextView" />
-
-    <Button
-        android:id="@+id/toStatsActivity"
-        android:layout_width="352dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="32dp"
-        android:text="To stats Activity"
-        app:layout_constraintEnd_toEndOf="@+id/mainTextView"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/mainTextView"
-        app:layout_constraintTop_toBottomOf="@+id/toSessionActivity" />
-
-    <Button
-        android:id="@+id/connectBTN"
-        android:layout_width="206dp"
-        android:layout_height="47dp"
-        android:layout_marginTop="68dp"
-        android:text="Connect to sensor"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toStatsActivity"
-        app:layout_constraintVertical_bias="0.788" />
+        app:layout_constraintVertical_bias="0.081" />
 
     <TextView
-        android:id="@+id/sensorTextView"
-        android:layout_width="223dp"
-        android:layout_height="51dp"
-        android:text="TextView"
-        app:layout_constraintBottom_toTopOf="@+id/connectBTN"
+        android:id="@+id/temp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/cityName"
+        android:text="23.0°C"
+        android:textSize="60dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.106"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toStatsActivity" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.136" />
+
+    <ImageView
+        android:id="@+id/currentWeather"
+        android:layout_width="82dp"
+        android:layout_height="80dp"
+        android:src="@mipmap/ic_launcher"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.668"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/temp"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/condition"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sunny"
+        android:textSize="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.657"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/temp"
+        app:layout_constraintVertical_bias="0.145" />
+
+    <TextView
+        android:id="@+id/uvIndex"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="UV Index: "
+        android:textSize="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.092"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/temp"
+        app:layout_constraintVertical_bias="0.129" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigationView"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:menu="@menu/bottom_nav_menu"
+        app:labelVisibilityMode="labeled"
+        app:itemIconSize="35dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
