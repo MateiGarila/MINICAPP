@@ -36,7 +36,6 @@ import app.uvtracker.sensor.pii.scanner.exception.TransceiverException;
 public class SettingsActivity extends AppCompatActivity implements IEventListener {
     private EditText cityName;
     private ImageView search;
-    protected TextView sensorView;
     protected Button connectBTN;
     private IScanner iScanner;
     private ISensor iSensor;
@@ -125,7 +124,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         if(event.getStage() != ConnectionStateChangeEvent.State.ESTABLISHED) return;
         Toast.makeText(SettingsActivity.this, "Connection established", Toast.LENGTH_SHORT).show();
     }
-
+/*
     @EventHandler
     public void onNewSample(NewSampleReceivedEvent event) {
         OpticalRecord record = event.getRecord();
@@ -133,7 +132,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         float uvIndex = record.uvIndex;
         sensorView.setText(String.format("Light: %1$.1f, UVI: %2$.2f", illuminance, uvIndex));
     }
-
+*/
     public boolean hasPermission(String permissionType) {
         return ContextCompat.checkSelfPermission(this, permissionType) ==
                 PackageManager.PERMISSION_GRANTED;

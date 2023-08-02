@@ -485,6 +485,10 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
     @EventHandler
     public void syncDataReceived(SyncDataReceivedEvent syncDataReceivedEvent){
         List<TimedRecord<OpticalRecord>> data = syncDataReceivedEvent.getData();
+
+        if(data.size() == 0) Log.d(TAG, "[Sync] Data size: 0.");
+        else Log.d(TAG, String.format("[Sync] Data size: %d; first: %s; last: %s.", data.size(), data.get(0), data.get(data.size() - 1)));
+
         for(TimedRecord<OpticalRecord> record : data) {
             this.insertStats(record);
         }
