@@ -4,12 +4,12 @@ import java.time.LocalDateTime;
 
 public class Stats {
     private int LogID;
-    private float exposure;
+    private String exposure;
     private String timestamp;
 
 
     // Constructor for Stats object
-    public Stats(int logID, float exposure, String timestamp){
+    public Stats(int logID, String exposure, String timestamp){
         LogID = logID;
         this.exposure = exposure;
         this.timestamp = timestamp;
@@ -19,7 +19,7 @@ public class Stats {
 
     public int getLogID() {return LogID;}
 
-    public float getExposure() {return exposure;}
+    public String getExposure() {return exposure;}
 
     public String getTimestamp() {return timestamp;}
 
@@ -27,7 +27,7 @@ public class Stats {
 
     public void setLogID(int logID) {LogID = logID;}
 
-    public void setExposure(float exposure) {this.exposure = exposure;}
+    public void setExposure(String exposure) {this.exposure = exposure;}
 
     public void setTimestamp(String timestamp) {this.timestamp = timestamp;}
 
