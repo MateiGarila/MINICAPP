@@ -22,7 +22,7 @@ import androidx.core.content.ContextCompat;
 
 import com.example.mini_cap.R;
 
-import app.uvtracker.data.type.Record;
+import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.sensor.SensorAPI;
 import app.uvtracker.sensor.pii.ISensor;
 import app.uvtracker.sensor.pii.connection.application.event.NewSampleReceivedEvent;
@@ -128,7 +128,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
 
     @EventHandler
     public void onNewSample(NewSampleReceivedEvent event) {
-        Record record = event.getRecord();
+        OpticalRecord record = event.getRecord();
         float illuminance = record.illuminance;
         float uvIndex = record.uvIndex;
         sensorView.setText(String.format("Light: %1$.1f, UVI: %2$.2f", illuminance, uvIndex));

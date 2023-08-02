@@ -79,7 +79,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
             return;
         }
         sensorController.registerListener(this);
-
+/*
         //"dd/MM/yyyy HH:mm:ss"
         dbHelper = new DBHelper(this);
         Stats stats1 = new Stats(1, 3.0F, "19/07/2023 08:00:00");
@@ -109,7 +109,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         dbHelper.insertStats(stats11);
         dbHelper.insertStats(stats12);
         dbHelper.insertStats(stats13);
-
+*/
 
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMMM d' 'yyyy");
         DateTimeFormatter outputFormatterForDB = DateTimeFormatter.ofPattern("dd/MM/yyyy");
