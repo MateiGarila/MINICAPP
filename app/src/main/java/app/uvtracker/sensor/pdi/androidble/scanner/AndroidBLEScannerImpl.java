@@ -12,7 +12,6 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelUuid;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,7 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import app.uvtracker.sensor.pdi.BLEOptions;
+import app.uvtracker.sensor.BLEOptions;
 import app.uvtracker.sensor.pdi.androidble.AndroidBLESensorImpl;
 import app.uvtracker.sensor.pii.ISensor;
 import app.uvtracker.sensor.pii.event.EventRegistry;
@@ -162,7 +161,6 @@ class BluetoothScanCallback extends ScanCallback {
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
         super.onScanResult(callbackType, result);
-        Log.d("TEST", result.getDevice().getAddress());
         this.callback.accept(Objects.requireNonNull(result));
     }
 

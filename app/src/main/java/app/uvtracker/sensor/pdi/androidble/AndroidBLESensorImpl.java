@@ -31,8 +31,8 @@ public class AndroidBLESensorImpl implements ISensor {
         @NonNull
         public final ISensorConnection applicationHandle;
 
-        public ConnectionFactory(@NonNull BluetoothDevice device, @NonNull Context context) {
-            this.bytestreamBased = new AndroidBLESensorBytestreamConnectionImpl(device, context);
+        public ConnectionFactory(@NonNull AndroidBLESensorImpl sensor, @NonNull BluetoothDevice device, @NonNull Context context) {
+            this.bytestreamBased = new AndroidBLESensorBytestreamConnectionImpl(sensor, device, context);
             this.packetBased = new PIISensorPacketConnectionImpl(this.bytestreamBased);
             this.applicationHandle = new PIISensorConnectionImpl(this.packetBased);
         }
@@ -112,7 +112,7 @@ public class AndroidBLESensorImpl implements ISensor {
     @NonNull
     public ConnectionFactory getFactoryBuilds() {
         if(this.factory == null)
-            this.factory = new ConnectionFactory(this.platformDevice, this.context);
+            this.factory = new ConnectionFactory(this, this.platformDevice, this.context);
         return this.factory;
     }
 

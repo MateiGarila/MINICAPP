@@ -7,7 +7,6 @@ import androidx.annotation.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Objects;
 
 import app.uvtracker.sensor.protocol.codec.IPacketCodec;
 import app.uvtracker.sensor.protocol.codec.exception.CodecException;
@@ -80,7 +79,12 @@ public class PacketCodecBase93NoAESImpl implements IPacketCodec {
         }
         catch (InvocationTargetException e) {
             Log.d(TAG, "Exception in down-construction process. Is the packet corrupted?");
-            Log.d(TAG, Objects.requireNonNull(e.getCause()).getMessage());
+            Throwable cause = e.getCause();
+            if(cause != null) {
+                String message = cause.getMessage();
+                if(message == null) message = "Trace:";
+                Log.d(TAG, message, cause);
+            }
             return packetBase;
         }
     }
@@ -90,7 +94,7 @@ public class PacketCodecBase93NoAESImpl implements IPacketCodec {
         if(data.length < 3) throw new PacketFormatException("Packet is too small.", data);
         PacketType type = this.deserializeHeader(data[0]);
         if(type == null) throw new PacketFormatException("Packet ID " + (data[0] & 0x7F) + " does not exist.", data);
-        int length = data[1];
+        int length = Byte.toUnsignedInt(data[1]);
         if(data.length < length + 3) throw new PacketFormatException("Packet is too small and does not contain necessary fields.", data);
         byte crc = CRC8Helper.compute(data, length + 2);
         if(crc != data[length + 2]) throw new PacketFormatException("Packet is corrupted.", data);

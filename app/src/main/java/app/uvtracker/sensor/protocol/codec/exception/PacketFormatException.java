@@ -7,11 +7,6 @@ import app.uvtracker.sensor.protocol.packet.base.Packet;
 
 public class PacketFormatException extends CodecException {
 
-    public static void requireLength(Packet packet, int length) throws PacketFormatException {
-        if(packet.getPayload().length != length)
-            throw new PacketFormatException("Expecting " + length + " byte(s)." + packet.getPayload().length, packet);
-    }
-
     @Nullable
     private final byte[] data;
 
@@ -30,11 +25,11 @@ public class PacketFormatException extends CodecException {
         this.packet = packet;
     }
 
-    @Nullable
+    @NonNull
     @Override
     public String getMessage() {
         String superMessage = super.getMessage();
-        if(superMessage == null) return null;
+        if(superMessage == null) return "(no further details)";
         StringBuilder sb = new StringBuilder(superMessage);
         if(this.data != null) {
             sb.append(" Packet dump: {");
