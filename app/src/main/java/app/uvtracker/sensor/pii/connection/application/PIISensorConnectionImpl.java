@@ -221,7 +221,10 @@ class SyncManager implements IEventListener {
     public SyncManager(@NonNull PIISensorConnectionImpl connection) {
         this.connection = connection;
         this.stage = Stage.DISCONNECTED;
-        this.timeoutTask = new TimeoutTask(BLEOptions.Sync.SYNC_TIMEOUT, this::abortSync);
+        this.timeoutTask = new TimeoutTask(BLEOptions.Sync.SYNC_TIMEOUT, () -> {
+            Log.d(TAG, "Sync timeout.");
+            this.abortSync();
+        });
         this.connection.getBaseConnection().registerListener(this);
         this.connection.getPacketEventManager().registerListener(this);
         this.resetSyncStates();
@@ -379,6 +382,7 @@ class SyncManager implements IEventListener {
         first = last - count + 1;
         Log.d(TAG, "Requesting remote DB: " + first + ", " + count);
         this.connection.getBaseConnection().write(new PacketOutRequestSyncData(first, count));
+        this.timeoutTask.refresh();
     }
 
     @EventHandler

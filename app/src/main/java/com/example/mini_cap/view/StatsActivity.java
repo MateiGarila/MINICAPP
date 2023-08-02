@@ -79,6 +79,9 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
             return;
         }
         sensorController.registerListener(this);
+
+        this.dbHelper = new DBHelper(this);
+
 /*
         //"dd/MM/yyyy HH:mm:ss"
 //        dbHelper = new DBHelper(this);
