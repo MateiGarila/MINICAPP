@@ -1,4 +1,4 @@
-package app.uvtracker.data.type;
+package app.uvtracker.data.optical;
 
 import android.util.Log;
 
@@ -8,15 +8,15 @@ import androidx.annotation.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Record implements IFlattenable {
+public class OpticalRecord {
 
-    private static final String TAG = Record.class.getSimpleName();
+    private static final String TAG = OpticalRecord.class.getSimpleName();
 
     @Nullable
-    public static Record unflatten(@NonNull String input) {
+    public static OpticalRecord unflatten(@NonNull String input) {
         try {
             JSONObject obj = new JSONObject(input);
-            return new Record(
+            return new OpticalRecord(
                     (float)obj.getDouble("uv"),
                     (float)obj.getDouble("vis")
             );
@@ -27,29 +27,26 @@ public class Record implements IFlattenable {
         }
     }
 
-    @NonNull
-    public static Record decompress(byte uv, byte vis) {
-        // TODO: maybe extract this conversion out to somewhere?
-        return new Record(
-                (float)decompress8(uv) / 10.9375f,
-                (float)decompress44(vis) * 2.4f
-        );
-    }
-
-
+    public final boolean valid;
     public final float uvIndex;
     public final float illuminance;
 
     @Nullable
     private String flattenedString;
 
-    public Record(float uvIndex, float illuminance) {
+    public OpticalRecord() {
+        this.valid = false;
+        this.uvIndex = 0f;
+        this.illuminance = 0f;
+    }
+
+    public OpticalRecord(float uvIndex, float illuminance) {
+        this.valid = true;
         this.uvIndex = round2(uvIndex);
         this.illuminance = round2(illuminance);
     }
 
     @NonNull
-    @Override
     public String flatten() {
         if(this.flattenedString == null)
             this.flattenedString = this.flattenCore();
@@ -57,7 +54,7 @@ public class Record implements IFlattenable {
     }
 
     @NonNull
-    public String flattenCore() {
+    private String flattenCore() {
         try {
             JSONObject obj = new JSONObject();
             obj.put("uv", this.uvIndex);
@@ -78,17 +75,6 @@ public class Record implements IFlattenable {
     private static float round2(float input) {
         if(Float.isNaN(input)) return 0.0f;
         return Math.round(input * 100.0f) / 100.0f;
-    }
-
-    private static int decompress44(byte input0) {
-        int input = Byte.toUnsignedInt(input0);
-        int dig = (input & 0xF0) >> 4;
-        int exp = (input & 0x0F);
-        return dig << exp;
-    }
-
-    private static int decompress8(byte input0) {
-        return Byte.toUnsignedInt(input0);
     }
 
 }

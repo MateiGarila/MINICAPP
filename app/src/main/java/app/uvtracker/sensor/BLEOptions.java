@@ -1,4 +1,4 @@
-package app.uvtracker.sensor.pdi;
+package app.uvtracker.sensor;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
@@ -49,6 +49,11 @@ public class BLEOptions {
         public static int CONNECTION_TIMEOUT = 8000;
         public static int CONNECTION_GRACE_PERIOD = 500;
         public static int DISCONNECTION_TIMEOUT = 2000;
+    }
+
+    @SuppressWarnings("CanBeFinal")
+    public static class Sync {
+        public static int SYNC_TIMEOUT = 2000;
     }
 
 }

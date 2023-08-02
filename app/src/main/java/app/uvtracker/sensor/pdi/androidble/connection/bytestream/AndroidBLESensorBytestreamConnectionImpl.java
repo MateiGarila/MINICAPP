@@ -21,8 +21,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import app.uvtracker.sensor.pii.ISensor;
 import app.uvtracker.sensor.pii.event.EventRegistry;
-import app.uvtracker.sensor.pdi.BLEOptions;
+import app.uvtracker.sensor.BLEOptions;
 import app.uvtracker.sensor.pii.connection.bytestream.event.BytesReceivedEvent;
 import app.uvtracker.sensor.pii.connection.shared.event.ConnectionStateChangeEvent;
 import app.uvtracker.sensor.pii.connection.bytestream.ISensorBytestreamConnection;
@@ -38,6 +39,9 @@ public class AndroidBLESensorBytestreamConnectionImpl extends EventRegistry impl
 
     @NonNull
     private final Context context;
+
+    @NonNull
+    private final ISensor sensor;
 
     @Nullable
     private DelayedTask delayedTask;
@@ -60,9 +64,10 @@ public class AndroidBLESensorBytestreamConnectionImpl extends EventRegistry impl
     @NonNull
     private final FlowControlledBuffer writeStream;
 
-    public AndroidBLESensorBytestreamConnectionImpl(@NonNull BluetoothDevice device, @NonNull Context context) {
+    public AndroidBLESensorBytestreamConnectionImpl(@NonNull ISensor sensor, @NonNull BluetoothDevice device, @NonNull Context context) {
         this.handler = new Handler(Looper.getMainLooper()); // TODO: which thread to use?
         this.context = context;
+        this.sensor = sensor;
         this.device = device;
         this.internalStage = Stage.DISCONNECTED;
         this.bleCallback = new BluetoothGattCallbackImpl(this);
@@ -128,6 +133,12 @@ public class AndroidBLESensorBytestreamConnectionImpl extends EventRegistry impl
 
     private void dispatch(ConnectionStateChangeEvent.State state) {
         this.dispatch(new ConnectionStateChangeEvent(state, this.internalStage.getPercentage()));
+    }
+
+    @Override
+    @NonNull
+    public ISensor getSensor() {
+        return this.sensor;
     }
 
     @Override
@@ -262,20 +273,19 @@ public class AndroidBLESensorBytestreamConnectionImpl extends EventRegistry impl
         this.dispatch(ConnectionStateChangeEvent.State.ESTABLISHED);
     }
 
-    protected void onCharacteristicChanged(BluetoothGattCharacteristic characteristic) {
+    protected void onCharacteristicChanged(BluetoothGattCharacteristic characteristic, @NonNull byte[] data) {
         this.debug("onCharacteristicChanged() [EV]");
         if(!this.ensureStage(Stage.ESTABLISHED)) {
             this.debug("- Connection flow still not done, we are at stage %1$s", this.internalStage);
             return;
         }
         if(characteristic.getUuid().equals(Objects.requireNonNull(this.getEndpoints().read).getUuid())) {
-            this.onDataReceived();
+            this.onDataReceived(data);
         }
     }
 
-    private void onDataReceived() {
+    private void onDataReceived(@NonNull byte[] data) {
         this.debug("- onDataReceived()");
-        byte[] data = Objects.requireNonNull(this.getEndpoints().read.getValue());
         this.debug("- Received %1$d bytes.", data.length);
         this.dispatch(new BytesReceivedEvent(data));
     }
@@ -466,7 +476,9 @@ class BluetoothGattCallbackImpl extends BluetoothGattCallback {
     @Override
     public void onCharacteristicChanged(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattCharacteristic characteristic) {
         super.onCharacteristicChanged(gatt, characteristic);
-        this.post(() -> this.connection.onCharacteristicChanged(characteristic));
+        byte[] data = characteristic.getValue();
+        if(data == null) return;
+        this.post(() -> this.connection.onCharacteristicChanged(characteristic, data));
     }
 
 }

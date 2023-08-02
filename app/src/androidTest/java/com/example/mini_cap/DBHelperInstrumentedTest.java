@@ -41,7 +41,7 @@ public class DBHelperInstrumentedTest {
 
         // Update the user's details
         Preset updatedPreset = new Preset(userId, "John", 30, "Medium");
-        int rowsUpdated = dbHelper.updatePreSet(userId, updatedPreset);
+        int rowsUpdated = dbHelper.updatePreset(userId, updatedPreset);
 
         // Fetch the updated user from the database
         Preset fetchedPreset = dbHelper.getPreSet(userId);
