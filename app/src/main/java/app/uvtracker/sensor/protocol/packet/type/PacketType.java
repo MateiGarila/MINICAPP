@@ -9,35 +9,26 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import app.uvtracker.sensor.protocol.packet.base.Packet;
-import app.uvtracker.sensor.protocol.packet.in.PacketInButtonInteract;
-import app.uvtracker.sensor.protocol.packet.in.PacketInDebug;
-import app.uvtracker.sensor.protocol.packet.in.PacketInKeepAlive;
-import app.uvtracker.sensor.protocol.packet.in.PacketInNewSample;
-import app.uvtracker.sensor.protocol.packet.out.PacketOutBuzz;
-import app.uvtracker.sensor.protocol.packet.out.PacketOutFlashLED;
-import app.uvtracker.sensor.protocol.packet.out.PacketOutKeepAlive;
+import app.uvtracker.sensor.protocol.packet.in.PacketInBatteryInfo;
+import app.uvtracker.sensor.protocol.packet.in.PacketInNewOpticalEstimation;
+import app.uvtracker.sensor.protocol.packet.in.PacketInNewOpticalSample;
+import app.uvtracker.sensor.protocol.packet.in.PacketInSyncData;
+import app.uvtracker.sensor.protocol.packet.in.PacketInSyncInfo;
+import app.uvtracker.sensor.protocol.packet.out.PacketOutRequestSyncData;
+import app.uvtracker.sensor.protocol.packet.out.PacketOutRequestSyncInfo;
 
-/*
-    Packet ID range conventions:
-        0x00 to 0x1F: System packets
-        0x20 to 0x3F: Data transfer & request packets
-        0x40 to 0x5F: HMI packets
-        0x60 to 0x6F: Reserved
-        0x70 to 0x7F: Debug & tracing
- */
 public interface PacketType {
 
     enum IN implements PacketType {
 
-        // Debug
-        DEBUG           (0x7F, PacketInDebug.class),
-        // System
-        KEEP_ALIVE      (0x00, PacketInKeepAlive.class),
-        // Data transfer
-        NEW_SAMPLE(0x20, PacketInNewSample.class),
-        // HMI
-        BUTTON_INTERACT (0x40, PacketInButtonInteract.class),
-
+        // System: 0x00 ~ 0x0F
+        BATTERY_INFO                (0x0F, PacketInBatteryInfo.class),
+        // HMI: 0x10 ~ 0x2F
+        // Data: 0x20 ~ 0x3F
+        NEW_OPTICAL_SAMPLE          (0x20, PacketInNewOpticalSample.class),
+        NEW_OPTICAL_ESTIMATION      (0x21, PacketInNewOpticalEstimation.class),
+        SYNC_INFO                   (0x22, PacketInSyncInfo.class),
+        SYNC_DATA                   (0x23, PacketInSyncData.class),
         ;
 
         private final int packetID;
@@ -88,12 +79,11 @@ public interface PacketType {
 
     enum OUT implements PacketType {
 
-        // System
-        KEEP_ALIVE      (0x00, PacketOutKeepAlive.class),
-        // HMI
-        BUZZ            (0x41, PacketOutBuzz.class),
-        FLASH_LED       (0x42, PacketOutFlashLED.class),
-
+        // System: 0x00 ~ 0x0F
+        // HMI: 0x10 ~ 0x2F
+        // Data: 0x20 ~ 0x3F
+        REQUEST_SYNC_INFO           (0x22, PacketOutRequestSyncInfo.class),
+        REQUEST_SYNC_DATA           (0x23,PacketOutRequestSyncData.class),
         ;
 
         private final int packetID;

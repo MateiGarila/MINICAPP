@@ -352,8 +352,8 @@
     </androidx.cardview.widget.CardView>
 
     <LinearLayout
-        android:layout_width="409dp"
-        android:layout_height="628dp"
+        android:layout_width="410dp"
+        android:layout_height="561dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -377,11 +377,11 @@
             </com.github.mikephil.charting.charts.LineChart>
 
             <TextView
-                android:id="@+id/time_id"
+                android:id="@+id/uvindex_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:text="Current Time: "
+                android:text="Current UV Index: "
                 android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                 android:textSize="20sp"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -392,32 +392,18 @@
                 app:layout_constraintVertical_bias="0.039" />
 
             <TextView
-                android:id="@+id/uv_index_text_view"
+                android:id="@+id/severity_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Current UV Index: "
+                android:text="Current Severity:"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                 android:textSize="20sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.078"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/time_id"
+                app:layout_constraintTop_toBottomOf="@+id/uvindex_id"
                 app:layout_constraintVertical_bias="0.156" />
-
-            <TextView
-                android:id="@+id/severity_textview"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Current Severity: "
-                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                android:textSize="20sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.075"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/uv_index_text_view"
-                app:layout_constraintVertical_bias="0.227" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

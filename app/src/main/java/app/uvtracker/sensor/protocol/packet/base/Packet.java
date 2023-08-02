@@ -2,6 +2,9 @@ package app.uvtracker.sensor.protocol.packet.base;
 
 import androidx.annotation.NonNull;
 
+import java.util.Date;
+
+import app.uvtracker.sensor.protocol.codec.exception.PacketFormatException;
 import app.uvtracker.sensor.protocol.packet.type.PacketType;
 
 public class Packet {
@@ -12,9 +15,13 @@ public class Packet {
     @NonNull
     protected byte[] payload;
 
+    @NonNull
+    protected final Date timestamp;
+
     public Packet(@NonNull PacketType type, @NonNull byte[] payload) {
         this.type = type;
         this.payload = payload;
+        this.timestamp = new Date();
     }
 
     public Packet(@NonNull PacketType type, int payloadSize) {
@@ -47,6 +54,21 @@ public class Packet {
 
     public void setPayload(@NonNull byte[] payload) {
         this.payload = payload;
+    }
+
+    public void requireLength(int length) throws PacketFormatException {
+        if(this.payload.length != length)
+            throw new PacketFormatException("Expecting " + length + " byte(s)." + this.payload.length, this);
+    }
+
+    public void requireAtLeastLength(int length) throws PacketFormatException {
+        if(this.payload.length < length)
+            throw new PacketFormatException("Expecting at least " + length + " byte(s)." + this.payload.length, this);
+    }
+
+    @NonNull
+    public Date getTimestamp() {
+        return this.timestamp;
     }
 
     @Override
