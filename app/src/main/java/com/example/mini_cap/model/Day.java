@@ -19,7 +19,7 @@ public class Day {
     public Day(Date javaDate) {
         this.year = javaDate.getYear() + 1900;
         this.month = javaDate.getMonth() + 1;
-        this.day = javaDate.getDay();
+        this.day = javaDate.getDate();
     }
 
     public Day(LocalDate javaLocalDate) {
