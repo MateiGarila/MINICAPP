@@ -2,6 +2,8 @@ package app.uvtracker.sensor.protocol.packet.in;
 
 import androidx.annotation.NonNull;
 
+import app.uvtracker.data.battery.BatteryRecord;
+import app.uvtracker.data.battery.BatteryStatus;
 import app.uvtracker.sensor.protocol.codec.exception.PacketFormatException;
 import app.uvtracker.sensor.protocol.packet.base.Packet;
 import app.uvtracker.sensor.protocol.packet.base.PacketIn;
@@ -9,50 +11,33 @@ import app.uvtracker.sensor.protocol.util.Packing;
 
 public class PacketInBatteryInfo extends PacketIn {
 
-    public enum BatteryStatus {
-        DISCHARGING,
-        CHARGING,
-        CHARGING_DONE,
-    }
-
-    private final float battertVoltage;
-
-    private final int batteryPercentage;
-
-    @NonNull
-    private final BatteryStatus chargingStatus;
+    private final BatteryRecord record;
 
     public PacketInBatteryInfo(Packet basePacket) throws PacketFormatException {
         super(basePacket);
         basePacket.requireLength(4);
-        this.battertVoltage = (float)Packing.unpack2(this.payload, 0) / 1000.0f;
-        this.batteryPercentage = Math.min(Packing.unpack1(this.payload, 2), 100);
+        float batteryVoltage = (float)Packing.unpack2(this.payload, 0) / 1000.0f;
+        int batteryPercentage = Math.min(Packing.unpack1(this.payload, 2), 100);
         int state = Packing.unpack1(this.payload, 3);
+        BatteryStatus chargingStatus;
         switch(state) {
             default:
             case 0:
-                this.chargingStatus = BatteryStatus.DISCHARGING;
+                chargingStatus = BatteryStatus.DISCHARGING;
                 break;
             case 1:
-                this.chargingStatus = BatteryStatus.CHARGING;
+                chargingStatus = BatteryStatus.CHARGING;
                 break;
             case 2:
-                this.chargingStatus = BatteryStatus.CHARGING_DONE;
+                chargingStatus = BatteryStatus.CHARGING_DONE;
                 break;
         }
-    }
-
-    public float getBattertVoltage() {
-        return battertVoltage;
-    }
-
-    public int getBatteryPercentage() {
-        return batteryPercentage;
+        this.record = new BatteryRecord(batteryVoltage, batteryPercentage, chargingStatus);
     }
 
     @NonNull
-    public BatteryStatus getChargingStatus() {
-        return chargingStatus;
+    public BatteryRecord getRecord() {
+        return this.record;
     }
 
 }
