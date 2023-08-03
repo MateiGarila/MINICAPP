@@ -15,7 +15,8 @@ import com.example.mini_cap.model.Preset;
 import com.example.mini_cap.model.Stats;
 
 import app.uvtracker.data.optical.OpticalRecord;
-import app.uvtracker.data.optical.TimedRecord;
+import app.uvtracker.data.optical.TimedOpticalRecord;
+import app.uvtracker.data.optical.Timestamp;
 import app.uvtracker.sensor.pii.connection.application.event.SyncDataReceivedEvent;
 import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.IEventListener;
@@ -244,7 +245,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param record
      * @return
      */
-    public long insertStats(TimedRecord<OpticalRecord> record){
+    public long insertStats(TimedOpticalRecord record){
 
         // If -1 is returned, function did not insert stats into db.
         long id = -1;
@@ -252,13 +253,14 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
 
+        Timestamp timestamp = record.getTimestamp();
 
         @SuppressLint("DefaultLocale")
         String primaryKey = String.format("%d/%02d/%02d-%d",
-                record.getDay().getYear() + 1900,
-                record.getDay().getMonth() + 1,
-                record.getDay().getDate(),
-                record.getSampleNumber()
+                timestamp.getDay().getYear() + 1900,
+                timestamp.getDay().getMonth() + 1,
+                timestamp.getDay().getDate(),
+                timestamp.getSampleNumber()
         );
 
         String dataString = record.getData().flatten();
@@ -490,12 +492,12 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
     }
     @EventHandler
     public void syncDataReceived(SyncDataReceivedEvent syncDataReceivedEvent){
-        List<TimedRecord<OpticalRecord>> data = syncDataReceivedEvent.getData();
+        List<TimedOpticalRecord> data = syncDataReceivedEvent.getData();
 
         if(data.size() == 0) Log.d(TAG, "[Sync] Data size: 0.");
         else Log.d(TAG, String.format("[Sync] Data size: %d; first: %s; last: %s.", data.size(), data.get(0), data.get(data.size() - 1)));
 
-        for(TimedRecord<OpticalRecord> record : data) {
+        for(TimedOpticalRecord record : data) {
             this.insertStats(record);
         }
     }
