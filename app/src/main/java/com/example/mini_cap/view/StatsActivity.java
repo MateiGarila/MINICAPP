@@ -78,10 +78,10 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         if(sensorController == null) {
             // Sensor is not connected!
             Toast.makeText(this, "Please first connect to a sensor.", Toast.LENGTH_SHORT).show();
-            this.finish();
-            return;
         }
-        sensorController.registerListener(this);
+        else {
+            sensorController.registerListener(this);
+        }
 
         this.dbHelper = new DBHelper(this);
 
