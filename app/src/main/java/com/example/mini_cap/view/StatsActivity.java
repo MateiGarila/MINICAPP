@@ -388,7 +388,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     }
 
     public void createDataSet(String selectedDate){
-        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
         LocalDate date = LocalDate.parse(selectedDate, inputFormatter);
