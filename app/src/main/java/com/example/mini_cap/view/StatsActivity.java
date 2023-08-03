@@ -2,6 +2,7 @@ package com.example.mini_cap.view;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -14,6 +15,7 @@ import androidx.core.content.ContextCompat;
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
 import com.example.mini_cap.controller.SensorController;
+import com.example.mini_cap.model.Date;
 import com.example.mini_cap.model.Stats;
 import com.example.mini_cap.view.helper.IntentDataHelper;
 import com.github.mikephil.charting.charts.LineChart;
@@ -56,6 +58,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     private int previousSelectedPosition;
     private Button previousSelectedButton;
     private DBHelper dbHelper;
+    private Date date;
     private TextView date_text_view;
 
     private TextView curr_time_text_view;
@@ -117,7 +120,13 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMMM d' 'yyyy");
         DateTimeFormatter outputFormatterForDB = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
+        // Getting date as LocalDate object and creating a Date class object with it
         LocalDate current_date = LocalDate.now();
+        int day = current_date.getDayOfMonth();
+        int month = current_date.getMonthValue();
+        int year = current_date.getYear();
+        Date currentDate = new Date(day, month, year);
+
         previousSelectedPosition = -1;
 
         defaultColor = ContextCompat.getColor(this, R.color.button_grey);
@@ -157,7 +166,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         ArrayList<Float> y_axis_values = new ArrayList<>();
 
-        float[] uv_values_float = dbHelper.getExposureForDay(current_date.format(outputFormatterForDB));
+        float[] uv_values_float = dbHelper.getExposureForDay(currentDate);
         for (float value : uv_values_float) {
             y_axis_values.add(value);
         }
@@ -352,7 +361,12 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         String selectedDate = curr_week_list.get(previousSelectedPosition);
         ArrayList<Float> y_axis_values = new ArrayList<>();
         String[] conversion1 = selectedDate.split("-");
-        String selectedDate2 = conversion1[2] + "/" + conversion1[0] + "/" + conversion1[1];
+
+        int day = Integer.parseInt(conversion1[0]);
+        int month = Integer.parseInt(conversion1[1]);
+        int year = Integer.parseInt(conversion1[2]);
+        Date selectedDate2 = new Date(day, month, year);
+        Log.d("date", selectedDate2.toString());
         float[] uv_values_float = dbHelper.getExposureForDay(selectedDate2);
         //System.out.println("uv values:" + uv_values_float);
         for (float value : uv_values_float) {
@@ -395,7 +409,11 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         LocalDate date = LocalDate.parse(selectedDate, inputFormatter);
         ArrayList<Float> y_axis_values = new ArrayList<>();
-        float[] uv_values_float = dbHelper.getExposureForDay(date.format(outputFormatter ));
+        int day = date.getDayOfMonth();
+        int month = date.getMonthValue();
+        int year = date.getYear();
+        Date outputDate = new Date(day, month, year);
+        float[] uv_values_float = dbHelper.getExposureForDay(outputDate);
 
 
         //System.out.println("uv values:" + uv_values_float);

@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 
 import com.example.mini_cap.model.Preset;
 import com.example.mini_cap.model.Stats;
+import com.example.mini_cap.model.Date;
 
 import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.data.optical.TimedOpticalRecord;
@@ -27,11 +28,11 @@ import java.util.Objects;
 
 public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
-    private Context context;
+    private final Context context;
     private final String TAG = "DBHelper";
 
-    private static int interval = 10;
-    private static int offset = 8;
+    private static final int interval = 10;
+    private static final int offset = 8;
 
     /**
      * Database constructor
@@ -328,7 +329,8 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param date must be in form "yyyy/mm/dd"
      * @return Stats object with data for timestamp entered
      */
-    public float getDailyAvg(String date){
+    public float getDailyAvg(Date date){
+        String dateString = date.toString();
         SQLiteDatabase db = this.getReadableDatabase();
         List<Stats> statsList = new ArrayList<>();
 
@@ -336,7 +338,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
         try {
             // The SQL query to select all records where the date matches the given day
-            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS + " WHERE SUBSTR(" + Dict.COLUMN_TIMESTAMP + ", 1, 10) = ?", new String[]{date});
+            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS + " WHERE SUBSTR(" + Dict.COLUMN_TIMESTAMP + ", 1, 10) = ?", new String[]{dateString});
 
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
@@ -410,15 +412,18 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
     /**
      * Function for returning the UV exposure for a specified day
-     * @param date must be in form "yyyy/mm/dd", hour is concatenated to date string to create full timestamp
+     * @param date is a date object, hour is concatenated to date string to create full timestamp
      * @return hourly avg exposure from 8 am to 6 pm
      */
-    public float getMinuteAvg(String date, int minute, int hour){
+    public float getMinuteAvg(Date date, int minute, int hour){
         int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float)interval);
         int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float)interval);
 
-        String timestamp1 = date + "-" + minuteSample;
+        String timestamp1 = date.toString() + "-" + minuteSample;
         String timestamp2 = date + "-" + nextMinuteSample;
+
+        Log.d("timestamp1", timestamp1);
+        Log.d("timestamp2", timestamp2);
 
         List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
 
@@ -438,7 +443,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         return avg;
     }
 
-    public float getHourlyAvg(String date, int hour){
+    public float getHourlyAvg(Date date, int hour){
         float[] minuteAvgs = new float[60];
 
         // Get minute averages for each minute in the hour
@@ -460,7 +465,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param date must be in form "yyyy/MM/dd"
      * @return array of hourly UV exposure floats for specified day from 8 am to 6 pm
      */
-    public float[] getExposureForDay(String date){
+    public float[] getExposureForDay(Date date){
 
         float[] dailyExposure = new float[11];
 
