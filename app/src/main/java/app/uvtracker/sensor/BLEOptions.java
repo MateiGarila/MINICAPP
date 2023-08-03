@@ -53,7 +53,7 @@ public class BLEOptions {
 
     @SuppressWarnings("CanBeFinal")
     public static class Sync {
-        public static int SYNC_TIMEOUT = 2000;
+        public static int SYNC_TIMEOUT = 5000;
     }
 
 }

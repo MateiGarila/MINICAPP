@@ -2,6 +2,9 @@ package com.example.mini_cap.model;
 
 import android.annotation.SuppressLint;
 
+import java.time.LocalDate;
+import java.util.Date;
+
 public class Day {
     private int day;
     private int month;
@@ -11,6 +14,18 @@ public class Day {
         this.day = day;
         this.month = month;
         this.year = year;
+    }
+
+    public Day(Date javaDate) {
+        this.year = javaDate.getYear() + 1900;
+        this.month = javaDate.getMonth() + 1;
+        this.day = javaDate.getDay();
+    }
+
+    public Day(LocalDate javaLocalDate) {
+        this.year = javaLocalDate.getYear();
+        this.month = javaLocalDate.getMonthValue();
+        this.day = javaLocalDate.getDayOfMonth();
     }
 
     public int getDay() {

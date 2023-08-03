@@ -122,10 +122,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         // Getting date as LocalDate object and creating a Date class object with it
         LocalDate current_date = LocalDate.now();
-        int day = current_date.getDayOfMonth();
-        int month = current_date.getMonthValue();
-        int year = current_date.getYear();
-        Day currentDate = new Day(day, month, year);
+        Day currentDate = new Day(current_date);
 
         previousSelectedPosition = -1;
 
@@ -360,13 +357,13 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         date_text_view.setText(setDateTextView(curr_week_list.get(selectedIndex)));
         String selectedDate = curr_week_list.get(previousSelectedPosition);
         ArrayList<Float> y_axis_values = new ArrayList<>();
-        String[] conversion1 = selectedDate.split("-");
 
-        int day = Integer.parseInt(conversion1[0]);
-        int month = Integer.parseInt(conversion1[1]);
+        String[] conversion1 = selectedDate.split("-");
+        int month = Integer.parseInt(conversion1[0]);
+        int day = Integer.parseInt(conversion1[1]);
         int year = Integer.parseInt(conversion1[2]);
         Day selectedDate2 = new Day(day, month, year);
-        Log.d("date", selectedDate2.toString());
+
         float[] uv_values_float = dbHelper.getExposureForDay(selectedDate2);
         //System.out.println("uv values:" + uv_values_float);
         for (float value : uv_values_float) {
@@ -409,10 +406,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         LocalDate date = LocalDate.parse(selectedDate, inputFormatter);
         ArrayList<Float> y_axis_values = new ArrayList<>();
-        int day = date.getDayOfMonth();
-        int month = date.getMonthValue();
-        int year = date.getYear();
-        Day outputDate = new Day(day, month, year);
+        Day outputDate = new Day(date);
         float[] uv_values_float = dbHelper.getExposureForDay(outputDate);
 
 

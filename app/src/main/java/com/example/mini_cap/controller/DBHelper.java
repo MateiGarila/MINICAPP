@@ -256,10 +256,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
         Timestamp timestamp = record.getTimestamp();
 
-        int day = timestamp.getDay().getDate();
-        int month = timestamp.getDay().getMonth();
-        int year = timestamp.getDay().getYear();
-        Day date = new Day(day, month, year);
+        Day date = new Day(timestamp.getDay());
 
         Long primaryKey = date.toDatabaseNumber() + timestamp.getSampleNumber();
 
