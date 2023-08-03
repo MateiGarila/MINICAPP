@@ -2,12 +2,12 @@ package com.example.mini_cap.model;
 
 import android.annotation.SuppressLint;
 
-public class Date {
+public class Day {
     private int day;
     private int month;
     private int year;
 
-    public Date(int day, int month, int year) {
+    public Day(int day, int month, int year) {
         this.day = day;
         this.month = month;
         this.year = year;

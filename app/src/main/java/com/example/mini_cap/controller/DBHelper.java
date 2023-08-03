@@ -13,7 +13,7 @@ import androidx.annotation.Nullable;
 
 import com.example.mini_cap.model.Preset;
 import com.example.mini_cap.model.Stats;
-import com.example.mini_cap.model.Date;
+import com.example.mini_cap.model.Day;
 
 import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.data.optical.TimedOpticalRecord;
@@ -326,11 +326,11 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
     /**
      * Function for returning Stats for a given day
-     * @param date must be in form "yyyy/mm/dd"
+     * @param day must be in form "yyyy/mm/dd"
      * @return Stats object with data for timestamp entered
      */
-    public float getDailyAvg(Date date){
-        String dateString = date.toString();
+    public float getDailyAvg(Day day){
+        String dateString = day.toString();
         SQLiteDatabase db = this.getReadableDatabase();
         List<Stats> statsList = new ArrayList<>();
 
@@ -415,7 +415,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param date is a date object, hour is concatenated to date string to create full timestamp
      * @return hourly avg exposure from 8 am to 6 pm
      */
-    public float getMinuteAvg(Date date, int minute, int hour){
+    public float getMinuteAvg(Day date, int minute, int hour){
         int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float)interval);
         int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float)interval);
 
@@ -443,7 +443,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         return avg;
     }
 
-    public float getHourlyAvg(Date date, int hour){
+    public float getHourlyAvg(Day date, int hour){
         float[] minuteAvgs = new float[60];
 
         // Get minute averages for each minute in the hour
@@ -465,7 +465,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param date must be in form "yyyy/MM/dd"
      * @return array of hourly UV exposure floats for specified day from 8 am to 6 pm
      */
-    public float[] getExposureForDay(Date date){
+    public float[] getExposureForDay(Day date){
 
         float[] dailyExposure = new float[11];
 

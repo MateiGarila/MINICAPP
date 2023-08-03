@@ -15,7 +15,7 @@ import androidx.core.content.ContextCompat;
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
 import com.example.mini_cap.controller.SensorController;
-import com.example.mini_cap.model.Date;
+import com.example.mini_cap.model.Day;
 import com.example.mini_cap.model.Stats;
 import com.example.mini_cap.view.helper.IntentDataHelper;
 import com.github.mikephil.charting.charts.LineChart;
@@ -58,7 +58,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     private int previousSelectedPosition;
     private Button previousSelectedButton;
     private DBHelper dbHelper;
-    private Date date;
+    private Day date;
     private TextView date_text_view;
 
     private TextView curr_time_text_view;
@@ -125,7 +125,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         int day = current_date.getDayOfMonth();
         int month = current_date.getMonthValue();
         int year = current_date.getYear();
-        Date currentDate = new Date(day, month, year);
+        Day currentDate = new Day(day, month, year);
 
         previousSelectedPosition = -1;
 
@@ -365,7 +365,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         int day = Integer.parseInt(conversion1[0]);
         int month = Integer.parseInt(conversion1[1]);
         int year = Integer.parseInt(conversion1[2]);
-        Date selectedDate2 = new Date(day, month, year);
+        Day selectedDate2 = new Day(day, month, year);
         Log.d("date", selectedDate2.toString());
         float[] uv_values_float = dbHelper.getExposureForDay(selectedDate2);
         //System.out.println("uv values:" + uv_values_float);
@@ -412,7 +412,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         int day = date.getDayOfMonth();
         int month = date.getMonthValue();
         int year = date.getYear();
-        Date outputDate = new Date(day, month, year);
+        Day outputDate = new Day(day, month, year);
         float[] uv_values_float = dbHelper.getExposureForDay(outputDate);
 
 
