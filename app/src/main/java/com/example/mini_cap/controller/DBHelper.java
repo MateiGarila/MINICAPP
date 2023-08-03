@@ -415,7 +415,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      */
     public float getMinuteAvg(String date, int minute, int hour){
         int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float)interval);
-        int nextMinuteSample = Math.round((float)3600 * hour + 60 * (minute+1)/ (float)interval);
+        int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float)interval);
 
         String timestamp1 = date + "-" + minuteSample;
         String timestamp2 = date + "-" + nextMinuteSample;
@@ -443,7 +443,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
         // Get minute averages for each minute in the hour
         for (int i = 0; i < 60; i++) {
-            minuteAvgs[i] = getMinuteAvg(date, hour, i);
+            minuteAvgs[i] = getMinuteAvg(date, i, hour);
         }
 
         // Calculate the hourly average

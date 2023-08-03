@@ -351,7 +351,9 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         date_text_view.setText(setDateTextView(curr_week_list.get(selectedIndex)));
         String selectedDate = curr_week_list.get(previousSelectedPosition);
         ArrayList<Float> y_axis_values = new ArrayList<>();
-        float[] uv_values_float = dbHelper.getExposureForDay("19/07/2023");
+        String[] conversion1 = selectedDate.split("-");
+        String selectedDate2 = conversion1[2] + "/" + conversion1[0] + "/" + conversion1[1];
+        float[] uv_values_float = dbHelper.getExposureForDay(selectedDate2);
         //System.out.println("uv values:" + uv_values_float);
         for (float value : uv_values_float) {
             System.out.println("uv value" + value);
