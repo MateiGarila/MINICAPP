@@ -438,7 +438,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
             }
         }
         int sampleCount = statsList.size();
-        avg = sum/sampleCount;
+        avg = sampleCount > 0 ? sum / sampleCount : 0.0f;
 
         return avg;
     }
