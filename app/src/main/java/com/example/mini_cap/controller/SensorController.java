@@ -21,6 +21,7 @@ import java.util.Objects;
 import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.sensor.SensorAPI;
 import app.uvtracker.sensor.pii.ISensor;
+import app.uvtracker.sensor.pii.connection.application.event.NewEstimationReceivedEvent;
 import app.uvtracker.sensor.pii.connection.application.event.NewSampleReceivedEvent;
 import app.uvtracker.sensor.pii.connection.shared.event.ConnectionStateChangeEvent;
 import app.uvtracker.sensor.pii.event.EventHandler;
@@ -150,7 +151,7 @@ public class SensorController extends EventRegistry implements IEventListener {
         this.getSensor().getConnection().registerListener(new IEventListener() {
 
             @EventHandler
-            private void onNewEstimationReceived() {
+            private void onNewEstimationReceived(NewEstimationReceivedEvent event) {
                 ISensor sensor = SensorController.this.getSensorIfConnected();
                 if(sensor == null) return;
                 sensor.getConnection().startSync();
