@@ -28,6 +28,8 @@ import java.util.Objects;
 
 public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
+    private static final boolean DEBUG_READ_ALS = true;
+
     private final Context context;
     private final String TAG = "DBHelper";
 
@@ -366,7 +368,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         for(Stats stats : statsList){
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
-                sum += opticalRecord.uvIndex;
+                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
             }
         }
         int sampleCount = statsList.size();
@@ -432,7 +434,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         for(Stats stats : statsList){
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
-                sum += opticalRecord.uvIndex;
+                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
             }
         }
         int sampleCount = statsList.size();
@@ -463,7 +465,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         for (Stats stats : statsList) {
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
-                sum += opticalRecord.uvIndex;
+                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
             }
         }
 
