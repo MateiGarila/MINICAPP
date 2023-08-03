@@ -359,7 +359,10 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         float sum = 0.0f, avg;
 
         for(Stats stats : statsList){
-            sum += Objects.requireNonNull(OpticalRecord.unflatten(stats.getExposure())).uvIndex;
+            OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
+            if (opticalRecord != null) {
+                sum += opticalRecord.uvIndex;
+            }
         }
         int sampleCount = statsList.size();
         avg = sum/sampleCount;
@@ -422,7 +425,10 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         float sum = 0.0f, avg;
 
         for(Stats stats : statsList){
-            sum += Objects.requireNonNull(OpticalRecord.unflatten(stats.getExposure())).uvIndex;
+            OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
+            if (opticalRecord != null) {
+                sum += opticalRecord.uvIndex;
+            }
         }
         int sampleCount = statsList.size();
         avg = sum/sampleCount;
