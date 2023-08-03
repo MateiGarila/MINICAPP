@@ -61,7 +61,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
         //Create stats table
         String CREATE_STATS_TABLE = "CREATE TABLE " + Dict.TABLE_STATS + " (" +
-                Dict.COLUMN_TIMESTAMP + " TEXT PRIMARY KEY NOT NULL, " + // Make timestamp the primary key
+                Dict.COLUMN_TIMESTAMP + " INTEGER PRIMARY KEY NOT NULL, " + // Make timestamp the primary key
                 Dict.COLUMN_UVINDEX + " TEXT NOT NULL)";
 
         String CREATE_TIMESTAMP_INDEX = "CREATE UNIQUE INDEX idx_timestamp ON " +
@@ -256,13 +256,12 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
         Timestamp timestamp = record.getTimestamp();
 
-        @SuppressLint("DefaultLocale")
-        String primaryKey = String.format("%d/%02d/%02d-%d",
-                timestamp.getDay().getYear() + 1900,
-                timestamp.getDay().getMonth() + 1,
-                timestamp.getDay().getDate(),
-                timestamp.getSampleNumber()
-        );
+        int day = timestamp.getDay().getDate();
+        int month = timestamp.getDay().getMonth();
+        int year = timestamp.getDay().getYear();
+        Day date = new Day(day, month, year);
+
+        Long primaryKey = date.toDatabaseNumber() + timestamp.getSampleNumber();
 
         String dataString = record.getData().flatten();
 
@@ -286,7 +285,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param timestamp must be in form "yyyy/mm/dd-sampleNumber"
      * @return Stats object with data for timestamp entered
       */
-    public Stats getStats(String timestamp) {
+    public Stats getStats(Long timestamp) {
 
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -330,7 +329,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @return Stats object with data for timestamp entered
      */
     public float getDailyAvg(Day day){
-        String dateString = day.toString();
+        Long dateLong = day.toDatabaseNumber();
         SQLiteDatabase db = this.getReadableDatabase();
         List<Stats> statsList = new ArrayList<>();
 
@@ -338,16 +337,17 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
         try {
             // The SQL query to select all records where the date matches the given day
-            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS + " WHERE SUBSTR(" + Dict.COLUMN_TIMESTAMP + ", 1, 10) = ?", new String[]{dateString});
+            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS + " WHERE " + Dict.COLUMN_TIMESTAMP + " >= ? AND " + Dict.COLUMN_TIMESTAMP + " < ?",
+                    new String[]{String.valueOf(dateLong), String.valueOf(dateLong + (24 * 60 * 60 )/interval)});
 
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
                     do {
-                        @SuppressLint("Range") String timestamp = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_TIMESTAMP));
+                        @SuppressLint("Range") long timestamp = cursor.getLong(cursor.getColumnIndex(Dict.COLUMN_TIMESTAMP));
                         @SuppressLint("Range") String exposure = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
 
                         // Create a Stats object and add it to the list
-                        statsList.add(new Stats(timestamp, exposure));
+                        statsList.add(new Stats(exposure, timestamp));
                     } while (cursor.moveToNext());
                 }
 
@@ -374,7 +374,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         return avg;
     }
 
-    public List<Stats> getStatsBetweenTimestamps(String timestamp1, String timestamp2) {
+    public List<Stats> getStatsBetweenTimestamps(long timestamp1, long timestamp2) {
         SQLiteDatabase db = this.getReadableDatabase();
         List<Stats> statsList = new ArrayList<>();
 
@@ -383,7 +383,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         try {
             cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS +
                             " WHERE " + Dict.COLUMN_TIMESTAMP + " >= ? AND " + Dict.COLUMN_TIMESTAMP + " < ?",
-                    new String[]{timestamp1, timestamp2});
+                    new String[]{String.valueOf(timestamp1), String.valueOf(timestamp2)});
 
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
@@ -391,7 +391,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
                         @SuppressLint("Range") String exposure = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
 
                         // Get the timestamp from the cursor
-                        @SuppressLint("Range") String timestamp = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_TIMESTAMP));
+                        @SuppressLint("Range") long timestamp = cursor.getLong(cursor.getColumnIndex(Dict.COLUMN_TIMESTAMP));
 
                         statsList.add(new Stats(exposure, timestamp));
                     } while (cursor.moveToNext());
@@ -419,11 +419,11 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float)interval);
         int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float)interval);
 
-        String timestamp1 = date.toString() + "-" + minuteSample;
-        String timestamp2 = date + "-" + nextMinuteSample;
+        Long timestamp1 = date.toDatabaseNumber() + minuteSample;
+        Long timestamp2 = date.toDatabaseNumber() + nextMinuteSample;
 
-        Log.d("timestamp1", timestamp1);
-        Log.d("timestamp2", timestamp2);
+        Log.d("timestamp1", String.valueOf(timestamp1));
+        Log.d("timestamp2", String.valueOf(timestamp2));
 
         List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
 

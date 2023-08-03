@@ -47,22 +47,23 @@
 
     <TextView
         android:id="@+id/condition"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sunny"
+        android:layout_width="190dp"
+        android:layout_height="84dp"
+        android:gravity="center"
+        android:text="Light rain with thunder"
         android:textSize="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.811"
+        app:layout_constraintHorizontal_bias="0.968"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/temp"
-        app:layout_constraintVertical_bias="0.154" />
+        app:layout_constraintVertical_bias="0.143" />
 
     <TextView
         android:id="@+id/uvIndex"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="UV Index: "
+        android:text="UV Index: 6.0"
         android:textSize="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

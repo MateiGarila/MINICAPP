@@ -4,11 +4,11 @@ import java.time.LocalDateTime;
 
 public class Stats {
     private String exposure;
-    private String timestamp;
+    private long timestamp;
 
 
     // Constructor for Stats object
-    public Stats(String exposure, String timestamp){
+    public Stats(String exposure, long timestamp){
         this.exposure = exposure;
         this.timestamp = timestamp;
     }
@@ -16,12 +16,12 @@ public class Stats {
     // Getters
     public String getExposure() {return exposure;}
 
-    public String getTimestamp() {return timestamp;}
+    public long getTimestamp() {return timestamp;}
 
     // Setters
     public void setExposure(String exposure) {this.exposure = exposure;}
 
-    public void setTimestamp(String timestamp) {this.timestamp = timestamp;}
+    public void setTimestamp(long timestamp) {this.timestamp = timestamp;}
 
 }
 

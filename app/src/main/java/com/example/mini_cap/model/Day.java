@@ -44,4 +44,9 @@ public class Day {
 
         return year+"/"+formatMonth+"/"+formatDay;
     }
+
+    /* Function for converting dates into database addressable numbers*/
+    public long toDatabaseNumber(){
+        return (year * 10000L + month * 100L + day) * 100000;
+    }
 }
