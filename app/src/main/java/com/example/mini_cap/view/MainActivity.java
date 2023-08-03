@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
     private TextView cityNameTV, temp, uvIndex, conditionTV;
     private ImageView currentWeather;
     private String defaultCity = "Montreal"; // Default city
+    private static final int SETTINGS_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
 
     private void toSettingsActivity(){
         Intent intent = new Intent(this, SettingsActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, SETTINGS_REQUEST_CODE);
     }
 
     private void getWeatherInfo(String city){
