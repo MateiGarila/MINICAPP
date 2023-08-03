@@ -61,7 +61,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
         //Create stats table
         String CREATE_STATS_TABLE = "CREATE TABLE " + Dict.TABLE_STATS + " (" +
-                Dict.COLUMN_TIMESTAMP + " INTEGER PRIMARY KEY NOT NULL, " + // Make timestamp the primary key
+                Dict.COLUMN_TIMESTAMP + " BIGINT PRIMARY KEY NOT NULL, " + // Make timestamp the primary key
                 Dict.COLUMN_UVINDEX + " TEXT NOT NULL)";
 
         String CREATE_TIMESTAMP_INDEX = "CREATE UNIQUE INDEX idx_timestamp ON " +
