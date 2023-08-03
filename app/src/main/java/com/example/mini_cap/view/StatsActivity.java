@@ -359,8 +359,8 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         ArrayList<Float> y_axis_values = new ArrayList<>();
 
         String[] conversion1 = selectedDate.split("-");
-        int month = Integer.parseInt(conversion1[0]);
-        int day = Integer.parseInt(conversion1[1]);
+        int month = Integer.parseInt(conversion1[1]);
+        int day = Integer.parseInt(conversion1[0]);
         int year = Integer.parseInt(conversion1[2]);
         Day selectedDate2 = new Day(day, month, year);
 

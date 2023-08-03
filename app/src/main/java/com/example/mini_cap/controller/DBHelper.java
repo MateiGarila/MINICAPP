@@ -243,40 +243,44 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
     /**
      * Function for inserting new stats into the db
-     * @param record
+     * @param records
      * @return
      */
-    public long insertStats(TimedOpticalRecord record){
-
+    public long insertStats(List<TimedOpticalRecord> records) {
         // If -1 is returned, function did not insert stats into db.
         long id = -1;
 
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
+        db.beginTransaction(); // Begin the transaction
 
-        Timestamp timestamp = record.getTimestamp();
+        try {
+            for (TimedOpticalRecord record : records) {
+                ContentValues contentValues = new ContentValues();
+                Timestamp timestamp = record.getTimestamp();
+                Day date = new Day(timestamp.getDay());
 
-        Day date = new Day(timestamp.getDay());
+                Long primaryKey = date.toDatabaseNumber() + timestamp.getSampleNumber();
 
-        Long primaryKey = date.toDatabaseNumber() + timestamp.getSampleNumber();
+                String dataString = record.getData().flatten();
 
-        String dataString = record.getData().flatten();
+                contentValues.put(Dict.COLUMN_TIMESTAMP, primaryKey);
+                contentValues.put(Dict.COLUMN_UVINDEX, dataString);
 
-        // ID is incremented by the db instead of inserted
-        // primaryKey is in form yyyy/mm/dd-sampleNumber
-        contentValues.put(Dict.COLUMN_TIMESTAMP, primaryKey);
-        contentValues.put(Dict.COLUMN_UVINDEX, dataString);
+                // Insert the record into the database with CONFLICT_IGNORE
+                id = db.insertWithOnConflict(Dict.TABLE_STATS, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
+            }
 
-        try{
-            id = db.insertWithOnConflict(Dict.TABLE_STATS, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
-        }catch(Exception e){
+            db.setTransactionSuccessful(); // Mark the transaction as successful
+        } catch (Exception e) {
             Toast.makeText(context, "DB Insert Error @ insertStats(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }finally{
+        } finally {
+            db.endTransaction(); // End the transaction
             db.close();
         }
 
         return id;
     }
+
     /**
      * Function for returning Stats for a given hour on a given date
      * @param timestamp must be in form "yyyy/mm/dd-sampleNumber"
@@ -419,9 +423,6 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         Long timestamp1 = date.toDatabaseNumber() + minuteSample;
         Long timestamp2 = date.toDatabaseNumber() + nextMinuteSample;
 
-        Log.d("timestamp1", String.valueOf(timestamp1));
-        Log.d("timestamp2", String.valueOf(timestamp2));
-
         List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
 
 
@@ -440,22 +441,38 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         return avg;
     }
 
-    public float getHourlyAvg(Day date, int hour){
-        float[] minuteAvgs = new float[60];
+    public float getHourlyAvg(Day date, int hour) {
+        float hourlyAvg = 0.0f;
 
-        // Get minute averages for each minute in the hour
-        for (int i = 0; i < 60; i++) {
-            minuteAvgs[i] = getMinuteAvg(date, i, hour);
+        // Get hour sample numbers and query the DB
+
+        int nextHour = hour + 1;
+        int hourSample = (hour*3600)/interval;
+        int nextHourSample = (nextHour*3600)/interval;
+        Long timestamp1 = date.toDatabaseNumber() + hourSample;
+        Long timestamp2 = date.toDatabaseNumber() + nextHourSample;
+
+        Log.d("timestamp1", String.valueOf(timestamp1));
+        Log.d("timestamp2", String.valueOf(timestamp2));
+
+        List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
+
+        // Calculate the average exposure for the given minute range if needed
+        float sum = 0.0f, avg;
+
+        for (Stats stats : statsList) {
+            OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
+            if (opticalRecord != null) {
+                sum += opticalRecord.uvIndex;
+            }
         }
 
-        // Calculate the hourly average
-        float totalMinuteAvg = 0.0f;
-        for (float minuteAvg : minuteAvgs) {
-            totalMinuteAvg += minuteAvg;
-        }
+        int sampleCount = statsList.size();
+        avg = sampleCount > 0 ? sum / sampleCount : 0.0f;
 
-        return totalMinuteAvg / 60.0f;
+        return avg;
     }
+
 
     /**
      * Function for returning the UV exposure for a specified day
@@ -470,6 +487,8 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
             int index = i - 8;
 
             dailyExposure[index] = getHourlyAvg(date, i);
+
+            Log.d("Call hourly avg", String.valueOf(date));
 
         }
 
@@ -499,9 +518,8 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         if(data.size() == 0) Log.d(TAG, "[Sync] Data size: 0.");
         else Log.d(TAG, String.format("[Sync] Data size: %d; first: %s; last: %s.", data.size(), data.get(0), data.get(data.size() - 1)));
 
-        for(TimedOpticalRecord record : data) {
-            this.insertStats(record);
-        }
+        insertStats(data);
+
     }
 
 }
