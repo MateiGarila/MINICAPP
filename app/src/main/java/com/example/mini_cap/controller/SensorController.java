@@ -18,9 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import app.uvtracker.data.type.Record;
+import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.sensor.SensorAPI;
 import app.uvtracker.sensor.pii.ISensor;
+
+import app.uvtracker.sensor.pii.connection.application.event.NewEstimationReceivedEvent;
+
 import app.uvtracker.sensor.pii.connection.application.event.NewSampleReceivedEvent;
 import app.uvtracker.sensor.pii.connection.shared.event.ConnectionStateChangeEvent;
 import app.uvtracker.sensor.pii.event.EventHandler;
@@ -120,7 +123,9 @@ public class SensorController extends EventRegistry implements IEventListener {
             }
             case ESTABLISHED: {
                 this.displayToast(R.string.sensor_connection_established);
-                this.dispatch(new SensorConnectedEvent(this.getSensor()));
+
+                this.handler.post(this::handleSensorConnection);
+
                 break;
             }
             case DISCONNECTED: {
@@ -144,6 +149,24 @@ public class SensorController extends EventRegistry implements IEventListener {
             this.sensor = null;
         }
     }
+
+
+    private void handleSensorConnection() {
+        this.getSensor().getConnection().registerListener(new DBHelper(this.activity));
+        this.getSensor().getConnection().registerListener(new IEventListener() {
+
+            @EventHandler
+            private void onNewEstimationReceived(NewEstimationReceivedEvent event) {
+                ISensor sensor = SensorController.this.getSensorIfConnected();
+                if(sensor == null) return;
+                sensor.getConnection().startSync();
+            }
+
+        });
+        this.dispatch(new SensorConnectedEvent(this.getSensor()));
+        this.handler.post(() -> this.getSensor().getConnection().startSync());
+    }
+
 
     @EventHandler
     protected void onReceivedData(@NonNull NewSampleReceivedEvent event) {
@@ -215,15 +238,15 @@ public class SensorController extends EventRegistry implements IEventListener {
         private final Context context;
 
         @NonNull
-        private final Record record;
+        private final OpticalRecord record;
 
-        protected RealTimeDataEvent(@NonNull Context context, @NonNull Record record) {
+        protected RealTimeDataEvent(@NonNull Context context, @NonNull OpticalRecord record) {
             this.context = context;
             this.record = record;
         }
 
         @NonNull
-        public Record getRecord() {
+        public OpticalRecord getRecord() {
             return record;
         }
 

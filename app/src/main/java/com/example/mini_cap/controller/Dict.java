@@ -14,7 +14,8 @@ public class Dict {
     public static final String TABLE_STATS = "stats";
     public static final String COLUMN_LOGID = "logID";
     public static final String COLUMN_TIMESTAMP = "timestamp";
-    public static final String COLUMN_EXPOSURE = "exposure";
+    public static final String COLUMN_UVINDEX = "uvIndex";
+    public static final String COLUMN_ILLUMINANCE = "illuminance";
 
     public static final String TABLE_PRESET = "user";
     public static final String COLUMN_PRESET_ID = "userID";

@@ -2,38 +2,27 @@ package app.uvtracker.sensor.pii.connection.application.event;
 
 import androidx.annotation.NonNull;
 
-import java.util.Date;
-
-import app.uvtracker.data.type.Record;
-import app.uvtracker.sensor.protocol.packet.in.PacketInNewSample;
+import app.uvtracker.data.optical.OpticalRecord;
+import app.uvtracker.sensor.protocol.packet.in.PacketInNewOpticalSample;
 
 public class NewSampleReceivedEvent {
 
-    @NonNull
-    private final Date localTimestamp;
-
-    private final int remoteTimestamp;
+    private final int seconds;
 
     @NonNull
-    private final Record record;
+    private final OpticalRecord record;
 
-    public NewSampleReceivedEvent(@NonNull PacketInNewSample packet) {
-        this.localTimestamp = new Date();
-        this.remoteTimestamp = packet.getRemoteTimestamp();
+    public NewSampleReceivedEvent(@NonNull PacketInNewOpticalSample packet) {
+        this.seconds = packet.getSampleSeconds();
         this.record = packet.getRecord();
     }
 
-    @NonNull
-    public Date getLocalTimestamp() {
-        return localTimestamp;
-    }
-
-    public int getRemoteTimestamp() {
-        return remoteTimestamp;
+    public int getSeconds() {
+        return seconds;
     }
 
     @NonNull
-    public Record getRecord() {
+    public OpticalRecord getRecord() {
         return record;
     }
 

@@ -2,6 +2,7 @@ package com.example.mini_cap.view;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -14,6 +15,9 @@ import androidx.core.content.ContextCompat;
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
 import com.example.mini_cap.controller.SensorController;
+
+import com.example.mini_cap.model.Day;
+
 import com.example.mini_cap.model.Stats;
 import com.example.mini_cap.view.helper.IntentDataHelper;
 import com.github.mikephil.charting.charts.LineChart;
@@ -56,6 +60,9 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     private int previousSelectedPosition;
     private Button previousSelectedButton;
     private DBHelper dbHelper;
+
+    private Day date;
+
     private TextView date_text_view;
 
     private TextView curr_time_text_view;
@@ -75,46 +82,54 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         if(sensorController == null) {
             // Sensor is not connected!
             Toast.makeText(this, "Please first connect to a sensor.", Toast.LENGTH_SHORT).show();
-            this.finish();
-            return;
+
         }
-        sensorController.registerListener(this);
+        else {
+            sensorController.registerListener(this);
+        }
 
+
+        this.dbHelper = new DBHelper(this);
+
+/*
         //"dd/MM/yyyy HH:mm:ss"
-        dbHelper = new DBHelper(this);
-        Stats stats1 = new Stats(1, 3.0F, "19/07/2023 08:00:00");
-        Stats stats2 = new Stats(2, 4.0F, "19/07/2023 09:00:00");
-        Stats stats3 = new Stats(3, 4.5F, "19/07/2023 10:00:00");
-        Stats stats4 = new Stats(4, 5.3F, "19/07/2023 11:00:00");
-        Stats stats5 = new Stats(5, 3.4F, "19/07/2023 12:00:00");
-        Stats stats6 = new Stats(6, 6.0F, "19/07/2023 13:00:00");
-        Stats stats7 = new Stats(7, 7.5F, "19/07/2023 14:00:00");
-        Stats stats8 = new Stats(8, 11.2F, "19/07/2023 15:00:00");
-        Stats stats9 = new Stats(9, 8.0F, "19/07/2023 16:00:00");
-        Stats stats10 = new Stats(10, 5.0F, "19/07/2023 17:00:00");
-        Stats stats11 = new Stats(11, 6.2F, "19/07/2023 18:00:00");
-        Stats stats12 = new Stats(12, 3.0F, "19/07/2023 19:00:00");
-        Stats stats13 = new Stats(13, 3.2F, "19/07/2023 20:00:00");
-
-        dbHelper.insertStats(stats1);
-        dbHelper.insertStats(stats2);
-        dbHelper.insertStats(stats3);
-        dbHelper.insertStats(stats4);
-        dbHelper.insertStats(stats5);
-        dbHelper.insertStats(stats6);
-        dbHelper.insertStats(stats7);
-        dbHelper.insertStats(stats8);
-        dbHelper.insertStats(stats9);
-        dbHelper.insertStats(stats10);
-        dbHelper.insertStats(stats11);
-        dbHelper.insertStats(stats12);
-        dbHelper.insertStats(stats13);
-
+//        dbHelper = new DBHelper(this);
+//        Stats stats1 = new Stats(1, 3.0F, "19/07/2023 08:00:00");
+//        Stats stats2 = new Stats(2, 4.0F, "19/07/2023 09:00:00");
+//        Stats stats3 = new Stats(3, 4.5F, "19/07/2023 10:00:00");
+//        Stats stats4 = new Stats(4, 5.3F, "19/07/2023 11:00:00");
+//        Stats stats5 = new Stats(5, 3.4F, "19/07/2023 12:00:00");
+//        Stats stats6 = new Stats(6, 6.0F, "19/07/2023 13:00:00");
+//        Stats stats7 = new Stats(7, 7.5F, "19/07/2023 14:00:00");
+//        Stats stats8 = new Stats(8, 11.2F, "19/07/2023 15:00:00");
+//        Stats stats9 = new Stats(9, 8.0F, "19/07/2023 16:00:00");
+//        Stats stats10 = new Stats(10, 5.0F, "19/07/2023 17:00:00");
+//        Stats stats11 = new Stats(11, 6.2F, "19/07/2023 18:00:00");
+//        Stats stats12 = new Stats(12, 3.0F, "19/07/2023 19:00:00");
+//        Stats stats13 = new Stats(13, 3.2F, "19/07/2023 20:00:00");
+//
+//        dbHelper.insertStats(stats1);
+//        dbHelper.insertStats(stats2);
+//        dbHelper.insertStats(stats3);
+//        dbHelper.insertStats(stats4);
+//        dbHelper.insertStats(stats5);
+//        dbHelper.insertStats(stats6);
+//        dbHelper.insertStats(stats7);
+//        dbHelper.insertStats(stats8);
+//        dbHelper.insertStats(stats9);
+//        dbHelper.insertStats(stats10);
+//        dbHelper.insertStats(stats11);
+//        dbHelper.insertStats(stats12);
+//        dbHelper.insertStats(stats13);
+*/
 
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMMM d' 'yyyy");
-        DateTimeFormatter outputFormatterForDB = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter outputFormatterForDB = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
+        // Getting date as LocalDate object and creating a Date class object with it
         LocalDate current_date = LocalDate.now();
+        Day currentDate = new Day(current_date);
+
         previousSelectedPosition = -1;
 
         defaultColor = ContextCompat.getColor(this, R.color.button_grey);
@@ -154,7 +169,9 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         ArrayList<Float> y_axis_values = new ArrayList<>();
 
-        float[] uv_values_float = dbHelper.getExposureForDay(current_date.format(outputFormatterForDB ));
+
+        float[] uv_values_float = dbHelper.getExposureForDay(currentDate);
+
         for (float value : uv_values_float) {
             y_axis_values.add(value);
         }
@@ -348,7 +365,16 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         date_text_view.setText(setDateTextView(curr_week_list.get(selectedIndex)));
         String selectedDate = curr_week_list.get(previousSelectedPosition);
         ArrayList<Float> y_axis_values = new ArrayList<>();
-        float[] uv_values_float = dbHelper.getExposureForDay("19/07/2023");
+
+
+        String[] conversion1 = selectedDate.split("-");
+        int month = Integer.parseInt(conversion1[1]);
+        int day = Integer.parseInt(conversion1[0]);
+        int year = Integer.parseInt(conversion1[2]);
+        Day selectedDate2 = new Day(day, month, year);
+
+        float[] uv_values_float = dbHelper.getExposureForDay(selectedDate2);
+
         //System.out.println("uv values:" + uv_values_float);
         for (float value : uv_values_float) {
             System.out.println("uv value" + value);
@@ -385,12 +411,17 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     }
 
     public void createDataSet(String selectedDate){
-        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
         LocalDate date = LocalDate.parse(selectedDate, inputFormatter);
         ArrayList<Float> y_axis_values = new ArrayList<>();
-        float[] uv_values_float = dbHelper.getExposureForDay(date.format(outputFormatter ));
+
+        Day outputDate = new Day(date);
+        float[] uv_values_float = dbHelper.getExposureForDay(outputDate);
+
 
 
         //System.out.println("uv values:" + uv_values_float);
