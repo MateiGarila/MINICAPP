@@ -2,6 +2,7 @@ package com.example.mini_cap.view;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -32,7 +33,8 @@ public class SessionActivity extends AppCompatActivity  {
     private Button NotificationButton;// to simulate notification
 
     //Declaration of all UI elements
-    protected TextView mainTextView, statusTextView, notificationTierTextView, timeRemainingTextView, timerTextView;
+    protected TextView mainTextView, statusTextView, notificationTierTextView,
+            timeRemainingTextView, timerTextView;
     protected Button startPauseBTN, addPresetBTN, editPresetBTN, endSessionBTN;
 
     //Needed
@@ -44,12 +46,11 @@ public class SessionActivity extends AppCompatActivity  {
     private static final int MAX_TIER = 5;
 
     //Countdown timer variables
-    //For Testing purposes
+    //For Testing purposes. This is 10 seconds
     private static final long START_TIME_IN_MILLIS = 10000;
     private CountDownTimer countDownTimer;
     private long timeLeftInMillis = START_TIME_IN_MILLIS;
-
-
+    
     private int notificationTier;
     private boolean isSessionStarted;
     private boolean isSessionPaused;
@@ -95,8 +96,6 @@ public class SessionActivity extends AppCompatActivity  {
         //Make end session button invisible when no session is started
         endSessionBTN.setVisibility(View.INVISIBLE);
 
-
-
         mainTextView.setOnClickListener(v -> finish());
 
         addPresetBTN.setOnClickListener(new View.OnClickListener() {
@@ -112,7 +111,8 @@ public class SessionActivity extends AppCompatActivity  {
         editPresetBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                toEditActivity();
+                Intent intent = new Intent(getBaseContext(), EditActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -202,32 +202,25 @@ public class SessionActivity extends AppCompatActivity  {
 
     private void showUVNotification(int uvIndex) {
         String notificationMessage;
-        switch (uvIndex) {
-            case 1:
-            case 2:
-                notificationMessage = "Low risk of UV exposure, don't forget to wear sunscreen.";
-                break;
-            case 3:
-            case 4:
-            case 5:
-                notificationMessage = "Moderate risk of UV exposure. Please wear sunscreen.";
-                break;
-            case 6:
-            case 7:
-                notificationMessage = "High risk of skin damage. Wear sunscreen and seek shade.";
-                break;
-            case 8:
-            case 9:
-            case 10:
-                notificationMessage = "Very High Risk! Wear sunscreen, seek shade or stay indoors.";
-                break;
-            default:
-                notificationMessage = "Extreme Risk! Stay indoors. If not possible then wear protective clothing, sunscreen and sunglasses, and seek shade.";
-                break;
+
+        if(uvIndex <= 2){
+            notificationMessage = "Low risk of UV exposure, don't forget to wear sunscreen.";
+
+        } else if(uvIndex <= 5) {
+            notificationMessage = "Moderate risk of UV exposure. Please wear sunscreen.";
+
+        } else if(uvIndex <= 7) {
+            notificationMessage = "High risk of skin damage. Wear sunscreen and seek shade.";
+
+        } else if(uvIndex <= 10) {
+            notificationMessage = "Very High Risk! Wear sunscreen, seek shade or stay indoors.";
+        } else {
+            notificationMessage = "Extreme Risk! Stay indoors. If not possible then wear protective clothing, sunscreen and sunglasses, and seek shade.";
         }
 
         Notification notification = createNotification(notificationMessage);
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
         if (notificationManager != null) {
             notificationManager.notify(NOTIFICATION_ID, notification);
         }
@@ -274,11 +267,11 @@ public class SessionActivity extends AppCompatActivity  {
         }
     }
 
-    protected void toEditActivity(){
-        Intent intent = new Intent(this, EditActivity.class);
-        startActivity(intent);
-    }
-
+    /**
+     * This is the method which receives the selected preset to start the session, which then calls
+     * the startSession() method; starting the session
+     * @param preset the selected preset
+     */
     public void fetchPresetStartSession(Preset preset){
 
         //Toast.makeText(this, "I got called from fragment: " + preset.getName(), Toast.LENGTH_SHORT).show();
@@ -290,6 +283,7 @@ public class SessionActivity extends AppCompatActivity  {
      * This method handles what happens at the start of a session
      * @param preset that has been selected for the session
      */
+    @SuppressLint("SetTextI18n")
     private void startSession(Preset preset){
 
         //Toast.makeText(this, "Session Started", Toast.LENGTH_SHORT).show();
@@ -374,14 +368,17 @@ public class SessionActivity extends AppCompatActivity  {
         int minutes = (int) (timeLeftInMillis / 1000) / 60;
         int seconds = (int) (timeLeftInMillis / 1000) % 60;
 
-        String timeLeftFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
+        String timeLeftFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes,
+                seconds);
 
         timerTextView.setText(timeLeftFormatted);
     }
 
     /**
-     * This method handles notification tiers. Depending on the tier a different text is applied to the notification
+     * This method handles notification tiers. Depending on the tier a different text is applied to
+     * the notification
      */
+    @SuppressLint("SetTextI18n")
     private void updateTier(){
 
         notificationTier = notificationTier + 1;
@@ -409,14 +406,146 @@ public class SessionActivity extends AppCompatActivity  {
 
             @Override
             public void onFinish() {
+
+                String notificationMessage = notificationMessage(notificationTier);
+                Toast.makeText(getBaseContext(), notificationMessage, Toast.LENGTH_SHORT).show();
                 //Notifications go here
-                Toast.makeText(getBaseContext(), "Just finished a tier: " + notificationTier + " notification", Toast.LENGTH_SHORT).show();
-                updateTier();
+                //-->
+                
                 timeLeftInMillis = START_TIME_IN_MILLIS;
                 countDownManager();
             }
 
         }.start();
 
+    }
+
+    /**
+     * Based on the notification tier this method returns the message that will be displayed in the
+     * notification
+     * @param notificationTier the current tier of notification (how many times the timer has
+     *                         completed it's run
+     * @return the string to be displayed in the notification
+     */
+    private String notificationMessage(int notificationTier){
+
+        String message = "";
+
+        switch (notificationTier){
+
+            case 1:
+                message = "Timer complete! Please hydrate yourself.";
+                break;
+            case 2:
+                message = "Timer complete! Please apply sunscreen (re-apply every 2 hours)";
+                break;
+            case 3:
+                message = "Timer complete! Please hydrate yourself";
+                break;
+            case 4:
+                message = "Timer complete! Please take shelter from the sun for a timer's duration";
+                break;
+            case 5:
+                message = "Timer complete! Enjoy the sun!";
+                break;
+            default:
+                Toast.makeText(this, "An error has happened in notificationMessage",
+                        Toast.LENGTH_SHORT).show();
+                break;
+        }
+
+        updateTier();
+
+        return message;
+    }
+
+    /**
+     * Based on the selected preset, the age will be used in the algorithm to determine the timer
+     * for that preset
+     * @param age the age from the preset
+     * @return age parameter to be used in the algorithm
+     */
+    private double ageParameter(int age){
+
+        double ageParam = 0.0;
+
+        if(age < 13){
+
+            ageParam = -2.0;
+
+        }else if(age < 16){
+
+            ageParam = -1.5;
+
+        }else if(age < 19){
+
+            ageParam = -1.0;
+
+        }else if(age < 22){
+
+            ageParam = -0.5;
+
+        }else if(age < 25){
+
+            ageParam = 0;
+
+        }else if(age < 28){
+
+            ageParam = 0.5;
+
+        }else if(age < 59){
+
+            ageParam = 1.0;
+
+        }else if(age < 62){
+
+            ageParam = 0.5;
+
+        }else if(age < 65){
+
+            ageParam = 0.0;
+
+        }else if(age < 68){
+
+            ageParam = -0.5;
+
+        }else if(age < 71){
+
+            ageParam = -1.0;
+
+        }else if(age < 74){
+
+            ageParam = -1.5;
+
+        }else{
+
+            ageParam = -2.0;
+
+        }
+
+        return ageParam;
+    }
+
+    private double skinToneParameter(String skinTone){
+
+        double skinParam = 0.0;
+
+        if(skinTone.equalsIgnoreCase("Light, pale white")){
+            skinParam = -2.0;
+        }else if(skinTone.equalsIgnoreCase("White, fair")){
+            skinParam = -1.5;
+        }else if(skinTone.equalsIgnoreCase("Medium white to light brown")){
+            skinParam = -1.0;
+        }else if(skinTone.equalsIgnoreCase("Olive, moderate brown")){
+            skinParam = -0.5;
+        }else if(skinTone.equalsIgnoreCase("Brown, dark brown")){
+            skinParam = 0.0;
+        }else if(skinTone.equalsIgnoreCase("Very dark brown to black")){
+            skinParam = 1.0;
+        }else {
+            skinParam = 0.0;
+        }
+
+        return skinParam;
     }
 }

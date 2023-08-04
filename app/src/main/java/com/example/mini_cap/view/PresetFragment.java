@@ -98,7 +98,6 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
 
                 confirmBTN.setOnClickListener(v -> {
                     editPreset(presetToEdit.getPresetID());
-                    dismiss();
                 });
 
                 deleteBTN.setOnClickListener(v -> {
@@ -123,7 +122,8 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
      */
     private void setUpSpinner(){
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(), R.array.skinTone_set, android.R.layout.simple_spinner_item);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
+                R.array.skinTone_set, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         skinToneSpinner.setAdapter(adapter);
         skinToneSpinner.setOnItemSelectedListener(this);
@@ -161,6 +161,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
 
             dbHelper.updatePreset(presetID, preset);
             ((EditActivity)getActivity()).setRecyclerView();
+            dismiss();
 
         }
     }
@@ -193,8 +194,13 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
 
             if(!(presetAge.getText().toString().isEmpty())){
 
-                return true;
+                if(Integer.parseInt(presetAge.getText().toString()) < 120){
 
+                    return true;
+
+                }else{
+                    Toast.makeText(getContext(), "Your age is too big, please enter an age below 120", Toast.LENGTH_SHORT).show();
+                }
             }else{
                 Toast.makeText(getContext(), "Please include an age for your preset", Toast.LENGTH_SHORT).show();
             }
