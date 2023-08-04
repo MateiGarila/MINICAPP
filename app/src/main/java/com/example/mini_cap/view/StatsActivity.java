@@ -15,7 +15,9 @@ import androidx.core.content.ContextCompat;
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
 import com.example.mini_cap.controller.SensorController;
+
 import com.example.mini_cap.model.Day;
+
 import com.example.mini_cap.model.Stats;
 import com.example.mini_cap.view.helper.IntentDataHelper;
 import com.github.mikephil.charting.charts.LineChart;
@@ -58,7 +60,9 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     private int previousSelectedPosition;
     private Button previousSelectedButton;
     private DBHelper dbHelper;
+
     private Day date;
+
     private TextView date_text_view;
 
     private TextView curr_time_text_view;
@@ -78,10 +82,12 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         if(sensorController == null) {
             // Sensor is not connected!
             Toast.makeText(this, "Please first connect to a sensor.", Toast.LENGTH_SHORT).show();
+
         }
         else {
             sensorController.registerListener(this);
         }
+
 
         this.dbHelper = new DBHelper(this);
 
@@ -163,7 +169,9 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         ArrayList<Float> y_axis_values = new ArrayList<>();
 
+
         float[] uv_values_float = dbHelper.getExposureForDay(currentDate);
+
         for (float value : uv_values_float) {
             y_axis_values.add(value);
         }
@@ -358,6 +366,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         String selectedDate = curr_week_list.get(previousSelectedPosition);
         ArrayList<Float> y_axis_values = new ArrayList<>();
 
+
         String[] conversion1 = selectedDate.split("-");
         int month = Integer.parseInt(conversion1[1]);
         int day = Integer.parseInt(conversion1[0]);
@@ -365,6 +374,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         Day selectedDate2 = new Day(day, month, year);
 
         float[] uv_values_float = dbHelper.getExposureForDay(selectedDate2);
+
         //System.out.println("uv values:" + uv_values_float);
         for (float value : uv_values_float) {
             System.out.println("uv value" + value);
@@ -401,13 +411,17 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     }
 
     public void createDataSet(String selectedDate){
+
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
         LocalDate date = LocalDate.parse(selectedDate, inputFormatter);
         ArrayList<Float> y_axis_values = new ArrayList<>();
+
         Day outputDate = new Day(date);
         float[] uv_values_float = dbHelper.getExposureForDay(outputDate);
+
 
 
         //System.out.println("uv values:" + uv_values_float);

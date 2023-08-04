@@ -3,6 +3,7 @@ package com.example.mini_cap.view;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,8 +11,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.ImageView;
+
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -26,21 +28,34 @@ import com.squareup.picasso.Picasso;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.example.mini_cap.R;
+import com.example.mini_cap.controller.SensorController;
+import com.example.mini_cap.view.helper.IntentDataHelper;
+
+import app.uvtracker.sensor.pii.event.EventHandler;
+import app.uvtracker.sensor.pii.event.IEventListener;
+
+
 
 public class MainActivity extends AppCompatActivity implements INavigationBar, BottomNavigationView.OnItemSelectedListener {
 
     //Declaration of all UI elements
+
     private TextView cityNameTV, temp, uvIndex, conditionTV;
     private ImageView currentWeather;
     private String defaultCity = "Montreal"; // Default city
     private static final int SETTINGS_REQUEST_CODE = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        this.sensorController = new SensorController(this);
+
         //Attaching the UI elements to their respective objects
+
         cityNameTV = findViewById(R.id.cityName);
         temp = findViewById(R.id.temp);
         uvIndex = findViewById(R.id.uvIndex);
@@ -87,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         }
 
         return false;
+
     }
 
     private void toSessionActivity(){
@@ -96,8 +112,10 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
 
     private void toStatsActivity(){
         Intent intent = new Intent(this, StatsActivity.class);
+        IntentDataHelper.writeSensorController(this.sensorController);
         startActivity(intent);
     }
+
 
     private void toSettingsActivity(){
         Intent intent = new Intent(this, SettingsActivity.class);
@@ -133,3 +151,4 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
 
 
 }
+

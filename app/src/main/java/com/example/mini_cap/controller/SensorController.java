@@ -21,7 +21,9 @@ import java.util.Objects;
 import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.sensor.SensorAPI;
 import app.uvtracker.sensor.pii.ISensor;
+
 import app.uvtracker.sensor.pii.connection.application.event.NewEstimationReceivedEvent;
+
 import app.uvtracker.sensor.pii.connection.application.event.NewSampleReceivedEvent;
 import app.uvtracker.sensor.pii.connection.shared.event.ConnectionStateChangeEvent;
 import app.uvtracker.sensor.pii.event.EventHandler;
@@ -121,7 +123,9 @@ public class SensorController extends EventRegistry implements IEventListener {
             }
             case ESTABLISHED: {
                 this.displayToast(R.string.sensor_connection_established);
+
                 this.handler.post(this::handleSensorConnection);
+
                 break;
             }
             case DISCONNECTED: {
@@ -146,6 +150,7 @@ public class SensorController extends EventRegistry implements IEventListener {
         }
     }
 
+
     private void handleSensorConnection() {
         this.getSensor().getConnection().registerListener(new DBHelper(this.activity));
         this.getSensor().getConnection().registerListener(new IEventListener() {
@@ -161,6 +166,7 @@ public class SensorController extends EventRegistry implements IEventListener {
         this.dispatch(new SensorConnectedEvent(this.getSensor()));
         this.handler.post(() -> this.getSensor().getConnection().startSync());
     }
+
 
     @EventHandler
     protected void onReceivedData(@NonNull NewSampleReceivedEvent event) {
