@@ -3,11 +3,30 @@ package com.example.mini_cap.view;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import android.widget.Button;
+import android.util.Log;
+import android.view.MenuItem;
+import android.widget.ImageView;
+
 import android.widget.TextView;
+
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.example.mini_cap.R;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.squareup.picasso.Picasso;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.SensorController;
@@ -16,14 +35,17 @@ import com.example.mini_cap.view.helper.IntentDataHelper;
 import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.IEventListener;
 
-public class MainActivity extends AppCompatActivity implements IEventListener {
+
+
+public class MainActivity extends AppCompatActivity implements INavigationBar, BottomNavigationView.OnItemSelectedListener {
 
     //Declaration of all UI elements
-    protected TextView mainView;
-    protected Button sessionActivity, statsActivity, connectBTN;
-    // Sensor controller
-    private SensorController sensorController;
-    private boolean isConnecting = false;
+
+    private TextView cityNameTV, temp, uvIndex, conditionTV;
+    private ImageView currentWeather;
+    private String defaultCity = "Montreal"; // Default city
+    private static final int SETTINGS_REQUEST_CODE = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,15 +55,54 @@ public class MainActivity extends AppCompatActivity implements IEventListener {
         this.sensorController = new SensorController(this);
 
         //Attaching the UI elements to their respective objects
-        mainView = findViewById(R.id.mainTextView);
-        sessionActivity = findViewById(R.id.toSessionActivity);
-        statsActivity = findViewById(R.id.toStatsActivity);
-        connectBTN = findViewById(R.id.connectBTN);
 
-        sessionActivity.setOnClickListener(v -> toSessionActivity());
-        statsActivity.setOnClickListener(v -> toStatsActivity());
-        this.connectBTN.setText("Connect to sensor");
-        connectBTN.setOnClickListener(v -> onConnectionButtonClicked());
+        cityNameTV = findViewById(R.id.cityName);
+        temp = findViewById(R.id.temp);
+        uvIndex = findViewById(R.id.uvIndex);
+        currentWeather = findViewById(R.id.currentWeather);
+        conditionTV = findViewById(R.id.condition);
+
+        getWeatherInfo(defaultCity);
+
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        bottomNavigationView.setOnItemSelectedListener(this);
+
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if (resultCode == Activity.RESULT_OK) {
+                // Retrieve the city name from the SettingsActivity
+                String city = data.getStringExtra("CITY_NAME");
+                if (city != null) {
+                    // Update the cityNameTV text view with the city name
+                    cityNameTV.setText(city);
+                    getWeatherInfo(city);
+                }
+            }
+        }
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
+
+        if (itemId == R.id.button_stats) {
+            toStatsActivity();
+            return true;
+        } else if (itemId == R.id.button_presets) {
+            toSessionActivity();
+            return true;
+        } else if (itemId == R.id.button_settings) {
+            toSettingsActivity();
+            return true;
+        }
+
+        return false;
+
     }
 
     private void toSessionActivity(){
@@ -55,24 +116,39 @@ public class MainActivity extends AppCompatActivity implements IEventListener {
         startActivity(intent);
     }
 
-    protected void onConnectionButtonClicked() {
-        boolean flag;
-        if(!this.isConnecting)
-            flag = this.sensorController.connectToAnySensor();
-        else
-            flag = this.sensorController.disconnectFromSensor();
-        if(flag) this.isConnecting = !this.isConnecting;
+
+    private void toSettingsActivity(){
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivityForResult(intent, SETTINGS_REQUEST_CODE);
     }
 
-    @EventHandler
-    protected void onSensorConnected(@NonNull SensorController.SensorConnectedEvent event) {
-        this.connectBTN.setText("Disconnect from sensor");
+    private void getWeatherInfo(String city){
+        String url = "https://api.weatherapi.com/v1/current.json?key=d868a85293a44ef8bb5184707230108&q=" + city + "&aqi=no";
+        Log.d("WeatherAPI", "URL: " + url); // Print URL to logcat
+        RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, response -> {
+            Log.d("WeatherAPI", "API Response: " + response.toString());
+            try{
+                String temperature = response.getJSONObject("current").getString("temp_c");
+                temp.setText(temperature+"°C");
+                String condition = response.getJSONObject("current").getJSONObject("condition").getString("text");
+                conditionTV.setText(condition);
+                String conditionIcon = response.getJSONObject("current").getJSONObject("condition").getString("icon");
+                Picasso.get().load("https:".concat(conditionIcon)).into(currentWeather);
+                String uv = response.getJSONObject("current").getString("uv");
+                uvIndex.setText("UV index: "+uv);
+
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+
+        }, error -> Toast.makeText(MainActivity.this, "Please enter valid city name", Toast.LENGTH_SHORT).show());
+        requestQueue.add(jsonObjectRequest);
     }
 
-    @EventHandler
-    protected void onSensorDisconnected(@NonNull SensorController.SensorDisconnectedEvent event) {
-        this.connectBTN.setText("Reconnect to sensor");
-    }
+
+
 
 }
 

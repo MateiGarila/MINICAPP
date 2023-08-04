@@ -13,13 +13,28 @@ import androidx.annotation.Nullable;
 
 import com.example.mini_cap.model.Preset;
 import com.example.mini_cap.model.Stats;
+import com.example.mini_cap.model.Day;
+
+import app.uvtracker.data.optical.OpticalRecord;
+import app.uvtracker.data.optical.TimedOpticalRecord;
+import app.uvtracker.data.optical.Timestamp;
+import app.uvtracker.sensor.pii.connection.application.event.SyncDataReceivedEvent;
+import app.uvtracker.sensor.pii.event.EventHandler;
+import app.uvtracker.sensor.pii.event.IEventListener;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-public class DBHelper extends SQLiteOpenHelper {
+public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
-    private Context context;
+    private static final boolean DEBUG_READ_ALS = true;
+
+    private final Context context;
     private final String TAG = "DBHelper";
+
+    private static final int interval = 10;
+    private static final int offset = 8;
 
     /**
      * Database constructor
@@ -48,11 +63,14 @@ public class DBHelper extends SQLiteOpenHelper {
 
         //Create stats table
         String CREATE_STATS_TABLE = "CREATE TABLE " + Dict.TABLE_STATS + " (" +
-                Dict.COLUMN_LOGID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                Dict.COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
-                Dict.COLUMN_EXPOSURE + " TEXT NOT NULL)";
+                Dict.COLUMN_TIMESTAMP + " BIGINT PRIMARY KEY NOT NULL, " + // Make timestamp the primary key
+                Dict.COLUMN_UVINDEX + " TEXT NOT NULL)";
+
+        String CREATE_TIMESTAMP_INDEX = "CREATE UNIQUE INDEX idx_timestamp ON " +
+                Dict.TABLE_STATS + "(" + Dict.COLUMN_TIMESTAMP + ")";
 
         db.execSQL(CREATE_STATS_TABLE);
+        db.execSQL(CREATE_TIMESTAMP_INDEX);
 
     }
 
@@ -227,37 +245,50 @@ public class DBHelper extends SQLiteOpenHelper {
 
     /**
      * Function for inserting new stats into the db
-     * @param stats
+     * @param records
      * @return
      */
-    public long insertStats(Stats stats){
-
+    public long insertStats(List<TimedOpticalRecord> records) {
         // If -1 is returned, function did not insert stats into db.
         long id = -1;
 
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
+        db.beginTransaction(); // Begin the transaction
 
-        // ID is incremented by the db instead of inserted
-        contentValues.put(Dict.COLUMN_TIMESTAMP, stats.getTimestamp());
-        contentValues.put(Dict.COLUMN_EXPOSURE, stats.getExposure());
+        try {
+            for (TimedOpticalRecord record : records) {
+                ContentValues contentValues = new ContentValues();
+                Timestamp timestamp = record.getTimestamp();
+                Day date = new Day(timestamp.getDay());
 
-        try{
-            id = db.insertOrThrow(Dict.TABLE_STATS, null, contentValues);
-        }catch(Exception e){
+                Long primaryKey = date.toDatabaseNumber() + timestamp.getSampleNumber();
+
+                String dataString = record.getData().flatten();
+
+                contentValues.put(Dict.COLUMN_TIMESTAMP, primaryKey);
+                contentValues.put(Dict.COLUMN_UVINDEX, dataString);
+
+                // Insert the record into the database with CONFLICT_IGNORE
+                id = db.insertWithOnConflict(Dict.TABLE_STATS, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
+            }
+
+            db.setTransactionSuccessful(); // Mark the transaction as successful
+        } catch (Exception e) {
             Toast.makeText(context, "DB Insert Error @ insertStats(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }finally{
+        } finally {
+            db.endTransaction(); // End the transaction
             db.close();
         }
 
-    return id;
+        return id;
     }
+
     /**
      * Function for returning Stats for a given hour on a given date
-     * @param timestamp must be in form "dd/MM/yyyy HH:mm:ss"
+     * @param timestamp must be in form "yyyy/mm/dd-sampleNumber"
      * @return Stats object with data for timestamp entered
       */
-    public Stats getStatsForHour(String timestamp) {
+    public Stats getStats(Long timestamp) {
 
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -270,10 +301,9 @@ public class DBHelper extends SQLiteOpenHelper {
             if (cursor != null){
                 if (cursor.moveToFirst()){
                     do{
-                        @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_LOGID));
-                        @SuppressLint("Range") float exposure = cursor.getFloat(cursor.getColumnIndex(Dict.COLUMN_EXPOSURE));
+                        @SuppressLint("Range") String exposure = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
 
-                        stats = new Stats(id, exposure, timestamp);
+                        stats = new Stats(exposure, timestamp);
                     } while(cursor.moveToNext());
                 }
 
@@ -283,7 +313,7 @@ public class DBHelper extends SQLiteOpenHelper {
             // Check if the cursor is empty, set stats to zero if no records are found.
             if (stats == null) {
                 // Assuming the Stats constructor takes 0 values for id and exposure as well.
-                stats = new Stats(0, 0.0f, timestamp);
+                stats = new Stats("0", timestamp);
             }
 
         }catch (Exception e){
@@ -297,25 +327,170 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     /**
+     * Function for returning Stats for a given day
+     * @param day must be in form "yyyy/mm/dd"
+     * @return Stats object with data for timestamp entered
+     */
+    public float getDailyAvg(Day day){
+        Long dateLong = day.toDatabaseNumber();
+        SQLiteDatabase db = this.getReadableDatabase();
+        List<Stats> statsList = new ArrayList<>();
+
+        Cursor cursor;
+
+        try {
+            // The SQL query to select all records where the date matches the given day
+            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS + " WHERE " + Dict.COLUMN_TIMESTAMP + " >= ? AND " + Dict.COLUMN_TIMESTAMP + " < ?",
+                    new String[]{String.valueOf(dateLong), String.valueOf(dateLong + (24 * 60 * 60 )/interval)});
+
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    do {
+                        @SuppressLint("Range") long timestamp = cursor.getLong(cursor.getColumnIndex(Dict.COLUMN_TIMESTAMP));
+                        @SuppressLint("Range") String exposure = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
+
+                        // Create a Stats object and add it to the list
+                        statsList.add(new Stats(exposure, timestamp));
+                    } while (cursor.moveToNext());
+                }
+
+                cursor.close();
+            }
+
+        } catch (Exception e) {
+            Toast.makeText(context, "DB Fetch Error @ getStatsForDay(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        } finally {
+            db.close();
+        }
+
+        float sum = 0.0f, avg;
+
+        for(Stats stats : statsList){
+            OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
+            if (opticalRecord != null) {
+                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+            }
+        }
+        int sampleCount = statsList.size();
+        avg = sum/sampleCount;
+
+        return avg;
+    }
+
+    public List<Stats> getStatsBetweenTimestamps(long timestamp1, long timestamp2) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        List<Stats> statsList = new ArrayList<>();
+
+        Cursor cursor;
+
+        try {
+            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS +
+                            " WHERE " + Dict.COLUMN_TIMESTAMP + " >= ? AND " + Dict.COLUMN_TIMESTAMP + " < ?",
+                    new String[]{String.valueOf(timestamp1), String.valueOf(timestamp2)});
+
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    do {
+                        @SuppressLint("Range") String exposure = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
+
+                        // Get the timestamp from the cursor
+                        @SuppressLint("Range") long timestamp = cursor.getLong(cursor.getColumnIndex(Dict.COLUMN_TIMESTAMP));
+
+                        statsList.add(new Stats(exposure, timestamp));
+                    } while (cursor.moveToNext());
+                }
+
+                cursor.close();
+            }
+        } catch (Exception e) {
+            Toast.makeText(context, "DB Fetch Error @ getStatsBetweenTimestamps(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        } finally {
+            db.close();
+        }
+
+        return statsList;
+    }
+
+
+
+    /**
      * Function for returning the UV exposure for a specified day
-     * @param date must be in form "dd/MM/yyyy", hour is concatenated to date string to create full timestamp
+     * @param date is a date object, hour is concatenated to date string to create full timestamp
+     * @return hourly avg exposure from 8 am to 6 pm
+     */
+    public float getMinuteAvg(Day date, int minute, int hour){
+        int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float)interval);
+        int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float)interval);
+
+        Long timestamp1 = date.toDatabaseNumber() + minuteSample;
+        Long timestamp2 = date.toDatabaseNumber() + nextMinuteSample;
+
+        List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
+
+
+        // Calculate the average exposure for the given minute range if needed
+        float sum = 0.0f, avg;
+
+        for(Stats stats : statsList){
+            OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
+            if (opticalRecord != null) {
+                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+            }
+        }
+        int sampleCount = statsList.size();
+        avg = sampleCount > 0 ? sum / sampleCount : 0.0f;
+
+        return avg;
+    }
+
+    public float getHourlyAvg(Day date, int hour) {
+        float hourlyAvg = 0.0f;
+
+        // Get hour sample numbers and query the DB
+
+        int nextHour = hour + 1;
+        int hourSample = (hour*3600)/interval;
+        int nextHourSample = (nextHour*3600)/interval;
+        Long timestamp1 = date.toDatabaseNumber() + hourSample;
+        Long timestamp2 = date.toDatabaseNumber() + nextHourSample;
+
+        Log.d("timestamp1", String.valueOf(timestamp1));
+        Log.d("timestamp2", String.valueOf(timestamp2));
+
+        List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
+
+        // Calculate the average exposure for the given minute range if needed
+        float sum = 0.0f, avg;
+
+        for (Stats stats : statsList) {
+            OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
+            if (opticalRecord != null) {
+                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+            }
+        }
+
+        int sampleCount = statsList.size();
+        avg = sampleCount > 0 ? sum / sampleCount : 0.0f;
+
+        return avg;
+    }
+
+
+    /**
+     * Function for returning the UV exposure for a specified day
+     * @param date must be in form "yyyy/MM/dd"
      * @return array of hourly UV exposure floats for specified day from 8 am to 6 pm
      */
-    public float[] getExposureForDay(String date){
+    public float[] getExposureForDay(Day date){
 
         float[] dailyExposure = new float[11];
 
-        for(int i = 8; i<19; i++){
+        for (int i = 8; i < 19; i++) {
             int index = i - 8;
-            @SuppressLint("DefaultLocale")
-            String timestamp = String.format("%s %02d:00:00", date, i);
-            {
-                Stats stats = getStatsForHour(timestamp);
-                if(stats != null)
-                    dailyExposure[index] = stats.getExposure();
-                else
-                    dailyExposure[index] = Float.NaN;
-            }
+
+            dailyExposure[index] = getHourlyAvg(date, i);
+
+            Log.d("Call hourly avg", String.valueOf(date));
 
         }
 
@@ -336,6 +511,16 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + Dict.TABLE_USER);
         db.execSQL("DROP TABLE IF EXISTS " + Dict.TABLE_STATS);
         onCreate(db);
+
+    }
+    @EventHandler
+    public void syncDataReceived(SyncDataReceivedEvent syncDataReceivedEvent){
+        List<TimedOpticalRecord> data = syncDataReceivedEvent.getData();
+
+        if(data.size() == 0) Log.d(TAG, "[Sync] Data size: 0.");
+        else Log.d(TAG, String.format("[Sync] Data size: %d; first: %s; last: %s.", data.size(), data.get(0), data.get(data.size() - 1)));
+
+        insertStats(data);
 
     }
 

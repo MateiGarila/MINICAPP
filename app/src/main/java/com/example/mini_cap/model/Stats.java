@@ -3,33 +3,25 @@ package com.example.mini_cap.model;
 import java.time.LocalDateTime;
 
 public class Stats {
-    private int LogID;
-    private float exposure;
-    private String timestamp;
+    private String exposure;
+    private long timestamp;
 
 
     // Constructor for Stats object
-    public Stats(int logID, float exposure, String timestamp){
-        LogID = logID;
+    public Stats(String exposure, long timestamp){
         this.exposure = exposure;
         this.timestamp = timestamp;
     }
 
     // Getters
+    public String getExposure() {return exposure;}
 
-    public int getLogID() {return LogID;}
-
-    public float getExposure() {return exposure;}
-
-    public String getTimestamp() {return timestamp;}
+    public long getTimestamp() {return timestamp;}
 
     // Setters
+    public void setExposure(String exposure) {this.exposure = exposure;}
 
-    public void setLogID(int logID) {LogID = logID;}
-
-    public void setExposure(float exposure) {this.exposure = exposure;}
-
-    public void setTimestamp(String timestamp) {this.timestamp = timestamp;}
+    public void setTimestamp(long timestamp) {this.timestamp = timestamp;}
 
 }
 
