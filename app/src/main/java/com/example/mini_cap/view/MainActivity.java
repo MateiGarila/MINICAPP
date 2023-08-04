@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.android.volley.Request;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
     private ImageView currentWeather;
     private String defaultCity = "Montreal"; // Default city
     private static final int SETTINGS_REQUEST_CODE = 1;
+    private SensorController sensorController;
 
 
     @Override
