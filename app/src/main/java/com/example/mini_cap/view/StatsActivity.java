@@ -2,7 +2,8 @@ package com.example.mini_cap.view;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -15,10 +16,7 @@ import androidx.core.content.ContextCompat;
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
 import com.example.mini_cap.controller.SensorController;
-
 import com.example.mini_cap.model.Day;
-
-import com.example.mini_cap.model.Stats;
 import com.example.mini_cap.view.helper.IntentDataHelper;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
@@ -38,10 +36,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
+import app.uvtracker.sensor.pii.connection.application.event.SyncProgressChangedEvent;
 import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.IEventListener;
 
 public class  StatsActivity extends AppCompatActivity implements IEventListener {
+
+
     private LineChart line_chart;
     private Button prev_week;
     private Button day1;
@@ -177,8 +178,6 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         }
 
 
-
-
         ArrayList<Entry> dataPoints = new ArrayList<>();
         for (int i = 0; i < y_axis_values.size(); i++) {
             dataPoints.add(new Entry(i, y_axis_values.get(i)));
@@ -201,15 +200,13 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         xAxis.setTextSize(12f);
         xAxis.setDrawAxisLine(false);
 
-
         YAxis leftYAxis = line_chart.getAxisLeft();
-        leftYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
-        leftYAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines on the left side
+        //leftYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
+        //leftYAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines on the left side
 
         YAxis rightYAxis = line_chart.getAxisRight();
         rightYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
         rightYAxis.setGridColor(Color.TRANSPARENT);
-
 
         // Hide the description label
         Description description = line_chart.getDescription();
@@ -218,8 +215,6 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         // Hide the dataset label in the legend
         Legend legend = line_chart.getLegend();
         legend.setEnabled(false);
-
-
 
         // Add the LineDataSet to LineData and set it to your LineChart
         LineData lineData = new LineData(dataSet);
@@ -457,8 +452,8 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
 
         YAxis leftYAxis = line_chart.getAxisLeft();
-        leftYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
-        leftYAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines on the left side
+       // leftYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
+        //leftYAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines on the left side
 
         YAxis rightYAxis = line_chart.getAxisRight();
         rightYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
@@ -472,39 +467,6 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         // Hide the dataset label in the legend
         Legend legend = line_chart.getLegend();
         legend.setEnabled(false);
-//        line_chart.setDrawGridBackground(true);
-//        line_chart.setGridBackgroundColor(Color.TRANSPARENT); // Transparent background color
-//
-//        XAxis xAxis = line_chart.getXAxis();
-//        xAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines
-//        xAxis.setValueFormatter(new IndexAxisValueFormatter(x_axis_values));
-//        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // Move X-axis to the bottom
-//        xAxis.setTextSize(12f);
-//        xAxis.setDrawAxisLine(false);
-//
-//
-//        YAxis leftYAxis = line_chart.getAxisLeft();
-//        leftYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
-//        leftYAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines on the left side
-//
-//        YAxis rightYAxis = line_chart.getAxisRight();
-//        rightYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
-//        rightYAxis.setGridColor(Color.TRANSPARENT);
-
-
-//        // Hide the description label
-//        Description description = line_chart.getDescription();
-//        description.setEnabled(false);
-
-        // Hide the dataset label in the legend
-//        Legend legend = line_chart.getLegend();
-//        legend.setEnabled(false);
-//
-//
-//
-//        // Add the LineDataSet to LineData and set it to your LineChart
-//        LineData lineData = new LineData(dataSet);
-//        line_chart.setData(lineData);
 
     }
 
@@ -513,32 +475,20 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         this.setCurrentUVIndex(event.toString());
     }
 
+    @EventHandler
+    protected void onSyncStateChange(@NonNull SyncProgressChangedEvent event) {
+        if (event.getStage() != SyncProgressChangedEvent.Stage.DONE) return;
+        //if its done, refresh the line chart
+        new Handler(Looper.getMainLooper()).post(() -> line_chart.invalidate());
+
+    }
+
     public void setCurrentUVIndex(@NonNull String message){
         currentUVIndex.setText(message);
     }
 
 }
 
-
-
-//        public static ArrayList<String> getWeekDays(LocalDate currentDate) {
-//            ArrayList<String> weekDays = new ArrayList<>();
-//            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-M-yy");
-//
-//            // Find the Sunday of the current week
-//            LocalDate sunday = currentDate.with(DayOfWeek.SUNDAY);
-//
-//            LocalDate firstDayOfWeek = sunday.minusDays(sunday.getDayOfWeek().getValue() - 1);
-//
-//            // Add the dates of the week to the ArrayList
-//            for (int i = 0; i < 7; i++) {
-//                LocalDate day = firstDayOfWeek.plusDays(i);
-//                String formattedDate = day.format(formatter);
-//                weekDays.add(formattedDate);
-//            }
-//
-//            return weekDays;
-//        }
 
 
 

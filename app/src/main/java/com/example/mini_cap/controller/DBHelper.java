@@ -11,9 +11,12 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import com.example.mini_cap.model.Day;
 import com.example.mini_cap.model.Preset;
 import com.example.mini_cap.model.Stats;
-import com.example.mini_cap.model.Day;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.data.optical.TimedOpticalRecord;
@@ -22,13 +25,9 @@ import app.uvtracker.sensor.pii.connection.application.event.SyncDataReceivedEve
 import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.IEventListener;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
-    private static final boolean DEBUG_READ_ALS = true;
+    private static final boolean DEBUG_READ_ALS = false;
 
     private final Context context;
     private final String TAG = "DBHelper";
