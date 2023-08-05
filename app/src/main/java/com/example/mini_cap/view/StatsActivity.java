@@ -55,6 +55,8 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     private Button next_week;
     public int curr_week = 0;
 
+    public String selectedDate = "07-08-2023";
+
 
     public int defaultColor;
     public int selectedColor;
@@ -358,7 +360,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         line_chart.invalidate();
 
         date_text_view.setText(setDateTextView(curr_week_list.get(selectedIndex)));
-        String selectedDate = curr_week_list.get(previousSelectedPosition);
+        selectedDate = curr_week_list.get(previousSelectedPosition);
         ArrayList<Float> y_axis_values = new ArrayList<>();
 
 
@@ -377,6 +379,8 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         }
 
         date_text_view.setText(setDateTextView(selectedDate));
+
+
         createDataSet(selectedDate);
         LineData lineData = new LineData(dataSet);
         line_chart.setData(lineData);
@@ -479,7 +483,11 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     protected void onSyncStateChange(@NonNull SyncProgressChangedEvent event) {
         if (event.getStage() != SyncProgressChangedEvent.Stage.DONE) return;
         //if its done, refresh the line chart
-        new Handler(Looper.getMainLooper()).post(() -> line_chart.invalidate());
+        new Handler(Looper.getMainLooper()).post(() -> {
+            createDataSet(selectedDate);
+            LineData lineData = new LineData(dataSet);
+            line_chart.setData(lineData);
+        });
 
     }
 
