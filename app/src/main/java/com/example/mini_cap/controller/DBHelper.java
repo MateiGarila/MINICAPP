@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.mini_cap.model.Day;
@@ -27,19 +28,31 @@ import app.uvtracker.sensor.pii.event.IEventListener;
 
 public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
-    private static final boolean DEBUG_READ_ALS = false;
+    private static final String TAG = "DBHelper";
+
+    private static final boolean DEBUG_READ_ALS = true;
+    private static final int INTERVAL = 10;
+
+    @SuppressLint("StaticFieldLeak")
+    private static DBHelper instance;
+
+    public static DBHelper get(@NonNull Context context) {
+        if(DBHelper.instance == null)
+            DBHelper.instance = new DBHelper(context);
+        return DBHelper.instance;
+    }
+
+    public static void release() {
+        DBHelper.instance = null;
+    }
 
     private final Context context;
-    private final String TAG = "DBHelper";
-
-    private static final int interval = 10;
-    private static final int offset = 8;
 
     /**
      * Database constructor
      * @param context
      */
-    public DBHelper(@Nullable Context context) {
+    private DBHelper(@Nullable Context context) {
         super(context, Dict.DATABASE_NAME, null, Dict.DATABASE_VERSION);
         this.context = context;
     }
@@ -340,7 +353,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         try {
             // The SQL query to select all records where the date matches the given day
             cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS + " WHERE " + Dict.COLUMN_TIMESTAMP + " >= ? AND " + Dict.COLUMN_TIMESTAMP + " < ?",
-                    new String[]{String.valueOf(dateLong), String.valueOf(dateLong + (24 * 60 * 60 )/interval)});
+                    new String[]{String.valueOf(dateLong), String.valueOf(dateLong + (24 * 60 * 60 )/ INTERVAL)});
 
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
@@ -418,8 +431,8 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @return hourly avg exposure from 8 am to 6 pm
      */
     public float getMinuteAvg(Day date, int minute, int hour){
-        int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float)interval);
-        int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float)interval);
+        int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float) INTERVAL);
+        int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float) INTERVAL);
 
         Long timestamp1 = date.toDatabaseNumber() + minuteSample;
         Long timestamp2 = date.toDatabaseNumber() + nextMinuteSample;
@@ -448,13 +461,10 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         // Get hour sample numbers and query the DB
 
         int nextHour = hour + 1;
-        int hourSample = (hour*3600)/interval;
-        int nextHourSample = (nextHour*3600)/interval;
+        int hourSample = (hour*3600)/ INTERVAL;
+        int nextHourSample = (nextHour*3600)/ INTERVAL;
         Long timestamp1 = date.toDatabaseNumber() + hourSample;
         Long timestamp2 = date.toDatabaseNumber() + nextHourSample;
-
-        Log.d("timestamp1", String.valueOf(timestamp1));
-        Log.d("timestamp2", String.valueOf(timestamp2));
 
         List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
 
@@ -489,8 +499,6 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
             dailyExposure[index] = getHourlyAvg(date, i);
 
-            Log.d("Call hourly avg", String.valueOf(date));
-
         }
 
         return dailyExposure;
@@ -523,14 +531,8 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
     }
     @EventHandler
-    public void syncDataReceived(SyncDataReceivedEvent syncDataReceivedEvent){
-        List<TimedOpticalRecord> data = syncDataReceivedEvent.getData();
-
-        if(data.size() == 0) Log.d(TAG, "[Sync] Data size: 0.");
-        else Log.d(TAG, String.format("[Sync] Data size: %d; first: %s; last: %s.", data.size(), data.get(0), data.get(data.size() - 1)));
-
-        insertStats(data);
-
+    public void syncDataReceived(SyncDataReceivedEvent event){
+        insertStats(event.getData());
     }
 
 }

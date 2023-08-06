@@ -1,65 +1,41 @@
 package com.example.mini_cap.view;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.media.Image;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.example.mini_cap.R;
+import com.example.mini_cap.controller.DBHelper;
 import com.example.mini_cap.controller.SensorController;
-import com.example.mini_cap.view.helper.IntentDataHelper;
 
-import app.uvtracker.data.optical.OpticalRecord;
-import app.uvtracker.sensor.SensorAPI;
-import app.uvtracker.sensor.pii.ISensor;
-import app.uvtracker.sensor.pii.connection.application.event.NewSampleReceivedEvent;
-import app.uvtracker.sensor.pii.connection.shared.event.ConnectionStateChangeEvent;
 import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.IEventListener;
-import app.uvtracker.sensor.pii.scanner.IScanner;
-import app.uvtracker.sensor.pii.scanner.event.SensorScannedEvent;
-import app.uvtracker.sensor.pii.scanner.exception.TransceiverException;
 
 public class SettingsActivity extends AppCompatActivity implements IEventListener {
     private EditText cityName;
     private ImageView search;
     protected Button connectBTN;
-    private IScanner iScanner;
-    private ISensor iSensor;
-
-    private SensorController sensorController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        this.sensorController = new SensorController(this);
-        IntentDataHelper.writeSensorController(this.sensorController);
+        // Initialize sensor controller
+        SensorController.get(this).registerListenerClass(DBHelper.get(this));
 
         //Attaching the UI elements to their respective objects
         //mainView = findViewById(R.id.mainTextView);
         connectBTN = findViewById(R.id.connectBTN);
         cityName = findViewById(R.id.cityInput);
         search = findViewById(R.id.search);
-        
-        connectBTN.setOnClickListener((v) -> this.sensorController.connectToAnySensor());
 
         search.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -77,6 +53,33 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
             }
         });
 
+        connectBTN.setOnClickListener((v) -> this.handleConnectButton());
+
+    }
+
+    private void handleConnectButton() {
+        SensorController controller = SensorController.get(this);
+        if(controller.getStage() == SensorController.ConnectionFlowStage.DISCONNECTED) {
+            controller.connectToAnySensor(this);
+        }
+        else if(controller.getStage() == SensorController.ConnectionFlowStage.CONNECTED) {
+            controller.disconnectFromSensor();
+        }
+    }
+
+    @EventHandler
+    protected void onConnectionFlow(SensorController.ConnectionFlowEvent event) {
+        switch(event.getStage()) {
+            case DISCONNECTED:
+                this.connectBTN.setText("Connect to sensor");
+                break;
+            case CONNECTING:
+                this.connectBTN.setText("Connecting...");
+                break;
+            case CONNECTED:
+                this.connectBTN.setText("Disconnect from sensor");
+                break;
+        }
     }
 
 }

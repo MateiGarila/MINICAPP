@@ -35,7 +35,6 @@ public class StartSessionFragment extends DialogFragment implements SelectListen
     protected TextView titleTextView;
     protected ImageView closeFragBTN;
     protected RecyclerView listOfPresets;
-    private DBHelper dbHelper;
     private CustomStartAdapter customStartAdapter;
 
     /**
@@ -65,8 +64,6 @@ public class StartSessionFragment extends DialogFragment implements SelectListen
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_start_session, container, false);
 
-        dbHelper = new DBHelper(getContext());
-
         titleTextView = view.findViewById(R.id.selectPresetTextView);
         closeFragBTN = view.findViewById(R.id.closeImgBTN);
         listOfPresets = view.findViewById(R.id.recyclerViewPresets);
@@ -88,7 +85,7 @@ public class StartSessionFragment extends DialogFragment implements SelectListen
      */
     public void setUpRecyclerView(){
 
-        ArrayList<Preset> presets = dbHelper.getAllPresets();
+        ArrayList<Preset> presets = DBHelper.get(this.requireContext()).getAllPresets();
         listOfPresets.setLayoutManager(new GridLayoutManager(getContext(), 1));
         customStartAdapter = new CustomStartAdapter(getContext(), presets, this);
         listOfPresets.setAdapter(customStartAdapter);

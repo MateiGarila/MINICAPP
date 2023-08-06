@@ -31,8 +31,6 @@ public class EditActivity extends AppCompatActivity implements SelectListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
 
-        dbHelper = new DBHelper(getBaseContext());
-
         mainTextView = findViewById(R.id.topText);
         listOfPresets = findViewById(R.id.listOfPresets);
         backBTN = findViewById(R.id.backBTN);
@@ -53,7 +51,7 @@ public class EditActivity extends AppCompatActivity implements SelectListener {
      */
     public void setRecyclerView(){
 
-        ArrayList<Preset> presets =  dbHelper.getAllPresets();
+        ArrayList<Preset> presets =  DBHelper.get(this).getAllPresets();
         listOfPresets.setLayoutManager(new GridLayoutManager(this, 1));
         customEditAdapter = new CustomEditAdapter(this, presets, this);
         listOfPresets.setAdapter(customEditAdapter);
