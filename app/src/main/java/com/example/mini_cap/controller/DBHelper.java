@@ -497,6 +497,16 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
     }
 
+    public float[] getMinuteExposureForHour(Day date, int hour) {
+        float[] minuteExposure = new float[60];
+
+        for (int i = 0; i < 60; i++) {
+            minuteExposure[i] = getMinuteAvg(date, i, hour);
+        }
+
+        return minuteExposure;
+    }
+
     /**
      * This method is called when upgrading the database
      * @param db The database.

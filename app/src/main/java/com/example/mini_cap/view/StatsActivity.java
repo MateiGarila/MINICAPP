@@ -28,7 +28,6 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
 import java.time.DayOfWeek;
@@ -36,6 +35,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
+import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.sensor.pii.connection.application.event.SyncProgressChangedEvent;
 import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.IEventListener;
@@ -55,7 +55,10 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     private Button next_week;
     public int curr_week = 0;
 
-    public String selectedDate = "07-08-2023";
+    public String selectedDate ;
+    public YAxis leftYAxisDefault = new YAxis();
+
+    public boolean viewingMinutes = false;
 
 
     public int defaultColor;
@@ -71,9 +74,17 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     private TextView curr_time_text_view;
 
     private  TextView currentUVIndex;
+    private  TextView lightIntensityTextView;
+    private TextView severityTextView;
+
+    private TextView recommendationTextView;
 
     //private String currentSelectedDate;
     private  LineDataSet dataSet;
+
+    public float currentUVValue;
+
+    public float currentIlluminance;
 
     public ArrayList<String> curr_week_list;
     @Override
@@ -127,10 +138,14 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 */
 
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMMM d' 'yyyy");
-        DateTimeFormatter outputFormatterForDB = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        DateTimeFormatter outputFormatterForDB = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+
+
 
         // Getting date as LocalDate object and creating a Date class object with it
         LocalDate current_date = LocalDate.now();
+        selectedDate = current_date.format(outputFormatterForDB);
         Day currentDate = new Day(current_date);
 
         previousSelectedPosition = -1;
@@ -162,102 +177,73 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         //set UV index realtime text for this textview
         currentUVIndex = findViewById(R.id.uvindex_id);
+        lightIntensityTextView = findViewById(R.id.lightIntensityID);
+        severityTextView = findViewById(R.id.severity_index);
 
 
         date_text_view.setText(current_date.format(outputFormatter));
         curr_week_list = getWeekDays(current_date, curr_week);
         set_menu_text(menu_buttons, curr_week_list);
 
-        ArrayList<String> x_axis_values = set_x_axis_values();
-
-        ArrayList<Float> y_axis_values = new ArrayList<>();
-
-
-        float[] uv_values_float = dbHelper.getExposureForDay(currentDate);
-
-        for (float value : uv_values_float) {
-            y_axis_values.add(value);
-        }
-
-
-        ArrayList<Entry> dataPoints = new ArrayList<>();
-        for (int i = 0; i < y_axis_values.size(); i++) {
-            dataPoints.add(new Entry(i, y_axis_values.get(i)));
-        }
-
-
-        // Create a LineDataSet and configure the appearance if needed
-        dataSet = new LineDataSet(dataPoints, "");
-        dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
-        dataSet.setDrawValues(false); // Set to false to hide the values on data points
-        dataSet.setLineWidth(4f); // Set line width to 4
-        dataSet.setCircleRadius(8f);
-        line_chart.setDrawGridBackground(true);
-        line_chart.setGridBackgroundColor(Color.TRANSPARENT); // Transparent background color
-
-        XAxis xAxis = line_chart.getXAxis();
-        xAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines
-        xAxis.setValueFormatter(new IndexAxisValueFormatter(x_axis_values));
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // Move X-axis to the bottom
-        xAxis.setTextSize(12f);
-        xAxis.setDrawAxisLine(false);
-
-        YAxis leftYAxis = line_chart.getAxisLeft();
-        //leftYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
-        //leftYAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines on the left side
-
-        YAxis rightYAxis = line_chart.getAxisRight();
-        rightYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
-        rightYAxis.setGridColor(Color.TRANSPARENT);
-
-        // Hide the description label
-        Description description = line_chart.getDescription();
-        description.setEnabled(false);
-
-        // Hide the dataset label in the legend
-        Legend legend = line_chart.getLegend();
-        legend.setEnabled(false);
-
         // Add the LineDataSet to LineData and set it to your LineChart
+        createDataSet(selectedDate);
         LineData lineData = new LineData(dataSet);
         line_chart.setData(lineData);
+        leftYAxisDefault = line_chart.getAxisLeft();
+        line_chart.setPinchZoom(false); // Disable pinch zoom
+        line_chart.setDoubleTapToZoomEnabled(false); // Disable double-tap zoom
+        currentUVValue = 4.0F;
+        currentIlluminance = 1100.0F;
+        this.setCurrentUVIndex(currentUVValue);
+        this.setLightIntensity(currentIlluminance);
+        setSeverity(currentUVValue);
+
 
         line_chart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, Highlight h) {
-                int originalColor = Color.BLUE;
-                float originalRadius = 8f;
-                dataSet.setCircleColors(new int[] { originalColor }); // Set the circle color for all data points
-                dataSet.setCircleRadius(originalRadius); // Set the circle radius for all data points
+//                int originalColor = Color.BLUE;
+//                float originalRadius = 8f;
+//                dataSet.setCircleColors(new int[] { originalColor }); // Set the circle color for all data points
+//                dataSet.setCircleRadius(originalRadius); // Set the circle radius for all data points
+//
+//                // Create a new DataSet for the clicked data point
+//                LineDataSet clickedDataSet = new LineDataSet(null, "Clicked DataSet");
+//                clickedDataSet.setDrawValues(true);
+//                clickedDataSet.setValueTextSize(16f);
+//
+//                clickedDataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+//                clickedDataSet.setColor(Color.parseColor("#88B0F6")); // Darker blue color for the clicked data point
+//                clickedDataSet.setCircleColor(Color.parseColor("#88B0F6")); // Darker blue color for the clicked data point
+//                clickedDataSet.setCircleHoleColor(Color.WHITE); // Customize the circle hole color
+//                clickedDataSet.setCircleRadius(12f); // Enlarged circle radius for the clicked data point
+//
+//                // Add the selected data point to the clicked DataSet
+//                ArrayList<Entry> clickedDataPoints = new ArrayList<>();
+//                clickedDataPoints.add(e);
+//                clickedDataSet.setValues(clickedDataPoints);
+//
+//                // Combine the original DataSet and the clicked DataSet
+//                ArrayList<ILineDataSet> dataSets = new ArrayList<>();
+//                dataSets.add(dataSet); // Add the original DataSet
+//                dataSets.add(clickedDataSet); // Add the clicked DataSet
+//
+//                // Create a new LineData object with the combined DataSets
+//                LineData combinedLineData = new LineData(dataSets);
 
-                // Create a new DataSet for the clicked data point
-                LineDataSet clickedDataSet = new LineDataSet(null, "Clicked DataSet");
-                clickedDataSet.setDrawValues(true);
-                clickedDataSet.setValueTextSize(16f);
 
-                clickedDataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-                clickedDataSet.setColor(Color.parseColor("#88B0F6")); // Darker blue color for the clicked data point
-                clickedDataSet.setCircleColor(Color.parseColor("#88B0F6")); // Darker blue color for the clicked data point
-                clickedDataSet.setCircleHoleColor(Color.WHITE); // Customize the circle hole color
-                clickedDataSet.setCircleRadius(12f); // Enlarged circle radius for the clicked data point
+                if (!viewingMinutes) {
+                    createHourDataSet(selectedDate, dataSet.getEntryIndex(e) + 1);
+                    LineData lineData = new LineData(dataSet);
+                    line_chart.setData(lineData);
+                    viewingMinutes = true;
 
-                // Add the selected data point to the clicked DataSet
-                ArrayList<Entry> clickedDataPoints = new ArrayList<>();
-                clickedDataPoints.add(e);
-                clickedDataSet.setValues(clickedDataPoints);
+                    // line_chart.setData(combinedLineData);
 
-                // Combine the original DataSet and the clicked DataSet
-                ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-                dataSets.add(dataSet); // Add the original DataSet
-                dataSets.add(clickedDataSet); // Add the clicked DataSet
+                    // Refresh the chart
+                    line_chart.invalidate();
+                }
 
-                // Create a new LineData object with the combined DataSets
-                LineData combinedLineData = new LineData(dataSets);
-                line_chart.setData(combinedLineData);
-
-                // Refresh the chart
-                line_chart.invalidate();
-                float yValue = e.getY();
 
                 // Do something with the Y value, e.g., display it in a TextView
                 // textView.setText("Selected Y Value: " + yValue);
@@ -265,7 +251,20 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
             @Override
             public void onNothingSelected() {
-                // Do something when nothing is selected (optional)
+                //user clicks outside the line on the graph
+                if (viewingMinutes) {
+                    System.out.println("here");
+                    viewingMinutes = false;
+                    createDataSet(selectedDate);
+                    LineData lineData = new LineData(dataSet);
+                    line_chart.setData(lineData);
+
+                    // line_chart.setData(combinedLineData);
+
+                    // Refresh the chart
+                    line_chart.invalidate();
+                }
+
             }
         });
         // Refresh the chart
@@ -275,6 +274,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         next_week.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                viewingMinutes = false;
                 curr_week += 1;
                 curr_week_list = getWeekDays(current_date, curr_week);
                 set_menu_text(menu_buttons, curr_week_list);
@@ -295,6 +295,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         prev_week.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                viewingMinutes = false;
                 curr_week -= 1;
                 curr_week_list = getWeekDays(current_date, curr_week);
                 set_menu_text(menu_buttons, curr_week_list);
@@ -346,6 +347,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     }
 
     private void handleButtonClick(Button clickedButton, int selectedIndex) {
+        viewingMinutes = false;
         if (previousSelectedButton != null) {
             previousSelectedButton.setBackgroundColor(defaultColor);
         }
@@ -399,6 +401,25 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         }
         return hoursList;
     }
+
+    private ArrayList<String> setMinuteXAxisValues(int hour) {
+
+        ArrayList<String> minList = new ArrayList<>();
+        for (int i = 0; i<=9; i++){
+            String str = hour + ":0" +i;
+            minList.add(str);
+        }
+        for (int i = 10; i<60; i++){
+            String str = hour + ":" +i;
+            minList.add(str);
+        }
+        int nextHour= hour+1;
+        String str = Integer.toString(nextHour) +":00";
+        minList.add(str);
+        return minList;
+      // Invalid index
+    }
+
     public static String setDateTextView(String inputDate) {
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         LocalDate date = LocalDate.parse(inputDate, inputFormatter);
@@ -416,12 +437,12 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
         LocalDate date = LocalDate.parse(selectedDate, inputFormatter);
+
         ArrayList<Float> y_axis_values = new ArrayList<>();
+        ArrayList<String> x_axis_values = set_x_axis_values();
 
         Day outputDate = new Day(date);
         float[] uv_values_float = dbHelper.getExposureForDay(outputDate);
-
-
 
         //System.out.println("uv values:" + uv_values_float);
         for (float value : uv_values_float) {
@@ -434,7 +455,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         for (int i = 0; i < y_axis_values.size(); i++) {
             dataPoints.add(new Entry(i, y_axis_values.get(i)));
         }
-
+        dataSet = new LineDataSet(dataPoints, "");
         dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
         dataSet.setDrawValues(false); // Set to false to hide the values on data points
         dataSet.setLineWidth(4f); // Set line width to 4
@@ -449,13 +470,18 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         XAxis xAxis = line_chart.getXAxis();
         xAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines
-
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(x_axis_values));
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // Move X-axis to the bottom
         xAxis.setTextSize(12f);
         xAxis.setDrawAxisLine(false);
 
 
         YAxis leftYAxis = line_chart.getAxisLeft();
+        //leftYAxis.setAxisMinimum(0f); // Set the minimum value of the y-axis to 0
+        //leftYAxis.setAxisMaximum(12f); // Set the maximum value of the y-axis to 12
+
+
+        //leftYAxis.setGranularityEnabled(true);
        // leftYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
         //leftYAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines on the left side
 
@@ -474,9 +500,85 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
     }
 
+    public void createHourDataSet(String selectedDate, int hour){
+
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+        LocalDate date = LocalDate.parse(selectedDate, inputFormatter);
+
+        ArrayList<Float> y_axis_values = new ArrayList<>();
+        ArrayList<String> x_axis_values = setMinuteXAxisValues(hour+8);
+
+        Day outputDate = new Day(date);
+        float[] uv_values_float = dbHelper.getMinuteExposureForHour(outputDate, hour);
+
+        //System.out.println("uv values:" + uv_values_float);
+        for (float value : uv_values_float) {
+            System.out.println("uv value" + value);
+            y_axis_values.add(value);
+        }
+
+
+        ArrayList<Entry> dataPoints = new ArrayList<>();
+        for (int i = 0; i < y_axis_values.size(); i++) {
+            dataPoints.add(new Entry(i, y_axis_values.get(i)));
+        }
+
+        dataSet = new LineDataSet(dataPoints, "");
+        dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
+        dataSet.setDrawValues(false); // Set to false to hide the values on data points
+        dataSet.setLineWidth(6f); // Set line width to 4
+
+// Set the circle appearance
+        dataSet.setDrawCircles(false); // Set to false to hide circles at data points
+        dataSet.setCircleRadius(8f);
+
+        int statsColor = ContextCompat.getColor(this, R.color.stats_color);
+        dataSet.setColor(statsColor);
+
+        line_chart.setDrawGridBackground(true);
+        line_chart.setGridBackgroundColor(Color.TRANSPARENT); // Transparent background color
+
+        XAxis xAxis = line_chart.getXAxis();
+        xAxis.setGridColor(Color.TRANSPARENT); // Transparent grid lines
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(x_axis_values));
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // Move X-axis to the bottom
+        xAxis.setTextSize(12f);
+        xAxis.setDrawAxisLine(false);
+
+
+        YAxis leftYAxis = line_chart.getAxisLeft();
+       // leftYAxis.setAxisMinimum(0f); // Set the minimum value of the y-axis to 0
+       // leftYAxis.setAxisMaximum(12f); // Set the maximum value of the y-axis to 12
+
+        YAxis rightYAxis = line_chart.getAxisRight();
+        rightYAxis.setDrawLabels(false); // Do not draw Y-axis values on the left side
+        rightYAxis.setGridColor(Color.TRANSPARENT);
+
+
+        // Hide the description label
+        Description description = line_chart.getDescription();
+        description.setEnabled(false);
+
+        // Hide the dataset label in the legend
+        Legend legend = line_chart.getLegend();
+        legend.setEnabled(false);
+
+    }
+
+
     @EventHandler
     protected void onRealTimeData(@NonNull SensorController.RealTimeDataEvent event) {
-        this.setCurrentUVIndex(event.toString());
+        OpticalRecord record = event.getRecord();
+//        currentUVValue = record.uvIndex;
+//        currentIlluminance = record.illuminance;
+        currentUVValue = 10.0F;
+        currentIlluminance = 1100.0F;
+        this.setCurrentUVIndex(currentUVValue);
+        this.setLightIntensity(currentIlluminance);
+        setSeverity(currentUVValue);
     }
 
     @EventHandler
@@ -484,15 +586,50 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         if (event.getStage() != SyncProgressChangedEvent.Stage.DONE) return;
         //if its done, refresh the line chart
         new Handler(Looper.getMainLooper()).post(() -> {
-            createDataSet(selectedDate);
-            LineData lineData = new LineData(dataSet);
-            line_chart.setData(lineData);
+            if (viewingMinutes) {
+                System.out.println("here");
+                viewingMinutes = false;
+                createDataSet(selectedDate);
+                LineData lineData = new LineData(dataSet);
+                line_chart.setData(lineData);
+
+                // Refresh the chart
+                line_chart.invalidate();
+            }
+
         });
 
     }
 
-    public void setCurrentUVIndex(@NonNull String message){
-        currentUVIndex.setText(message);
+    public void setCurrentUVIndex(@NonNull float uvValue){
+
+        String str= "Current UV Index: " + String.valueOf(uvValue);
+        currentUVIndex.setText(str);
+    }
+    public void setLightIntensity(@NonNull float lightIntensity){
+
+        String str= "Light Intensity: " + String.valueOf(lightIntensity) + " lux";
+        lightIntensityTextView.setText(str);
+    }
+
+    public void setSeverity(float uvIndex){
+        String uvIndexText;
+        int textColor;
+
+        if (uvIndex >= 0 && uvIndex <= 2) {
+            uvIndexText = "Low";
+            textColor = Color.GREEN;
+        } else if (uvIndex >= 3 && uvIndex <= 7) {
+            uvIndexText = "Moderate";
+            textColor = Color.parseColor("#FFA500");
+        } else {
+            uvIndexText = "High";
+            textColor = Color.RED;
+        }
+
+        this.severityTextView.setText(uvIndexText);
+        this.severityTextView.setTextColor(textColor);
+
     }
 
 }
