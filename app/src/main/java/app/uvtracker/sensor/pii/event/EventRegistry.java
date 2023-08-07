@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 
 public class EventRegistry implements IEventSource {
 
+    private static final String TAG = EventRegistry.class.getSimpleName();
+
     @NonNull
     private final List<EventAcceptor> storage;
 
@@ -23,12 +25,47 @@ public class EventRegistry implements IEventSource {
 
     @Override
     public void registerListener(IEventListener listener) {
+        if(this.storage.stream().anyMatch((a) -> a.listener == listener)) {
+            Log.d(TAG, "Duplicate event handler registration: " + listener);
+            return;
+        }
+        this.registerListenerCore(listener);
+    }
+
+    @Override
+    public void registerListenerClass(IEventListener listener) {
+        if(this.storage.stream().anyMatch((a) -> a.listener == listener)) {
+            Log.d(TAG, "Duplicate event handler registration: " + listener);
+            return;
+        }
+        if(this.storage.removeIf((a) -> a.listener.getClass() == listener.getClass())) {
+            Log.d(TAG, "Duplicate event handler class registration: " + listener);
+        }
+        this.registerListenerCore(listener);
+    }
+
+    private void registerListenerCore(IEventListener listener) {
         this.storage.addAll(
                 Arrays.stream(listener.getClass().getDeclaredMethods())
                         .map(method -> EventAcceptor.getHandlerMethod(listener, method))
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList())
         );
+    }
+
+    @Override
+    public boolean unregisterListener(IEventListener listener) {
+        return this.storage.removeIf((a) -> a.listener == listener);
+    }
+
+    @Override
+    public boolean unregisterListenerClass(IEventListener listener) {
+        return unregisterListenerClass(listener.getClass());
+    }
+
+    @Override
+    public boolean unregisterListenerClass(Class<? extends IEventListener> clazz) {
+        return this.storage.removeIf((a) -> a.listener.getClass() == clazz);
     }
 
     @Override
@@ -49,16 +86,16 @@ class EventAcceptor {
     private static final String TAG = EventAcceptor.class.getSimpleName();
 
     @NonNull
-    private final IEventListener listener;
+    protected final IEventListener listener;
 
     @NonNull
-    private final Method method;
+    protected final Method method;
 
     @NonNull
-    private final Class<?> inputType;
+    protected final Class<?> inputType;
 
     @NonNull
-    private final EventHandler annotation;
+    protected final EventHandler annotation;
 
     public static EventAcceptor getHandlerMethod(@NonNull IEventListener listener, @NonNull Method method) {
         EventHandler annotation = method.getAnnotation(EventHandler.class);
