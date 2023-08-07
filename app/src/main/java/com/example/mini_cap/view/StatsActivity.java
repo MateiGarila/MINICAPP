@@ -445,12 +445,14 @@ public class StatsActivity extends AppCompatActivity implements IEventListener {
     }
 
     private void refreshLineChartNow(boolean displayMinuteView) {
+        boolean oldViewMode = this.viewingMinutes;
         if(displayMinuteView) {
             this.renderHourlyDetailChart(this.selectedDate, this.selectedHour);
         }
         else {
             this.renderDailyDetailChart(this.selectedDate);
         }
+        if(this.viewingMinutes != oldViewMode) this.lineChart.fitScreen();
     }
 
 
