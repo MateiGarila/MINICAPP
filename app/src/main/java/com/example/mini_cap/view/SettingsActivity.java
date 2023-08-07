@@ -161,7 +161,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     /* -------- Helpers -------- */
 
     private void showBusyPrompt() {
-        Snackbar.make(this.sensorConnectButton, R.string.sensor_settings_busy, Snackbar.LENGTH_SHORT).show();
+        Snackbar.make(this.sensorConnectButton, R.string.sensor_activity_busy, Snackbar.LENGTH_SHORT).show();
     }
 
 
@@ -176,6 +176,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
                 this.sensorProgressBar.setVisibility(View.VISIBLE);
                 this.sensorProgressBar.setIndeterminate(true);
                 this.sensorConnectButton.setText(R.string.sensor_button_scanning);
+                break;
             }
             case CONNECTING: {
                 this.sensorStatusText.setText(R.string.sensor_status_connecting);
@@ -183,6 +184,21 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
                 this.sensorProgressBar.setVisibility(View.VISIBLE);
                 this.sensorProgressBar.setIndeterminate(true);
                 this.sensorConnectButton.setText(R.string.sensor_button_connecting);
+
+                String name = null;
+                ISensor sensor = SensorController.get(this).getSensor();
+                if(sensor != null) {
+                    name = sensor.getName();
+                    if(name.equals("null")) name = null;
+                }
+
+                String message;
+                if(name == null)
+                    message = this.getString(R.string.sensor_activity_found_noname);
+                else
+                    message = this.getString(R.string.sensor_activity_found, name);
+
+                Snackbar.make(this.sensorConnectButton, message, Snackbar.LENGTH_SHORT).show();
                 break;
             }
             case SCAN_TIMEOUT: {

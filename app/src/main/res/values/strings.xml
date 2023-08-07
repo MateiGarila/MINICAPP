@@ -71,7 +71,9 @@
     <string name="sensor_battery_charging">Charging, %d%%</string>
     <string name="sensor_battery_charged">Fully charged.</string>
 
-    <string name="sensor_settings_busy">App busy, please wait..</string>
+    <string name="sensor_activity_busy">App busy, please wait..</string>
+    <string name="sensor_activity_found">Found sensor %1$s</string>
+    <string name="sensor_activity_found_noname">Found a sensor (why it has no name?)</string>
 
 
 </resources>
