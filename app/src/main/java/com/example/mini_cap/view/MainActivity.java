@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,8 +30,8 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
     //Declaration of all UI elements
 
     private TextView cityNameTV, temp, uvIndex, conditionTV;
-    private ImageView currentWeather;
-    private String defaultCity = "Montreal"; // Default city
+    private ImageView currentWeather, refresh;
+    private String currentCity = "Montreal";
     private static final int SETTINGS_REQUEST_CODE = 1;
 
     @Override
@@ -45,11 +46,19 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         uvIndex = findViewById(R.id.uvIndex);
         currentWeather = findViewById(R.id.currentWeather);
         conditionTV = findViewById(R.id.condition);
+        refresh = findViewById(R.id.refresh);
 
-        getWeatherInfo(defaultCity);
+        getWeatherInfo(currentCity);
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnItemSelectedListener(this);
+
+        refresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getWeatherInfo(currentCity);
+            }
+        });
 
 
     }
@@ -63,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
                 String city = data.getStringExtra("CITY_NAME");
                 if (city != null) {
                     // Update the cityNameTV text view with the city name
-                    cityNameTV.setText(city);
+                    currentCity = city;
                     getWeatherInfo(city);
                 }
             }
@@ -121,6 +130,8 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
                 Picasso.get().load("https:".concat(conditionIcon)).into(currentWeather);
                 String uv = response.getJSONObject("current").getString("uv");
                 uvIndex.setText("UV index: "+uv);
+                String cityName = response.getJSONObject("location").getString("name");
+                cityNameTV.setText(cityName);
 
             } catch (JSONException e) {
                 throw new RuntimeException(e);

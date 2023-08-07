@@ -240,7 +240,7 @@ public class SessionActivity extends AppCompatActivity  {
         return new Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setContentTitle("UV Index Alert")
                 .setContentText(contentText)
-                .setSmallIcon(R.mipmap.ic_launcher) // Set an appropriate app icon here
+                .setSmallIcon(R.drawable.ic_notif) // Set an appropriate app icon here
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .build();
