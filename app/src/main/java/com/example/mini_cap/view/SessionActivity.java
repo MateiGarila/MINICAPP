@@ -1,5 +1,7 @@
 package com.example.mini_cap.view;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
@@ -643,6 +645,45 @@ public class SessionActivity extends AppCompatActivity  {
     }
 
     private static class SessionActivityStorage {
+
+        private static SessionActivityStorage instance;
+
+        @NonNull
+        private static SessionActivityStorage get() {
+            if(SessionActivityStorage.instance == null)
+                SessionActivityStorage.instance = new SessionActivityStorage();
+            return SessionActivityStorage.instance;
+        }
+
+        private SessionActivityStorage() {
+
+        }
+
+        @Nullable
+        private Preset latestPreset;
+
+        @Nullable
+        private String presetButtonSavedText;
+
+        public void setLatestPreset(Preset latestPreset) {
+            this.latestPreset = latestPreset;
+        }
+
+        @Nullable
+        public Preset getLatestPreset() {
+            return this.latestPreset;
+        }
+
+        // Will be called: onDestroy()
+        public void saveActivityState(@NonNull SessionActivity activity) {
+            this.presetButtonSavedText = activity.addPresetBTN.getText().toString();
+        }
+
+        // Will be called: onCreate()
+        public void loadActivityState(@NonNull SessionActivity activity) {
+            if(this.presetButtonSavedText != null)
+                activity.addPresetBTN.setText(this.presetButtonSavedText);
+        }
 
     }
 }
