@@ -104,6 +104,19 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         this.sensorProgressBar.setVisibility(View.INVISIBLE);
     }
 
+
+    /* -------- UI initialization -------- */
+
+    private void initiateSensorConnectionUI() {
+        this.sensorStatusText.setText(R.string.sensor_status_not_connected);
+        this.sensorBatteryText.setText("");
+        this.sensorProgressBar.setVisibility(View.INVISIBLE);
+        this.sensorConnectButton.setText(R.string.sensor_button_connect);
+    }
+
+
+    /* -------- UI handlers - search -------- */
+
     private void handleSearchConfiguration() {
         String city = this.cityNameText.getText().toString();
         if(city.isEmpty()) {
@@ -118,10 +131,13 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         }
     }
 
+
+    /* -------- UI handlers - sensor -------- */
+
     private void handleConnectButtonClick() {
         SensorController controller = SensorController.get(this);
         if(controller.isConnecting()) {
-            Snackbar.make(this.sensorConnectButton, "App busy, please wait..", Snackbar.LENGTH_SHORT).show();
+            this.showBusyPrompt();
             return;
         }
         if(!controller.isConnected()) {
@@ -132,12 +148,24 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         }
     }
 
-    private void initiateSensorConnectionUI() {
-        this.sensorStatusText.setText(R.string.sensor_status_not_connected);
-        this.sensorBatteryText.setText("");
-        this.sensorProgressBar.setVisibility(View.INVISIBLE);
-        this.sensorConnectButton.setText(R.string.sensor_button_connect);
+    @Override
+    public void onBackPressed() {
+        if(SensorController.get(this).isConnecting()) {
+            this.showBusyPrompt();
+            return;
+        }
+        super.onBackPressed();
     }
+
+
+    /* -------- Helpers -------- */
+
+    private void showBusyPrompt() {
+        Snackbar.make(this.sensorConnectButton, R.string.sensor_settings_busy, Snackbar.LENGTH_SHORT).show();
+    }
+
+
+    /* -------- External events -------- */
 
     @EventHandler
     private void updateSensorConnectionUI(@NonNull SensorController.ConnectionFlowStage event) {
