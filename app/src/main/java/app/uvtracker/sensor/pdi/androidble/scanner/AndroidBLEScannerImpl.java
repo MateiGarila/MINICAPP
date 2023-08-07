@@ -61,15 +61,12 @@ public class AndroidBLEScannerImpl extends EventRegistry implements IScanner {
         this(context, null);
     }
 
-    public AndroidBLEScannerImpl(@NonNull Context context, @Nullable Predicate<Context> permChecker) throws TransceiverException {
+    public AndroidBLEScannerImpl(@NonNull Context context, @Nullable Predicate<Context> permChecker) throws TransceiverUnsupportedException {
         this.handler = new Handler(Looper.getMainLooper()); // TODO: which thread to use?
         this.context = context;
         this.permChecker = permChecker;
-
         this.adapter = context.getSystemService(BluetoothManager.class).getAdapter();
         if(this.adapter == null) throw new TransceiverUnsupportedException();
-        if(!this.adapter.isEnabled()) throw new TransceiverOffException();
-
         this.callback = new BluetoothScanCallback(this::onSensorScanned);
         this.map = new ConcurrentHashMap<>();
     }
@@ -83,6 +80,7 @@ public class AndroidBLEScannerImpl extends EventRegistry implements IScanner {
     @Override
     public synchronized void startScanning() throws TransceiverException {
         if(this.isScanning) return;
+        this.ensureBleOn();
         this.ensurePerm();
         this.isScanning = true;
         this.map.clear();
@@ -93,9 +91,14 @@ public class AndroidBLEScannerImpl extends EventRegistry implements IScanner {
     @Override
     public synchronized void stopScanning() throws TransceiverException {
         if(!this.isScanning) return;
+        this.ensureBleOn();
         this.ensurePerm();
         this.adapter.getBluetoothLeScanner().stopScan(this.callback);
         this.isScanning = false;
+    }
+
+    private void ensureBleOn() throws TransceiverException {
+        if(!this.adapter.isEnabled()) throw new TransceiverOffException();
     }
 
     private void ensurePerm() throws TransceiverNoPermException {
