@@ -361,7 +361,7 @@ public class StatsActivity extends AppCompatActivity implements IEventListener {
 
         // Generate datasets
         LineData lineData = this.prepareDataSets(yAxisValues, dataSet -> {
-            dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
+            dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // Use different modes for the line appearance
             dataSet.setDrawValues(false); // Set to false to hide the values on data points
             dataSet.setLineWidth(6f); // Set line width to 6
             dataSet.setDrawCircles(false); // Set to false to hide circles at data points
@@ -405,6 +405,21 @@ public class StatsActivity extends AppCompatActivity implements IEventListener {
     private LineData prepareDataSets(List<Entry> values, Consumer<LineDataSet> formatter) {
         List<LineDataSet> dataSets = new ArrayList<>(2);
 
+        // Generate X axis line
+        List<Entry> placeholderValues = new ArrayList<>(2);
+        placeholderValues.add(new Entry(0, 0));
+        placeholderValues.add(new Entry(values.size() - 1, 0));
+
+        LineDataSet dataSetPlaceholder = new LineDataSet(placeholderValues, "");
+        // X axis line format
+        dataSetPlaceholder.setDrawValues(false);
+        dataSetPlaceholder.setLineWidth(3f);
+        dataSetPlaceholder.setDrawCircles(false);
+        dataSetPlaceholder.setColor(ContextCompat.getColor(this, R.color.button_grey));
+
+        dataSets.add(dataSetPlaceholder);
+
+        // Generate actual data
         DatasetSplitter splitter = new DatasetSplitter((i, j) -> {
             List<Entry> subset = values.subList(i, j);
             if(subset.contains(null)) {
@@ -418,15 +433,6 @@ public class StatsActivity extends AppCompatActivity implements IEventListener {
 
         values.forEach((e) -> splitter.write(e != null));
         splitter.writeEOL();
-
-        List<Entry> placeholderValues = new ArrayList<>(2);
-        placeholderValues.add(new Entry(0, 0));
-        placeholderValues.add(new Entry(values.size() - 1, 0));
-
-        LineDataSet dataSetPlaceholder = new LineDataSet(placeholderValues, "");
-        dataSetPlaceholder.setVisible(false);
-
-        dataSets.add(dataSetPlaceholder);
 
         return new LineData(dataSets.toArray(new LineDataSet[0]));
     }
