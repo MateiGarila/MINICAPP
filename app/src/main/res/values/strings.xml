@@ -38,7 +38,8 @@
     <string name="sensor_connection_disconnected">Disconnected.</string>
     <string name="sensor_connection_failed_retry">Connection lost. Please retry.</string>
     <string name="sensor_connection_failed_noretry">Connection lost. Incompatible hardware?</string>
-    <string name="sensor_sync_progress">Data sync in progress.. %1$d%%</string>
+    <string name="sensor_sync_in_progress">History data sync in progress.. %1$d%%</string>
+    <string name="sensor_sync_done">History data sync completed.</string>
     <string name="sensor_record_format">Current UV Index: %1$.1f. Illuminance: %2$.1flux.</string>
 
     <!--Below this line you will find all the Strings related to the PresetFragment-->

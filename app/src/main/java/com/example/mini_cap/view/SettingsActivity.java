@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
 import com.example.mini_cap.controller.SensorController;
+import com.google.android.material.snackbar.Snackbar;
 
 import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.IEventListener;
@@ -30,10 +31,9 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
 
         // Initialize sensor controller
         SensorController.get(this).registerListenerClass(DBHelper.get(this));
+        SensorController.get(this).registerListenerClass(this);
 
         //Attaching the UI elements to their respective objects
-        //mainView = findViewById(R.id.mainTextView);
-        connectBTN = findViewById(R.id.connectBTN);
         cityName = findViewById(R.id.cityInput);
         search = findViewById(R.id.search);
 
@@ -53,11 +53,27 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
             }
         });
 
-        connectBTN.setOnClickListener((v) -> this.handleConnectButton());
-
+        // Connect button - connection flow handling
+        this.connectBTN = findViewById(R.id.connectBTN);
+        this.updateConnectButton(SensorController.get(this).getStage());
+        connectBTN.setOnClickListener((v) -> this.handleConnectButtonClick());
     }
 
-    private void handleConnectButton() {
+    private void updateConnectButton(SensorController.ConnectionFlowStage stage) {
+        switch(stage) {
+            case DISCONNECTED:
+                this.connectBTN.setText("Connect to sensor");
+                break;
+            case CONNECTING:
+                this.connectBTN.setText("Connecting...");
+                break;
+            case CONNECTED:
+                this.connectBTN.setText("Disconnect from sensor");
+                break;
+        }
+    }
+
+    private void handleConnectButtonClick() {
         SensorController controller = SensorController.get(this);
         if(controller.getStage() == SensorController.ConnectionFlowStage.DISCONNECTED) {
             controller.connectToAnySensor(this);
@@ -69,17 +85,12 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
 
     @EventHandler
     protected void onConnectionFlow(SensorController.ConnectionFlowEvent event) {
-        switch(event.getStage()) {
-            case DISCONNECTED:
-                this.connectBTN.setText("Connect to sensor");
-                break;
-            case CONNECTING:
-                this.connectBTN.setText("Connecting...");
-                break;
-            case CONNECTED:
-                this.connectBTN.setText("Disconnect from sensor");
-                break;
-        }
+        this.updateConnectButton(event.getStage());
+    }
+
+    @EventHandler
+    protected void onMessage(String message) {
+        Snackbar.make(this.connectBTN, message, Snackbar.LENGTH_SHORT).show();
     }
 
 }

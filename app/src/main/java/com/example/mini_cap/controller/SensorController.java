@@ -5,12 +5,10 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.hardware.Sensor;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -72,13 +70,17 @@ public class SensorController extends EventRegistry implements IEventListener {
     @NonNull
     private ConnectionFlowStage stage;
 
+    private boolean syncCompleteMessagePending;
+
+    @NonNull
+    private final NoSpammingDispatcher syncMessageDispatcher;
+
     private SensorController(@NonNull Context context) {
         this.registerListenerClass(this);
         this.handler = new Handler(Looper.getMainLooper());
         this.context = context;
-        if(context instanceof IEventListener)
-            this.registerListenerClass((IEventListener)context);
         this.stage = ConnectionFlowStage.DISCONNECTED;
+        this.syncMessageDispatcher = new NoSpammingDispatcher();
     }
 
     @Nullable
@@ -156,6 +158,7 @@ public class SensorController extends EventRegistry implements IEventListener {
             Log.d(TAG, "Handling sensor connection but there's no sensor. Glitched?");
             return;
         }
+        this.syncCompleteMessagePending = false;
         this.handler.post(() -> this.connectedSensor.getConnection().startSync());
         this.setStage(ConnectionFlowStage.CONNECTED);
     }
@@ -226,8 +229,14 @@ public class SensorController extends EventRegistry implements IEventListener {
     @EventHandler
     protected void onSyncProgress(SyncProgressChangedEvent event) {
         if(event.getStage() != SyncProgressChangedEvent.Stage.PROCESSING) return;
-        if(event.getProgress() > 0 && event.getProgress() < 100)
-            this.displayToast(this.context.getString(R.string.sensor_sync_progress, event.getProgress()));
+        if(event.getProgress() == 100 && this.syncCompleteMessagePending) {
+            this.syncCompleteMessagePending = false;
+            this.syncMessageDispatcher.dispatchFinal(() -> this.displayToast(R.string.sensor_sync_done));
+        }
+        if(event.getProgress() > 0 && event.getProgress() < 100) {
+            this.syncCompleteMessagePending = true;
+            this.syncMessageDispatcher.dispatch(() -> this.displayToast(this.context.getString(R.string.sensor_sync_in_progress, event.getProgress())));
+        }
     }
 
 
@@ -262,9 +271,8 @@ public class SensorController extends EventRegistry implements IEventListener {
     }
 
     private void displayToast(@NonNull String message, boolean isLong) {
-        this.handler.post(() ->
-            Toast.makeText(this.context, message, isLong ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT).show()
-        );
+        // TODO: any better way to surface this to the user?
+        this.handler.post(() -> this.dispatch(message));
     }
 
 
@@ -346,5 +354,34 @@ class BLEPermissions {
 interface TransceiverOperationRunnable {
 
     void run() throws TransceiverException;
+
+}
+
+class NoSpammingDispatcher {
+
+    private static final long INTERVAL = 1000;
+
+    private long targetTime;
+
+    public NoSpammingDispatcher() {
+        this.targetTime = -1;
+    }
+
+    public void reset() {
+        this.targetTime = -1;
+    }
+
+    public void dispatch(@NonNull Runnable runnable) {
+        long now = System.currentTimeMillis();
+        if(this.targetTime > now) return;
+        this.targetTime = now + INTERVAL;
+        runnable.run();
+    }
+
+    public void dispatchFinal(@NonNull Runnable runnable) {
+        this.reset();
+        this.dispatch(runnable);
+        this.reset();
+    }
 
 }
