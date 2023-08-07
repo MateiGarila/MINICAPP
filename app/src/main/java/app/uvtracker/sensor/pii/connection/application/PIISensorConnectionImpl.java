@@ -278,7 +278,7 @@ class SyncManager implements IEventListener {
         Log.d(TAG, "Processing sync info packet...");
         if(this.latestSyncInfo == null) {
             this.sampleInterval = packet.getSampleInterval();
-            this.deviceBootTime = new Date().getTime() - (long) packet.getSampleCount() * packet.getSampleInterval() * 1000 - packet.getCurrentSecondCounter();
+            this.deviceBootTime = new Date().getTime() - (long) (packet.getSampleStart() + packet.getSampleCount()) * packet.getSampleInterval() * 1000 - packet.getCurrentSecondCounter();
             Log.d(TAG, "Device boot time: " + new Date(this.deviceBootTime));
         }
         this.latestSyncInfo = packet;
@@ -323,6 +323,8 @@ class SyncManager implements IEventListener {
             list.add(sample);
         }
         this.progressInfoCount += count;
+        if(list.size() == 0) Log.d(TAG, "Data size: 0.");
+        else Log.d(TAG, String.format("Data size: %d; first: %s; last: %s.", list.size(), list.get(0), list.get(list.size() - 1)));
         this.connection.dispatch(new SyncProgressChangedEvent(SyncProgressChangedEvent.Stage.PROCESSING, Math.round((float)this.progressInfoCount / (float)this.progressInfoTotalCount * 100.0f)));
         this.handler.post(() -> this.connection.dispatch(new SyncDataReceivedEvent(list)));
         this.processSync(false);
