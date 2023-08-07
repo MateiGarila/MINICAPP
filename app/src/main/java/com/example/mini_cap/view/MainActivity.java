@@ -1,9 +1,5 @@
 package com.example.mini_cap.view;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
-
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -18,36 +14,28 @@ import android.icu.util.Calendar;
 import android.icu.util.TimeZone;
 import android.os.Build;
 import android.os.Bundle;
-
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.ImageView;
-
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
+import com.example.mini_cap.controller.SensorController;
 import com.example.mini_cap.controller.UVIndexService;
 import com.example.mini_cap.model.Day;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
-import org.json.JSONObject;
-
-import com.example.mini_cap.R;
-import com.example.mini_cap.controller.SensorController;
-import com.example.mini_cap.view.helper.IntentDataHelper;
-
-import java.sql.Date;
 
 public class MainActivity extends AppCompatActivity implements INavigationBar, BottomNavigationView.OnItemSelectedListener {
 
@@ -75,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        this.sensorController = new SensorController(this);
+        this.sensorController = SensorController.get(this);
 
         //Attaching the UI elements to their respective objects
 
@@ -144,7 +132,6 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
 
     private void toStatsActivity(){
         Intent intent = new Intent(this, StatsActivity.class);
-        IntentDataHelper.writeSensorController(this.sensorController);
         startActivity(intent);
     }
 
