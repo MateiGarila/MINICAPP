@@ -23,6 +23,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mini_cap.R;
+import com.example.mini_cap.controller.DBHelper;
+import com.example.mini_cap.model.Day;
 import com.example.mini_cap.model.Preset;
 
 import java.util.Calendar;
@@ -50,10 +52,9 @@ public class SessionActivity extends AppCompatActivity  {
     //For Testing purposes. This is 10 seconds
     private static final long START_TIME_IN_MILLIS = 10000;
     private static final long DEFAULT_TIMER_IN_MILLIS = 1050000;
-
+    private static long calculatedTimer;
     private CountDownTimer countDownTimer;
     private long timeLeftInMillis;
-    
     private int notificationTier;
     private boolean isSessionStarted;
     private boolean isSessionPaused;
@@ -298,11 +299,11 @@ public class SessionActivity extends AppCompatActivity  {
         isSessionStarted = true;
 
         //Third purpose of method
-        //For demo purposes remove this line (timer will be set to 10 seconds)
-        //TODO need to fix repetitive timers
-        timeLeftInMillis = timerDurationAlgo(ageParameter(preset.getAge()),
-                skinToneParameter(preset.getSkinTone()), uvParameter());
-
+        //For demo purposes (timer will be set to 10 seconds)
+        timeLeftInMillis = DEFAULT_TIMER_IN_MILLIS;
+        //calculatedTimer = timerDurationAlgo(ageParameter(preset.getAge()),
+        //        skinToneParameter(preset.getSkinTone()), uvParameter());
+        //timeLeftInMillis = calculatedTimer;
 
         countDownManager();
 
@@ -317,7 +318,6 @@ public class SessionActivity extends AppCompatActivity  {
 
         //First update UI
         startPauseBTN.setText(R.string.continue_session_text);
-
 
         //Second update variables
         isSessionPaused = true;
@@ -418,7 +418,9 @@ public class SessionActivity extends AppCompatActivity  {
                 //Notifications go here
                 //-->
                 
-                timeLeftInMillis = START_TIME_IN_MILLIS;
+                //timeLeftInMillis = calculatedTimer;
+                //this is the demo mode
+                timeLeftInMillis = DEFAULT_TIMER_IN_MILLIS;
                 countDownManager();
             }
 
@@ -534,9 +536,13 @@ public class SessionActivity extends AppCompatActivity  {
         return skinParam;
     }
 
+    /**
+     * This method calculates the parameter obtained from the average UV index over a minute
+     * @return the multiplier parameter used in the timer algorithm
+     */
     private double uvParameter(){
 
-        dbHelper = new DBHelper(getBaseContext());
+        DBHelper dbHelper = DBHelper.get(this);
         Date currentDate = new Date();
         Calendar calendar = Calendar.getInstance();
         TimeZone timeZone = calendar.getTimeZone();
@@ -544,7 +550,7 @@ public class SessionActivity extends AppCompatActivity  {
         int hours = calendar.get(Calendar.HOUR_OF_DAY);
         int minutes = calendar.get(Calendar.MINUTE);
 
-        int avgUVIndex = (int) dbHelper.getMinuteAvg(new Day(currentDate), minutes, hours);
+        int avgUVIndex = (int) dbHelper.getMinuteAvg(new Day(currentDate), minutes, hours, false);
         double uvParam = 0.0;
 
         if(avgUVIndex == 0){
@@ -566,6 +572,13 @@ public class SessionActivity extends AppCompatActivity  {
         return uvParam;
     }
 
+    /**
+     * This method determines the duration of the timer based off 3 parameters
+     * @param age parameter, obtained from the preset
+     * @param skin parameter, obtained from the preset
+     * @param uvIndex parameter, obtained from the minute average
+     * @return timer duration
+     */
     public long timerDurationAlgo(double age, double skin, double uvIndex){
 
         long time = 0;
