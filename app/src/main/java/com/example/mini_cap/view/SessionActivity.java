@@ -43,7 +43,9 @@ public class SessionActivity extends AppCompatActivity  {
 
     //Needed
     private final static String TAG = "SessionActivity";
+    private static Bundle bundle;
     private final boolean isCreate = true;
+    private boolean isDemo = false;
     private static final String NOTIFICATION_CHANNEL_ID = "UV_INDEX_NOTIFICATION_CHANNEL";
     private static final int NOTIFICATION_ID = 1;
     private static final int MAX_TIER = 5;
@@ -71,6 +73,10 @@ public class SessionActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
+
+        // Initialize local bundle
+        if(SessionActivity.bundle == null)
+            SessionActivity.bundle = new Bundle();
 
         //Attaching the UI elements to their respective objects
         //TextViews
@@ -172,6 +178,8 @@ public class SessionActivity extends AppCompatActivity  {
 
         // Schedule repeated notifications every 2 hours
         scheduleRepeatingNotifications();
+
+        this.restoreUI(SessionActivity.bundle);
     }
 
     @Override
@@ -179,6 +187,20 @@ public class SessionActivity extends AppCompatActivity  {
         // Unregister the broadcast receiver to avoid memory leaks
         unregisterReceiver(uvNotificationReceiver);
         super.onDestroy();
+        this.saveUI(SessionActivity.bundle);
+    }
+
+    private void saveUI(Bundle state){
+
+        state.putBoolean("Session_Start_Status", this.isSessionStarted);
+        state.putBoolean("Session_Paused_Status", this.isSessionPaused);
+        state.putBoolean("Session_is_Demo", this.isDemo);
+        state.putInt("Notification_tier", this.notificationTier);
+        state.putLong("Time_Left_In_Millis", this.timeLeftInMillis);
+    }
+
+    private void restoreUI(Bundle state){
+
     }
 
     private boolean isValidInput(String input) {
@@ -300,10 +322,14 @@ public class SessionActivity extends AppCompatActivity  {
 
         //Third purpose of method
         //For demo purposes (timer will be set to 10 seconds)
-        timeLeftInMillis = DEFAULT_TIMER_IN_MILLIS;
-        //calculatedTimer = timerDurationAlgo(ageParameter(preset.getAge()),
-        //        skinToneParameter(preset.getSkinTone()), uvParameter());
-        //timeLeftInMillis = calculatedTimer;
+        if(preset.getName().equalsIgnoreCase("Demo")){
+            timeLeftInMillis = START_TIME_IN_MILLIS;
+            isDemo = true;
+        }else{
+            calculatedTimer = timerDurationAlgo(ageParameter(preset.getAge()),
+                    skinToneParameter(preset.getSkinTone()), uvParameter());
+            timeLeftInMillis = calculatedTimer;
+        }
 
         countDownManager();
 
@@ -418,9 +444,12 @@ public class SessionActivity extends AppCompatActivity  {
                 //Notifications go here
                 //-->
                 
-                //timeLeftInMillis = calculatedTimer;
-                //this is the demo mode
-                timeLeftInMillis = DEFAULT_TIMER_IN_MILLIS;
+                if(isDemo){
+                    timeLeftInMillis = START_TIME_IN_MILLIS;
+                }else{
+                    timeLeftInMillis = calculatedTimer;
+                }
+
                 countDownManager();
             }
 
@@ -612,4 +641,10 @@ public class SessionActivity extends AppCompatActivity  {
 
         return time;
     }
+
+    private static class SessionActivityStorage {
+
+    }
 }
+
+

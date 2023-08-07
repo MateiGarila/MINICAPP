@@ -13,8 +13,8 @@
 
         <TextView
             android:id="@+id/addPresetTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="350dp"
+            android:layout_height="60dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
@@ -26,41 +26,76 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <EditText
-            android:id="@+id/presetName"
-            android:layout_width="375dp"
+        <TextView
+            android:id="@+id/presetNameTV"
+            android:layout_width="350dp"
             android:layout_height="60dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:digits="qwertzuiopasdfghjklyxcvbnmQWERTZUIOPASDFGHJKLYXCVBNM"
+            android:text="@string/preset_name"
+            android:textSize="25dp"
+            android:gravity="center"
+            app:layout_constraintBottom_toTopOf="@+id/presetName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.529"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/addPresetTextView"
+            app:layout_constraintVertical_bias="0.0" />
+
+
+        <EditText
+            android:id="@+id/presetName"
+            android:layout_width="350dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="60dp"
+            android:layout_marginEnd="8dp"
+            android:digits="qwertzuiopasdfghjklyxcvbnmQWERTZUIOPASDFGHJKLYXCVBNM-0123456789"
             android:ems="10"
-            android:hint="@string/preset_name_hint"
+            android:hint="@string/preset_name"
             android:inputType="text"
             app:layout_constraintEnd_toEndOf="@+id/addPresetTextView"
+            app:layout_constraintHorizontal_bias="0.437"
             app:layout_constraintStart_toStartOf="@+id/addPresetTextView"
             app:layout_constraintTop_toBottomOf="@+id/addPresetTextView" />
 
-        <EditText
-            android:id="@+id/presetAge"
-            android:layout_width="375dp"
+        <TextView
+            android:id="@+id/presetAgeTV"
+            android:layout_width="350dp"
             android:layout_height="60dp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
+            android:text="@string/preset_age"
+            android:textSize="25dp"
+            android:gravity="center"
+            app:layout_constraintBottom_toTopOf="@+id/presetAge"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.533"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/presetName"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <EditText
+            android:id="@+id/presetAge"
+            android:layout_width="350dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="60dp"
+            android:layout_marginEnd="8dp"
             android:ems="10"
+            android:hint="@string/preset_age"
             android:inputType="number"
-            android:hint="@string/preset_age_hint"
             app:layout_constraintEnd_toEndOf="@+id/presetName"
             app:layout_constraintStart_toStartOf="@+id/presetName"
             app:layout_constraintTop_toBottomOf="@+id/presetName" />
 
         <Spinner
             android:id="@+id/presetSkinTone"
-            android:layout_width="375dp"
+            android:layout_width="350dp"
             android:layout_height="60dp"
-            app:layout_constraintEnd_toEndOf="@+id/presetAge"
-            app:layout_constraintStart_toStartOf="@+id/presetAge"
-            app:layout_constraintTop_toBottomOf="@+id/presetAge" />
+            app:layout_constraintEnd_toEndOf="@+id/skinToneTV"
+            app:layout_constraintStart_toStartOf="@+id/skinToneTV"
+            app:layout_constraintTop_toBottomOf="@+id/skinToneTV" />
 
         <Button
             android:id="@+id/presetCancelBTN"
@@ -99,6 +134,18 @@
             app:layout_constraintStart_toStartOf="@+id/presetCancelBTN"
             app:layout_constraintTop_toBottomOf="@+id/presetSkinTone"
             app:layout_constraintVertical_bias="0.0" />
+
+        <TextView
+            android:id="@+id/skinToneTV"
+            android:layout_width="350dp"
+            android:layout_height="60dp"
+            android:text="@string/preset_skin_tone"
+            android:textSize="25dp"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="@+id/presetAge"
+            app:layout_constraintStart_toStartOf="@+id/presetAge"
+            app:layout_constraintTop_toBottomOf="@+id/presetAge" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>
