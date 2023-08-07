@@ -434,85 +434,44 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float) INTERVAL);
         int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float) INTERVAL);
 
-        Long timestamp1 = date.toDatabaseNumber() + minuteSample;
-        Long timestamp2 = date.toDatabaseNumber() + nextMinuteSample;
+        long timestamp1 = date.toDatabaseNumber() + minuteSample;
+        long timestamp2 = date.toDatabaseNumber() + nextMinuteSample;
 
         List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
 
-
-        // Calculate the average exposure for the given minute range if needed
-        float sum = 0.0f, avg;
-
+        float sum = 0.0f;
+        int counter = 0;
         for(Stats stats : statsList){
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
                 sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+                counter++;
             }
         }
-        int sampleCount = statsList.size();
-        avg = sampleCount > 0 ? sum / sampleCount : 0.0f;
-
-        return avg;
+        if(counter == 0) return Float.NaN;
+        return sum / counter;
     }
 
     public float getHourlyAvg(Day date, int hour) {
-        float hourlyAvg = 0.0f;
+        int hourSample = Math.round((float)(hour * 3600)/ (float)INTERVAL);
+        int nextHourSample = Math.round((float)((hour + 1) * 3600)/ (float)INTERVAL);
 
-        // Get hour sample numbers and query the DB
-
-        int nextHour = hour + 1;
-        int hourSample = (hour*3600)/ INTERVAL;
-        int nextHourSample = (nextHour*3600)/ INTERVAL;
-        Long timestamp1 = date.toDatabaseNumber() + hourSample;
-        Long timestamp2 = date.toDatabaseNumber() + nextHourSample;
+        long timestamp1 = date.toDatabaseNumber() + hourSample;
+        long timestamp2 = date.toDatabaseNumber() + nextHourSample;
 
         List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
 
-        // Calculate the average exposure for the given minute range if needed
-        float sum = 0.0f, avg;
-
+        float sum = 0.0f;
+        int counter = 0;
         for (Stats stats : statsList) {
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
                 sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+                counter++;
             }
         }
-
-        int sampleCount = statsList.size();
-        avg = sampleCount > 0 ? sum / sampleCount : 0.0f;
-
-        return avg;
-    }
-
-
-    /**
-     * Function for returning the UV exposure for a specified day
-     * @param date must be in form "yyyy/MM/dd"
-     * @return array of hourly UV exposure floats for specified day from 8 am to 6 pm
-     */
-    public float[] getExposureForDay(Day date){
-
-        float[] dailyExposure = new float[11];
-
-        for (int i = 8; i < 19; i++) {
-            int index = i - 8;
-
-            dailyExposure[index] = getHourlyAvg(date, i);
-
-        }
-
-        return dailyExposure;
-
-    }
-
-    public float[] getMinuteExposureForHour(Day date, int hour) {
-        float[] minuteExposure = new float[60];
-
-        for (int i = 0; i < 60; i++) {
-            minuteExposure[i] = getMinuteAvg(date, i, hour);
-        }
-
-        return minuteExposure;
+        if(counter == 0) return Float.NaN;
+        return sum / counter;
     }
 
     /**

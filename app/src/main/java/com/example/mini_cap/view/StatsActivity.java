@@ -29,8 +29,10 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -50,11 +52,10 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
     // These configures the hour range to display (inclusive)
     private static final int HOURS_START = 6;
-    private static final int HOURS_END = 10;
+    private static final int HOURS_END = 23;
 
     // Activity state - chart control
     private LocalDate today;
-    private LineDataSet lineChartDataSet;
     private boolean viewingMinutes;
     private String selectedDate;
     private int selectedHour;
@@ -87,7 +88,6 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         /* -------- Initialize activity state -------- */
         this.today = LocalDate.now();
-        this.lineChartDataSet = null;
         this.viewingMinutes = false;
         this.selectedDate = this.today.format(outputFormatterForDB);
         this.selectedHour = 0;
@@ -209,11 +209,9 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     // Event handler
     public void onLineChartValueSelected(Entry e, Highlight ignoredH) {
         if(this.viewingMinutes) return;
-        this.selectedHour = this.lineChartDataSet.getEntryIndex(e);
+        if(e.getData() != null && e.getData().equals(Boolean.TRUE)) return;
+        this.selectedHour = Math.round(e.getX()) + HOURS_START;
         this.refreshLineChart(true);
-
-        // Do something with the Y value, e.g., display it in a TextView
-        // textView.setText("Selected Y Value: " + yValue);
     }
 
     // Event handler
@@ -247,9 +245,25 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         // Generate y-axis values
         List<Entry> yAxisValues =
                 IntStream.range(0, HOURS_END - HOURS_START + 1)
-                        .mapToObj(i -> new Entry(i, dbHelper.getHourlyAvg(day, HOURS_START + i)))
+                        .mapToObj(i -> {
+                            float val = dbHelper.getHourlyAvg(day, HOURS_START + i);
+                            if(Float.isNaN(val)) return null;
+                            return new Entry(i, val);
+                        })
+                        .filter(Objects::nonNull)
                         .collect(Collectors.toList());
+        List<Entry> yAxisValuePlaceholder = new ArrayList<>(2);
+        yAxisValuePlaceholder.add(new Entry(0, 0, true));
+        yAxisValuePlaceholder.add(new Entry(HOURS_END - HOURS_START, 0, true));
 
+        // Generate datasets
+        LineDataSet dataSet = new LineDataSet(yAxisValues, "");
+        dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
+        dataSet.setDrawValues(false); // Set to false to hide the values on data points
+        dataSet.setLineWidth(4f); // Set line width to 4
+        dataSet.setCircleRadius(8f);
+        LineDataSet dataSetPlaceholder = new LineDataSet(yAxisValuePlaceholder, "");
+        dataSetPlaceholder.setVisible(false);
 
         // Set line chart style
         this.lineChart.setDrawGridBackground(true);
@@ -264,13 +278,6 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // Move X-axis to the bottom
         xAxis.setTextSize(12f);
         xAxis.setDrawAxisLine(false);
-
-        // Set data
-        this.lineChartDataSet = new LineDataSet(yAxisValues, "");
-        this.lineChartDataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
-        this.lineChartDataSet.setDrawValues(false); // Set to false to hide the values on data points
-        this.lineChartDataSet.setLineWidth(4f); // Set line width to 4
-        this.lineChartDataSet.setCircleRadius(8f);
 
         // Set y-axis style (left)
         /*
@@ -289,7 +296,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         // Refresh
         this.viewingMinutes = false;
-        this.lineChart.setData(new LineData(this.lineChartDataSet));
+        this.lineChart.setData(new LineData(dataSet, dataSetPlaceholder));
         this.lineChart.invalidate();
         this.selectedDateTextView.setText(generateDateText(date));
     }
@@ -312,8 +319,26 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         // Generate y-axis values
         List<Entry> yAxisValues = IntStream.range(0, 61)
-                .mapToObj(i -> new Entry(i, dbHelper.getMinuteAvg(day, i, hour)))
+                .mapToObj(i -> {
+                    float val = dbHelper.getMinuteAvg(day, i, hour);
+                    if(Float.isNaN(val)) return null;
+                    return new Entry(i, val);
+                })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+        List<Entry> yAxisValuePlaceholder = new ArrayList<>(2);
+        yAxisValuePlaceholder.add(new Entry(0, 0, true));
+        yAxisValuePlaceholder.add(new Entry(60, 0, true));
+
+        // Generate datasets
+        LineDataSet dataSet = new LineDataSet(yAxisValues, "");
+        dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
+        dataSet.setDrawValues(false); // Set to false to hide the values on data points
+        dataSet.setLineWidth(6f); // Set line width to 6
+        dataSet.setDrawCircles(false); // Set to false to hide circles at data points
+        dataSet.setColor(ContextCompat.getColor(this, R.color.stats_color));
+        LineDataSet dataSetPlaceholder = new LineDataSet(yAxisValuePlaceholder, "");
+        dataSetPlaceholder.setVisible(false);
 
         // Set line chart style
         lineChart.setDrawGridBackground(true);
@@ -329,14 +354,6 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         xAxis.setTextSize(12f);
         xAxis.setDrawAxisLine(false);
 
-        // Set data
-        this.lineChartDataSet = new LineDataSet(yAxisValues, "");
-        this.lineChartDataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
-        this.lineChartDataSet.setDrawValues(false); // Set to false to hide the values on data points
-        this.lineChartDataSet.setLineWidth(6f); // Set line width to 6
-        this.lineChartDataSet.setDrawCircles(false); // Set to false to hide circles at data points
-        this.lineChartDataSet.setColor(ContextCompat.getColor(this, R.color.stats_color));
-
         // Set y-axis style (left)
         /*
         YAxis leftYAxis = this.lineChart.getAxisLeft();
@@ -351,7 +368,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         // Refresh
         this.viewingMinutes = true;
-        this.lineChart.setData(new LineData(this.lineChartDataSet));
+        this.lineChart.setData(new LineData(dataSet, dataSetPlaceholder));
         this.lineChart.invalidate();
         this.selectedDateTextView.setText(generateDateText(date) + ", " + generateHourText(hour));
     }
