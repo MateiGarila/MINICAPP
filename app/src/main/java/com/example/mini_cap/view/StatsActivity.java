@@ -29,10 +29,11 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -51,7 +52,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     private static final boolean PROGRESSIVE_REFRESH = false;
 
     // These configures the hour range to display (inclusive)
-    private static final int HOURS_START = 6;
+    private static final int HOURS_START = 0;
     private static final int HOURS_END = 23;
 
     // Activity state - chart control
@@ -166,6 +167,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
     // Event handler
     private void onDayOfWeekButtonClick(int selectedIndex) {
+        if(this.selectedDayOfWeekButtonIndex == selectedIndex) return;
         // Restore old button color
         if(this.selectedDayOfWeekButtonIndex != -1)
             this.dayOfWeekButtons[this.selectedDayOfWeekButtonIndex].setBackgroundColor(ContextCompat.getColor(this, R.color.button_grey));
@@ -183,7 +185,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
         // Find the Sunday of the current week
-        LocalDate sunday = this.today.with(DayOfWeek.SUNDAY);
+        LocalDate sunday = this.today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
 
         // Add the number of weeks based on the currentWeek value
         LocalDate firstDayOfWeek = sunday.plusWeeks(this.selectedWeek);
@@ -208,8 +210,8 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     // Event handler
     public void onLineChartValueSelected(Entry e, Highlight ignoredH) {
         if(this.viewingMinutes) return;
-        if(e.getData() != null && e.getData().equals(Boolean.TRUE)) return;
-        this.selectedHour = Math.round(e.getX()) + HOURS_START;
+        if(e.getData() == null || !(e.getData() instanceof Integer)) return;
+        this.selectedHour = (Integer)e.getData();
         this.refreshLineChart(true);
     }
 
@@ -245,24 +247,20 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         List<Entry> yAxisValues =
                 IntStream.range(0, HOURS_END - HOURS_START + 1)
                         .mapToObj(i -> {
-                            float val = dbHelper.getHourlyAvg(day, HOURS_START + i);
+                            int h24 = HOURS_START + i;
+                            float val = dbHelper.getHourlyAvg(day, h24);
                             if(Float.isNaN(val)) return null;
-                            return new Entry(i, val);
+                            return new Entry(i, val, h24);
                         })
-                        .filter(Objects::nonNull)
                         .collect(Collectors.toList());
-        List<Entry> yAxisValuePlaceholder = new ArrayList<>(2);
-        yAxisValuePlaceholder.add(new Entry(0, 0, true));
-        yAxisValuePlaceholder.add(new Entry(HOURS_END - HOURS_START, 0, true));
 
         // Generate datasets
-        LineDataSet dataSet = new LineDataSet(yAxisValues, "");
-        dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
-        dataSet.setDrawValues(false); // Set to false to hide the values on data points
-        dataSet.setLineWidth(4f); // Set line width to 4
-        dataSet.setCircleRadius(8f);
-        LineDataSet dataSetPlaceholder = new LineDataSet(yAxisValuePlaceholder, "");
-        dataSetPlaceholder.setVisible(false);
+        LineData lineData = this.prepareDataSets(yAxisValues, dataSet -> {
+            dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
+            dataSet.setDrawValues(false); // Set to false to hide the values on data points
+            dataSet.setLineWidth(4f); // Set line width to 4
+            dataSet.setCircleRadius(8f);
+        });
 
         // Set line chart style
         this.lineChart.setDrawGridBackground(true);
@@ -295,7 +293,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         // Refresh
         this.viewingMinutes = false;
-        this.lineChart.setData(new LineData(dataSet, dataSetPlaceholder));
+        this.lineChart.setData(lineData);
         this.lineChart.invalidate();
         this.selectedDateTextView.setText(generateDateText(date));
     }
@@ -323,21 +321,17 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
                     if(Float.isNaN(val)) return null;
                     return new Entry(i, val);
                 })
-                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        List<Entry> yAxisValuePlaceholder = new ArrayList<>(2);
-        yAxisValuePlaceholder.add(new Entry(0, 0, true));
-        yAxisValuePlaceholder.add(new Entry(60, 0, true));
+
 
         // Generate datasets
-        LineDataSet dataSet = new LineDataSet(yAxisValues, "");
-        dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
-        dataSet.setDrawValues(false); // Set to false to hide the values on data points
-        dataSet.setLineWidth(6f); // Set line width to 6
-        dataSet.setDrawCircles(false); // Set to false to hide circles at data points
-        dataSet.setColor(ContextCompat.getColor(this, R.color.stats_color));
-        LineDataSet dataSetPlaceholder = new LineDataSet(yAxisValuePlaceholder, "");
-        dataSetPlaceholder.setVisible(false);
+        LineData lineData = this.prepareDataSets(yAxisValues, dataSet -> {
+            dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER); // Use different modes for the line appearance
+            dataSet.setDrawValues(false); // Set to false to hide the values on data points
+            dataSet.setLineWidth(6f); // Set line width to 6
+            dataSet.setDrawCircles(false); // Set to false to hide circles at data points
+            dataSet.setColor(ContextCompat.getColor(this, R.color.stats_color));
+        });
 
         // Set line chart style
         lineChart.setDrawGridBackground(true);
@@ -367,9 +361,46 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
         // Refresh
         this.viewingMinutes = true;
-        this.lineChart.setData(new LineData(dataSet, dataSetPlaceholder));
+        this.lineChart.setData(lineData);
         this.lineChart.invalidate();
         this.selectedDateTextView.setText(generateDateText(date) + ", " + generateHourText(hour));
+    }
+
+    // Helper
+    public LineData prepareDataSets(List<Entry> values, Consumer<LineDataSet> formatter) {
+        List<LineDataSet> dataSets = new ArrayList<>(2);
+
+        int length = values.size();
+        int recordedIndex = 0;
+        boolean recording = values.get(0) != null;
+        for(int index = 0; index < length; index++) {
+            Entry entry = values.get(index);
+            if(!recording) {
+                if(entry == null) continue;
+                recording = true;
+                recordedIndex = index;
+            }
+            if(entry != null && index != length - 1) continue;
+            if(index == length - 1) index++;
+            recording = false;
+            List<Entry> subset = values;
+            if(recordedIndex != 0 || index != length)
+                subset = values.subList(recordedIndex, index);
+            LineDataSet dataSet = new LineDataSet(subset, "");
+            formatter.accept(dataSet);
+            dataSets.add(dataSet);
+        }
+
+        List<Entry> placeholderValues = new ArrayList<>(2);
+        placeholderValues.add(new Entry(0, 0));
+        placeholderValues.add(new Entry(values.size() - 1, 0));
+
+        LineDataSet dataSetPlaceholder = new LineDataSet(placeholderValues, "");
+        dataSetPlaceholder.setVisible(false);
+
+        dataSets.add(dataSetPlaceholder);
+
+        return new LineData(dataSets.toArray(new LineDataSet[0]));
     }
 
     // Helper
