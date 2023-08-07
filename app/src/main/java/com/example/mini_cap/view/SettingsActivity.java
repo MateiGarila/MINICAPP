@@ -44,6 +44,8 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     private ISensor iSensor;
 
     private SensorController sensorController;
+    private Handler handler = new Handler();
+    private boolean isSensorConnected = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +61,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         cityName = findViewById(R.id.cityInput);
         search = findViewById(R.id.search);
         
-        connectBTN.setOnClickListener((v) -> this.sensorController.connectToAnySensor());
+        connectBTN.setOnClickListener((v) -> sensorUpdate());
 
         search.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -77,6 +79,32 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
             }
         });
 
+    }
+
+    private void sensorUpdate(){
+
+        if(isSensorConnected){
+
+            //sensorController.disconnectFromSensor();
+            connectBTN.setText(R.string.connect_sensor);
+
+        }else{
+
+            //sensorController.connectToAnySensor();
+            connectBTN.setEnabled(false);
+
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+
+                    connectBTN.setText(R.string.disconnect_sensor);
+                    connectBTN.setEnabled(true);
+                }
+            },3000);
+
+
+
+        }
     }
 
 }

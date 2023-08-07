@@ -24,7 +24,6 @@ import app.uvtracker.sensor.pii.event.IEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
@@ -148,7 +147,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param presetId id of the fetched Preset
      * @return Preset object with the specified id
      */
-    public Preset getPreSet(int presetId) {
+    public Preset getPreset(int presetId) {
 
         SQLiteDatabase db = this.getReadableDatabase();
 
