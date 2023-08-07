@@ -1,11 +1,13 @@
 package com.example.mini_cap.view;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Pair;
 import android.widget.Button;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -55,6 +57,9 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     private static final int HOURS_START = 0;
     private static final int HOURS_END = 23;
 
+    // System
+    private Handler handler;
+
     // Activity state - chart control
     private LocalDate today;
     private boolean viewingMinutes;
@@ -63,11 +68,14 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     private int selectedWeek;
     private String[] dayOfWeekStrings;
     private int selectedDayOfWeekButtonIndex;
+    private boolean viewingALS;
 
     // UI components - chart displays
     private LineChart lineChart;
     private Button[] dayOfWeekButtons;
     private TextView selectedDateTextView;
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
+    private Switch dataContentSwitch;
 
     // UI components - RT data displays
     private TextView currentUVTextView;
@@ -78,6 +86,9 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.activity_stats);
+
+        if(this.handler == null)
+            this.handler = new Handler(Looper.getMainLooper());
 
         // Register event handlers
         SensorController.get(this).registerListenerClass(this);
@@ -120,6 +131,13 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         // Current selected date text
         this.selectedDateTextView = this.findViewById(R.id.date_text_view);
         this.selectedDateTextView.setText(this.today.format(outputFormatter));
+
+
+        /* -------- Initialize UI components - content display switch -------- */
+        this.dataContentSwitch = this.findViewById(R.id.stat_display_switch);
+        this.dataContentSwitch.setChecked(false);
+        this.dataContentSwitch.setOnClickListener(e -> this.onDataContentSwitchToggle());
+        this.updateDataContentSwitch();
 
 
         /* -------- Initialize UI components - chart displays -------- */
@@ -177,7 +195,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         this.selectedDayOfWeekButtonIndex = selectedIndex;
         // UI updates
         this.selectedDate = this.dayOfWeekStrings[selectedIndex];
-        this.renderDailyDetailChart(this.selectedDate);
+        this.refreshLineChartDelayed(false);
     }
 
     // Rendering
@@ -205,6 +223,21 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     }
 
 
+    /* -------- Content display switch methods -------- */
+
+    // Event handler
+    private void onDataContentSwitchToggle() {
+        this.updateDataContentSwitch();
+        this.refreshLineChartDelayed();
+    }
+
+    // Helper
+    private void updateDataContentSwitch() {
+        this.viewingALS = this.dataContentSwitch.isChecked();
+        this.dataContentSwitch.setText(this.viewingALS ? "Light Intensity": "UV Index");
+    }
+
+
     /* -------- Line chart methods -------- */
 
     // Event handler
@@ -212,21 +245,20 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         if(this.viewingMinutes) return;
         if(e.getData() == null || !(e.getData() instanceof Integer)) return;
         this.selectedHour = (Integer)e.getData();
-        this.refreshLineChart(true);
+        this.refreshLineChartDelayed(true);
     }
 
     // Event handler
     public void onLineChartValueDeselected() {
         if(!this.viewingMinutes) return;
-        this.refreshLineChart(false);
+        this.refreshLineChartNow(false);
     }
-
 
     // Event handler
     @Override
     public void onBackPressed() {
         if(!this.viewingMinutes) super.onBackPressed();
-        this.refreshLineChart(false);
+        this.refreshLineChartNow(false);
     }
 
     // Rendering
@@ -248,7 +280,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
                 IntStream.range(0, HOURS_END - HOURS_START + 1)
                         .mapToObj(i -> {
                             int h24 = HOURS_START + i;
-                            float val = dbHelper.getHourlyAvg(day, h24);
+                            float val = dbHelper.getHourlyAvg(day, h24, this.viewingALS);
                             if(Float.isNaN(val)) return null;
                             return new Entry(i, val, h24);
                         })
@@ -317,7 +349,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         // Generate y-axis values
         List<Entry> yAxisValues = IntStream.range(0, 61)
                 .mapToObj(i -> {
-                    float val = dbHelper.getMinuteAvg(day, i, hour);
+                    float val = dbHelper.getMinuteAvg(day, i, hour, this.viewingALS);
                     if(Float.isNaN(val)) return null;
                     return new Entry(i, val);
                 })
@@ -404,11 +436,19 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     }
 
     // Helper
-    public void refreshLineChart() {
-        this.refreshLineChart(this.viewingMinutes);
+    public void refreshLineChartDelayed() {
+        this.refreshLineChartDelayed(this.viewingMinutes);
     }
 
-    public void refreshLineChart(boolean displayMinuteView) {
+    public void refreshLineChartDelayed(boolean displayMinuteView) {
+        this.handler.postDelayed(() -> this.refreshLineChartNow(displayMinuteView), 15);
+    }
+
+    public void refreshLineChartNow() {
+        this.refreshLineChartNow(this.viewingMinutes);
+    }
+
+    public void refreshLineChartNow(boolean displayMinuteView) {
         if(displayMinuteView) {
             this.renderHourlyDetailChart(this.selectedDate, this.selectedHour);
         }
@@ -467,13 +507,13 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     protected void onSyncStateChange(@NonNull SyncProgressChangedEvent event) {
         if (event.getStage() != SyncProgressChangedEvent.Stage.DONE) return;
         if(!PROGRESSIVE_REFRESH)
-            new Handler(Looper.getMainLooper()).post(this::refreshLineChart);
+            new Handler(Looper.getMainLooper()).post(this::refreshLineChartDelayed);
     }
 
     @EventHandler
     protected void onSyncDataReceived(@NonNull SyncDataReceivedEvent event) {
         if(PROGRESSIVE_REFRESH)
-            new Handler(Looper.getMainLooper()).post(this::refreshLineChart);
+            new Handler(Looper.getMainLooper()).post(this::refreshLineChartDelayed);
     }
 
 

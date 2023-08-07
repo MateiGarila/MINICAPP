@@ -30,7 +30,6 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
     private static final String TAG = "DBHelper";
 
-    private static final boolean DEBUG_READ_ALS = true;
     private static final int INTERVAL = 10;
 
     @SuppressLint("StaticFieldLeak")
@@ -343,7 +342,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param day must be in form "yyyy/mm/dd"
      * @return Stats object with data for timestamp entered
      */
-    public float getDailyAvg(Day day){
+    public float getDailyAvg(Day day, boolean getALS){
         Long dateLong = day.toDatabaseNumber();
         SQLiteDatabase db = this.getReadableDatabase();
         List<Stats> statsList = new ArrayList<>();
@@ -380,7 +379,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         for(Stats stats : statsList){
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
-                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+                sum += getALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
             }
         }
         int sampleCount = statsList.size();
@@ -430,7 +429,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param date is a date object, hour is concatenated to date string to create full timestamp
      * @return hourly avg exposure from 8 am to 6 pm
      */
-    public float getMinuteAvg(Day date, int minute, int hour){
+    public float getMinuteAvg(Day date, int minute, int hour, boolean getALS) {
         int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float) INTERVAL);
         int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float) INTERVAL);
 
@@ -444,7 +443,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         for(Stats stats : statsList){
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
-                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+                sum += getALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
                 counter++;
             }
         }
@@ -452,7 +451,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         return sum / counter;
     }
 
-    public float getHourlyAvg(Day date, int hour) {
+    public float getHourlyAvg(Day date, int hour, boolean getALS) {
         int hourSample = Math.round((float)(hour * 3600)/ (float)INTERVAL);
         int nextHourSample = Math.round((float)((hour + 1) * 3600)/ (float)INTERVAL);
 
@@ -466,7 +465,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         for (Stats stats : statsList) {
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
-                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+                sum += getALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
                 counter++;
             }
         }
