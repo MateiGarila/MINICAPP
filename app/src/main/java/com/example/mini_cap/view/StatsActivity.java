@@ -237,7 +237,7 @@ public class StatsActivity extends AppCompatActivity implements IEventListener {
     // Helper
     private void updateDataContentSwitch() {
         this.viewingALS = this.dataContentSwitch.isChecked();
-        this.dataContentSwitch.setText(this.viewingALS ? "Light Intensity": "UV Index");
+        this.dataContentSwitch.setText(this.viewingALS ? "Sunlight": "UV Index");
     }
 
 

@@ -10,11 +10,9 @@
         android:id="@+id/cardView"
         android:layout_width="411dp"
         android:layout_height="169dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.001">
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -346,8 +344,8 @@
     </androidx.cardview.widget.CardView>
 
     <LinearLayout
-        android:layout_width="410dp"
-        android:layout_height="561dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -361,12 +359,18 @@
 
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/line_chart"
-                android:layout_width="376dp"
-                android:layout_height="289dp"
-                android:layout_marginTop="32dp"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="36dp"
+                app:layout_constraintBottom_toTopOf="@+id/uvindex_id"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.504">
 
             </com.github.mikephil.charting.charts.LineChart>
 
@@ -374,58 +378,50 @@
                 android:id="@+id/uvindex_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
+                android:layout_marginBottom="16dp"
                 android:text="Current UV Index: "
                 android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                 android:textSize="20sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.069"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/line_chart"
-                app:layout_constraintVertical_bias="0.0" />
+                app:layout_constraintBottom_toTopOf="@+id/lightIntensityID"
+                app:layout_constraintStart_toStartOf="@+id/lightIntensityID" />
 
             <TextView
                 android:id="@+id/lightIntensityID"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="16dp"
                 android:text="Light Intensity:"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                 android:textSize="20sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="@+id/uvindex_id"
-                app:layout_constraintTop_toBottomOf="@+id/uvindex_id"
-                app:layout_constraintVertical_bias="0.097" />
+                app:layout_constraintBottom_toTopOf="@+id/severity_id"
+                app:layout_constraintStart_toStartOf="parent" />
 
             <TextView
                 android:id="@+id/severity_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="24dp"
                 android:text="Current Severity:"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                 android:textSize="20sp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.065"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/uvindex_id"
-                app:layout_constraintVertical_bias="0.357" />
+                app:layout_constraintStart_toStartOf="parent" />
 
 
             <TextView
                 android:id="@+id/severity_index"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Default"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                 android:textSize="20sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.086"
+                app:layout_constraintBottom_toBottomOf="@+id/severity_id"
                 app:layout_constraintStart_toEndOf="@+id/severity_id"
-                app:layout_constraintTop_toBottomOf="@+id/lightIntensityID"
-                app:layout_constraintVertical_bias="0.116" />
+                app:layout_constraintTop_toTopOf="@+id/severity_id"
+                app:layout_constraintVertical_bias="0.0" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
