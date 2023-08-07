@@ -5,7 +5,9 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.util.Pair;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -35,6 +37,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -46,7 +49,9 @@ import app.uvtracker.sensor.pii.connection.application.event.SyncProgressChanged
 import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.IEventListener;
 
-public class  StatsActivity extends AppCompatActivity implements IEventListener {
+public class StatsActivity extends AppCompatActivity implements IEventListener {
+
+    private static final String TAG = StatsActivity.class.getSimpleName();
 
     // If set to true, the graph will progressively update everytime it receives sync data.
     // If set to false, the graph will only update once the entire sync session is completed.
@@ -80,7 +85,8 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     // UI components - RT data displays
     private TextView currentUVTextView;
     private TextView currentALSTextView;
-    private TextView currentSeverityTextView;
+    private TextView currentSeverityTextView1;
+    private TextView currentSeverityTextView2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,19 +169,16 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         /* -------- Initialize UI components - real-time data displays -------- */
         this.currentUVTextView = this.findViewById(R.id.uvindex_id);
         this.currentALSTextView = this.findViewById(R.id.lightIntensityID);
-        this.currentSeverityTextView = this.findViewById(R.id.severity_index);
-        float defaultUVValue = 4.0F;
-        float defaultIlluminance = 1100.0F;
-        this.setCurrentUVIndex(defaultUVValue);
-        this.setLightIntensity(defaultIlluminance);
-        this.setSeverity(defaultUVValue);
+        this.currentSeverityTextView1 = this.findViewById(R.id.severity_id);
+        this.currentSeverityTextView2 = this.findViewById(R.id.severity_index);
+        this.resetRealtimeMeasurementDisplays();
     }
 
 
     /* -------- Day of week menu methods -------- */
 
     // Event handler
-    public void onWeekSelectionButtonClick(int weekOffset) {
+    private void onWeekSelectionButtonClick(int weekOffset) {
         if(weekOffset == 0) return;
         this.selectedWeek += weekOffset;
         this.updateDayOfWeekButtons();
@@ -241,7 +244,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     /* -------- Line chart methods -------- */
 
     // Event handler
-    public void onLineChartValueSelected(Entry e, Highlight ignoredH) {
+    private void onLineChartValueSelected(Entry e, Highlight ignoredH) {
         if(this.viewingMinutes) return;
         if(e.getData() == null || !(e.getData() instanceof Integer)) return;
         this.selectedHour = (Integer)e.getData();
@@ -249,7 +252,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     }
 
     // Event handler
-    public void onLineChartValueDeselected() {
+    private void onLineChartValueDeselected() {
         if(!this.viewingMinutes) return;
         this.refreshLineChartNow(false);
     }
@@ -262,7 +265,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     }
 
     // Rendering
-    public void renderDailyDetailChart(String selectedDate){
+    private void renderDailyDetailChart(String selectedDate){
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         LocalDate date = LocalDate.parse(selectedDate, inputFormatter);
         Day day = new Day(date);
@@ -331,7 +334,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     }
 
     // Rendering
-    public void renderHourlyDetailChart(String selectedDate, int hour){
+    private void renderHourlyDetailChart(String selectedDate, int hour){
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         LocalDate date = LocalDate.parse(selectedDate, inputFormatter);
         Day day = new Day(date);
@@ -399,29 +402,22 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     }
 
     // Helper
-    public LineData prepareDataSets(List<Entry> values, Consumer<LineDataSet> formatter) {
+    private LineData prepareDataSets(List<Entry> values, Consumer<LineDataSet> formatter) {
         List<LineDataSet> dataSets = new ArrayList<>(2);
 
-        int length = values.size();
-        int recordedIndex = 0;
-        boolean recording = values.get(0) != null;
-        for(int index = 0; index < length; index++) {
-            Entry entry = values.get(index);
-            if(!recording) {
-                if(entry == null) continue;
-                recording = true;
-                recordedIndex = index;
+        DatasetSplitter splitter = new DatasetSplitter((i, j) -> {
+            List<Entry> subset = values.subList(i, j);
+            if(subset.contains(null)) {
+                Log.wtf(TAG, "Something is wrong");
+                return;
             }
-            if(entry != null && index != length - 1) continue;
-            if(index == length - 1) index++;
-            recording = false;
-            List<Entry> subset = values;
-            if(recordedIndex != 0 || index != length)
-                subset = values.subList(recordedIndex, index);
             LineDataSet dataSet = new LineDataSet(subset, "");
             formatter.accept(dataSet);
             dataSets.add(dataSet);
-        }
+        });
+
+        values.forEach((e) -> splitter.write(e != null));
+        splitter.writeEOL();
 
         List<Entry> placeholderValues = new ArrayList<>(2);
         placeholderValues.add(new Entry(0, 0));
@@ -436,19 +432,19 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     }
 
     // Helper
-    public void refreshLineChartDelayed() {
+    private void refreshLineChartDelayed() {
         this.refreshLineChartDelayed(this.viewingMinutes);
     }
 
-    public void refreshLineChartDelayed(boolean displayMinuteView) {
+    private void refreshLineChartDelayed(boolean displayMinuteView) {
         this.handler.postDelayed(() -> this.refreshLineChartNow(displayMinuteView), 15);
     }
 
-    public void refreshLineChartNow() {
+    private void refreshLineChartNow() {
         this.refreshLineChartNow(this.viewingMinutes);
     }
 
-    public void refreshLineChartNow(boolean displayMinuteView) {
+    private void refreshLineChartNow(boolean displayMinuteView) {
         if(displayMinuteView) {
             this.renderHourlyDetailChart(this.selectedDate, this.selectedHour);
         }
@@ -461,35 +457,53 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
     /* -------- Text field methods -------- */
 
     // Rendering
-    public void setCurrentUVIndex(float uvValue){
-        String str= "Current UV Index: " + uvValue;
-        this.currentUVTextView.setText(str);
+    private void resetRealtimeMeasurementDisplays() {
+        this.currentUVTextView.setVisibility(View.VISIBLE);
+        this.currentALSTextView.setVisibility(View.VISIBLE);
+        this.currentSeverityTextView1.setVisibility(View.INVISIBLE);
+        this.currentSeverityTextView2.setVisibility(View.INVISIBLE);
+        this.currentUVTextView.setText("Sensor not connected.");
+        this.currentALSTextView.setText("Connect to a sensor to display real-time measurements.");
     }
 
     // Rendering
-    public void setLightIntensity(float lightIntensity){
-        String str= "Light Intensity: " + lightIntensity + " lux";
-        this.currentALSTextView.setText(str);
-    }
-
-    // Rendering
-    public void setSeverity(float uvIndex){
-        String uvIndexText;
-        int textColor;
-
-        if (uvIndex >= 0 && uvIndex <= 2) {
-            uvIndexText = "Low";
-            textColor = Color.GREEN;
-        } else if (uvIndex >= 3 && uvIndex <= 7) {
-            uvIndexText = "Moderate";
-            textColor = Color.parseColor("#FFA500");
-        } else {
-            uvIndexText = "High";
-            textColor = Color.RED;
+    private void updateRealtimeMeasurementDisplays(@NonNull OpticalRecord record) {
+        if(!record.valid) {
+            this.resetRealtimeMeasurementDisplays();
+            return;
         }
 
-        this.currentSeverityTextView.setText(uvIndexText);
-        this.currentSeverityTextView.setTextColor(textColor);
+        this.currentUVTextView.setVisibility(View.VISIBLE);
+        this.currentALSTextView.setVisibility(View.VISIBLE);
+        this.currentSeverityTextView1.setVisibility(View.VISIBLE);
+        this.currentSeverityTextView2.setVisibility(View.VISIBLE);
+
+        this.currentUVTextView.setText(String.format(Locale.getDefault(), "UV index now: %.2f", record.uvIndex));
+
+        float illuminance = record.illuminance;
+        String illuminanceUnit = "lux";
+        if(illuminance > 1000.0f) {
+            illuminance /= 1000.0f;
+            illuminanceUnit = "klux";
+        }
+        this.currentALSTextView.setText(String.format(Locale.getDefault(), "Light intensity now: %.1f%s", illuminance, illuminanceUnit));
+
+        // TODO: any averaging on severity?
+        String severityPrompt;
+        int severityTextColor;
+        if (record.uvIndex >= 0.0f && record.uvIndex <= 2.5f) {
+            severityPrompt = "Low";
+            severityTextColor = Color.GREEN;
+        } else if (record.uvIndex > 2.5f && record.uvIndex <= 7.5f) {
+            severityPrompt = "Moderate";
+            severityTextColor = Color.parseColor("#FFA500");
+        } else {
+            severityPrompt = "High";
+            severityTextColor = Color.RED;
+        }
+
+        this.currentSeverityTextView2.setText(severityPrompt);
+        this.currentSeverityTextView2.setTextColor(severityTextColor);
     }
 
 
@@ -497,10 +511,7 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
     @EventHandler
     protected void onNewSample(@NonNull NewSampleReceivedEvent event) {
-        OpticalRecord record = event.getRecord();
-        this.setCurrentUVIndex(record.uvIndex);
-        this.setLightIntensity(record.illuminance);
-        this.setSeverity(record.uvIndex);
+        this.updateRealtimeMeasurementDisplays(event.getRecord());
     }
 
     @EventHandler
@@ -529,6 +540,45 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
         int h12 = h24 > 12 ? h24 - 12 : h24;
         disp12 = h12 + disp12;
         return disp12;
+    }
+
+}
+
+class DatasetSplitter {
+
+    private boolean closed;
+
+    @NonNull
+    private final BiConsumer<Integer, Integer> consumer;
+
+    private int index;
+    private boolean isRecording;
+    private int recordedStartIndex;
+
+    public DatasetSplitter(@NonNull BiConsumer<Integer, Integer> consumer) {
+        this.closed = false;
+        this.consumer = consumer;
+        this.index = 0;
+        this.isRecording = false;
+        this.recordedStartIndex = 0;
+    }
+
+    public void write(boolean valid) {
+        if(this.closed) return;
+        else if(!this.isRecording && valid) {
+            this.isRecording = true;
+            this.recordedStartIndex = this.index;
+        }
+        else if(this.isRecording && !valid) {
+            this.isRecording = false;
+            this.consumer.accept(this.recordedStartIndex, this.index);
+        }
+        this.index++;
+    }
+
+    public void writeEOL() {
+        this.write(false);
+        this.closed = true;
     }
 
 }
