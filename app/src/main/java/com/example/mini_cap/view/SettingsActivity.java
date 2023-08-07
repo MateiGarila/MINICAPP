@@ -32,6 +32,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     private static final String TAG = SettingsActivity.class.getSimpleName();
 
     // Persistent state workaround
+    // TODO: make this more MVC
     private static Bundle bundle;
 
     // App configs
@@ -42,9 +43,6 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     private TextView sensorBatteryText;
     private ProgressBar sensorProgressBar;
     private Button sensorConnectButton;
-
-    // Sensor state
-    private boolean isSyncing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +70,6 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         this.restoreUI(SettingsActivity.bundle);
 
         // Initialize state
-        this.isSyncing = false;
     }
 
     @Override
@@ -85,7 +82,6 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         state.putString ("UI_SensorStatus_Text",        this.sensorStatusText.getText().toString());
         state.putString ("UI_SensorBattery_Text",       this.sensorBatteryText.getText().toString());
         state.putString ("UI_SensorConnectButton_Text", this.sensorConnectButton.getText().toString());
-        state.putBoolean("UI_SensorState_IsSyncing",    this.isSyncing);
     }
 
     private void restoreUI(Bundle state) {
@@ -94,13 +90,12 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
             this.initiateSensorConnectionUI();
             return;
         }
-        String defaultText                  = "(no further info)"; // TODO: use R
+        String defaultText                  = "(no further info)";
         String UI_SensorStatus_Text         = state.getString("UI_SensorStatus_Text",        defaultText);
         String UI_SensorBattery_Text        = state.getString("UI_SensorBattery_Text",       defaultText);
         String UI_SensorConnectButton_Text  = state.getString("UI_SensorConnectButton_Text", defaultText);
 
-        boolean isSyncing                   = state.getBoolean("UI_SensorState_IsSyncing");
-        if(isSyncing) UI_SensorStatus_Text = this.getString(R.string.sensor_status_connected);
+        if(controller.isSyncing()) UI_SensorStatus_Text = this.getString(R.string.sensor_status_connected);
 
         this.sensorStatusText.setText   (UI_SensorStatus_Text);
         this.sensorBatteryText.setText  (UI_SensorBattery_Text);
@@ -251,7 +246,6 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
                 this.sensorProgressBar.setVisibility(View.VISIBLE);
                 this.sensorProgressBar.setIndeterminate(false);
                 this.sensorProgressBar.setProgress(Math.max(event.getProgress(), 2), true);
-                this.isSyncing = true;
                 break;
             }
             case ABORTED:
@@ -259,7 +253,6 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
             case DONE: {
                 this.sensorStatusText.setText(R.string.sensor_status_downloaded);
                 this.sensorProgressBar.setVisibility(View.INVISIBLE);
-                this.isSyncing = false;
                 break;
             }
         }

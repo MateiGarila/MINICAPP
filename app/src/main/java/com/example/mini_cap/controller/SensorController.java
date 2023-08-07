@@ -23,6 +23,7 @@ import app.uvtracker.sensor.pii.ISensor;
 
 import app.uvtracker.sensor.pii.connection.application.event.NewEstimationReceivedEvent;
 
+import app.uvtracker.sensor.pii.connection.application.event.SyncProgressChangedEvent;
 import app.uvtracker.sensor.pii.connection.shared.event.ConnectionStateChangeEvent;
 import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.EventRegistry;
@@ -68,6 +69,7 @@ public class SensorController extends EventRegistry implements IEventListener {
 
     private boolean connecting;
     private boolean connected;
+    private boolean syncing;
 
 
     private SensorController(@NonNull Context context) {
@@ -76,6 +78,7 @@ public class SensorController extends EventRegistry implements IEventListener {
         this.context = context;
         this.connecting = false;
         this.connected = false;
+        this.syncing = false;
     }
 
     @Nullable
@@ -84,11 +87,15 @@ public class SensorController extends EventRegistry implements IEventListener {
     }
 
     public boolean isConnecting() {
-        return connecting;
+        return this.connecting;
     }
 
     public boolean isConnected() {
-        return connected;
+        return this.connected;
+    }
+
+    public boolean isSyncing() {
+        return this.syncing;
     }
 
     /* -------- Connection flow logic -------- */
@@ -195,6 +202,21 @@ public class SensorController extends EventRegistry implements IEventListener {
     protected void onNewEstimation(@NonNull NewEstimationReceivedEvent event) {
         if(!this.connected || this.connectedSensor == null) return;
         this.connectedSensor.getConnection().startSync();
+    }
+
+    @EventHandler
+    protected void onSyncProgress(@NonNull SyncProgressChangedEvent event) {
+        switch(event.getStage()) {
+            case INITIATING:
+            case PROCESSING:
+                this.syncing = true;
+                break;
+            case DONE_NOUPDATE:
+            case DONE:
+            case ABORTED:
+                this.syncing = false;
+                break;
+        }
     }
 
 
