@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 
 import java.util.List;
 
-import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.data.optical.TimedOpticalRecord;
 
 public class SyncDataReceivedEvent {

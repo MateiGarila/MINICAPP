@@ -8,6 +8,8 @@ import androidx.annotation.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Locale;
+
 public class OpticalRecord {
 
     private static final String TAG = OpticalRecord.class.getSimpleName();
@@ -69,7 +71,7 @@ public class OpticalRecord {
     @NonNull
     @Override
     public String toString() {
-        return String.format("{%1$.1flux,%2$.1fuvi}", this.illuminance, this.uvIndex);
+        return String.format(Locale.getDefault(), "{%1$.1flux,%2$.1fuvi}", this.illuminance, this.uvIndex);
     }
 
     private static float round2(float input) {
