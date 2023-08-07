@@ -67,20 +67,18 @@ public class SensorController extends EventRegistry implements IEventListener {
     @Nullable
     private ISensor connectedSensor;
 
-    @NonNull
-    private ConnectionFlowStage stage;
+    private boolean connecting;
+    private boolean connected;
+    private boolean syncing;
 
-    private boolean syncCompleteMessagePending;
-
-    @NonNull
-    private final NoSpammingDispatcher syncMessageDispatcher;
 
     private SensorController(@NonNull Context context) {
         this.registerListenerClass(this);
         this.handler = new Handler(Looper.getMainLooper());
         this.context = context;
-        this.stage = ConnectionFlowStage.DISCONNECTED;
-        this.syncMessageDispatcher = new NoSpammingDispatcher();
+        this.connecting = false;
+        this.connected = false;
+        this.syncing = false;
     }
 
     @Nullable
@@ -88,11 +86,17 @@ public class SensorController extends EventRegistry implements IEventListener {
         return this.connectedSensor;
     }
 
-    @NonNull
-    public ConnectionFlowStage getStage() {
-        return this.stage;
+    public boolean isConnecting() {
+        return this.connecting;
     }
 
+    public boolean isConnected() {
+        return this.connected;
+    }
+
+    public boolean isSyncing() {
+        return this.syncing;
+    }
 
     /* -------- Connection flow logic -------- */
 
@@ -103,7 +107,7 @@ public class SensorController extends EventRegistry implements IEventListener {
             this.connectedSensor = null;
         }
         if(!BLEPermissions.ensurePermissions(activity)) {
-            this.displayToast(R.string.sensor_bluetooth_permission_request, true);
+            this.displayFeedback(R.string.sensor_bluetooth_permission_request);
             return false;
         }
         if(this.scanner == null) {
@@ -115,19 +119,15 @@ public class SensorController extends EventRegistry implements IEventListener {
                 }
             });
         }
-        return !this.startScanning();
-    }
-
-    private boolean startScanning() {
-        if(this.scanner == null) return true;
-        if(this.bleExceptionWrap(() -> this.scanner.startScanning())) return true;
+        if(this.bleExceptionWrap(() -> this.scanner.startScanning())) return false;
         int currentSession = this.scanSession;
         this.handler.postDelayed(() -> {
             if(currentSession == this.scanSession && this.scanner.isScanning()) this.stopScanning(true);
         }, SCAN_TIMEOUT_MS);
-        this.displayToast(R.string.sensor_scan_start);
-        this.setStage(ConnectionFlowStage.CONNECTING);
-        return false;
+        this.dispatch(ConnectionFlowStage.SCANNING);
+        this.connecting = true;
+        this.connected = false;
+        return true;
     }
 
     private void stopScanning(boolean timeout) {
@@ -135,8 +135,9 @@ public class SensorController extends EventRegistry implements IEventListener {
         if(this.bleExceptionWrap(() -> this.scanner.stopScanning())) return;
         this.handler.post(() -> this.scanSession++);
         if(this.connectedSensor != null) return;
-        if(timeout) this.displayToast(R.string.sensor_scan_timeout);
-        this.setStage(ConnectionFlowStage.DISCONNECTED);
+        this.connecting = false;
+        this.connected = false;
+        if(timeout) this.dispatch(ConnectionFlowStage.SCAN_TIMEOUT);
     }
 
     private void initiateSensorConnection(@NonNull ISensor sensor) {
@@ -150,7 +151,9 @@ public class SensorController extends EventRegistry implements IEventListener {
             }
         });
         this.connectedSensor.getConnection().connect();
-        this.displayToast(this.context.getString(R.string.sensor_connection_initiated, this.connectedSensor.getName()));
+        this.connecting = true;
+        this.connected = false;
+        this.dispatch(ConnectionFlowStage.CONNECTING);
     }
 
     private void handleSensorConnection() {
@@ -158,9 +161,9 @@ public class SensorController extends EventRegistry implements IEventListener {
             Log.d(TAG, "Handling sensor connection but there's no sensor. Glitched?");
             return;
         }
-        this.syncCompleteMessagePending = false;
         this.handler.post(() -> this.connectedSensor.getConnection().startSync());
-        this.setStage(ConnectionFlowStage.CONNECTED);
+        this.connecting = false;
+        this.connected = true;
     }
 
     public boolean disconnectFromSensor() {
@@ -179,73 +182,45 @@ public class SensorController extends EventRegistry implements IEventListener {
 
     @EventHandler
     protected void onConnectionStateUpdate(@NonNull ConnectionStateChangeEvent event) {
-        boolean flag = false;
         switch(event.getStage()) {
-            case CONNECTING: {
-                if(this.connectedSensor == null) {
-                    Log.d(TAG, "Received " + event.getStage() + " when there's no sensor! Glitched?");
-                    break;
-                }
-                this.displayToast(this.context.getString(R.string.sensor_connection_connecting, event.getPercentage()));
-                break;
-            }
             case ESTABLISHED: {
-                if(this.connectedSensor == null) {
-                    Log.d(TAG, "Received " + event.getStage() + " when there's no sensor! Glitched?");
-                    break;
-                }
-                this.displayToast(R.string.sensor_connection_established);
-                this.handler.post(this::handleSensorConnection);
+                if (this.connectedSensor != null) this.handler.post(this::handleSensorConnection);
                 break;
             }
-            case DISCONNECTED: {
-                this.displayToast(R.string.sensor_connection_disconnected);
-                flag = true;
-                break;
-            }
-            case FAILED_RETRY: {
-                this.displayToast(R.string.sensor_connection_failed_retry);
-                flag = true;
-                break;
-            }
+            case DISCONNECTED:
+            case FAILED_RETRY:
             case FAILED_NO_RETRY: {
-                this.displayToast(R.string.sensor_connection_failed_noretry);
-                flag = true;
+                this.connectedSensor = null;
+                this.connecting = false;
+                this.connected = false;
                 break;
             }
-        }
-        if(flag) {
-            this.setStage(ConnectionFlowStage.DISCONNECTED);
-            this.connectedSensor = null;
         }
     }
 
     @EventHandler
     protected void onNewEstimation(@NonNull NewEstimationReceivedEvent event) {
-        if(this.connectedSensor == null) return;
+        if(!this.connected || this.connectedSensor == null) return;
         this.connectedSensor.getConnection().startSync();
     }
 
     @EventHandler
-    protected void onSyncProgress(SyncProgressChangedEvent event) {
-        if(event.getStage() != SyncProgressChangedEvent.Stage.PROCESSING) return;
-        if(event.getProgress() == 100 && this.syncCompleteMessagePending) {
-            this.syncCompleteMessagePending = false;
-            this.syncMessageDispatcher.dispatchFinal(() -> this.displayToast(R.string.sensor_sync_done));
-        }
-        if(event.getProgress() > 0 && event.getProgress() < 100) {
-            this.syncCompleteMessagePending = true;
-            this.syncMessageDispatcher.dispatch(() -> this.displayToast(this.context.getString(R.string.sensor_sync_in_progress, event.getProgress())));
+    protected void onSyncProgress(@NonNull SyncProgressChangedEvent event) {
+        switch(event.getStage()) {
+            case INITIATING:
+            case PROCESSING:
+                this.syncing = true;
+                break;
+            case DONE_NOUPDATE:
+            case DONE:
+            case ABORTED:
+                this.syncing = false;
+                break;
         }
     }
 
 
     /* -------- Internal helper methods -------- */
-
-    private void setStage(@NonNull  ConnectionFlowStage stage) {
-        this.stage = stage;
-        this.dispatch(new ConnectionFlowEvent(this.connectedSensor, stage));
-    }
 
     private boolean bleExceptionWrap(TransceiverOperationRunnable r) {
         try {
@@ -253,25 +228,16 @@ public class SensorController extends EventRegistry implements IEventListener {
             return false;
         }
         catch(TransceiverException ignored) {
-            this.displayToast(R.string.sensor_bluetooth_exception);
+            this.displayFeedback(R.string.sensor_bluetooth_exception);
             return true;
         }
     }
 
-    private void displayToast(int resourceID) {
-        this.displayToast(resourceID, false);
+    private void displayFeedback(int resourceID) {
+        this.displayFeedback(this.context.getString(resourceID));
     }
 
-    private void displayToast(@NonNull String message) {
-        this.displayToast(message, false);
-    }
-
-    private void displayToast(int resourceID, boolean isLong) {
-        this.displayToast(this.context.getString(resourceID), isLong);
-    }
-
-    private void displayToast(@NonNull String message, boolean isLong) {
-        // TODO: any better way to surface this to the user?
+    private void displayFeedback(@NonNull String message) {
         this.handler.post(() -> this.dispatch(message));
     }
 
@@ -279,34 +245,9 @@ public class SensorController extends EventRegistry implements IEventListener {
     /* -------- Inner classes --------*/
 
     public enum ConnectionFlowStage {
-        DISCONNECTED,
+        SCANNING,
         CONNECTING,
-        CONNECTED,
-    }
-
-    public static class ConnectionFlowEvent {
-
-        @Nullable
-        private final ISensor sensor;
-
-        @NonNull
-        private final ConnectionFlowStage stage;
-
-        public ConnectionFlowEvent(@Nullable ISensor sensor, @NonNull ConnectionFlowStage stage) {
-            this.sensor = sensor;
-            this.stage = stage;
-        }
-
-        @Nullable
-        public ISensor getSensor() {
-            return sensor;
-        }
-
-        @NonNull
-        public ConnectionFlowStage getStage() {
-            return stage;
-        }
-
+        SCAN_TIMEOUT,
     }
 
 }
@@ -354,34 +295,5 @@ class BLEPermissions {
 interface TransceiverOperationRunnable {
 
     void run() throws TransceiverException;
-
-}
-
-class NoSpammingDispatcher {
-
-    private static final long INTERVAL = 1000;
-
-    private long targetTime;
-
-    public NoSpammingDispatcher() {
-        this.targetTime = -1;
-    }
-
-    public void reset() {
-        this.targetTime = -1;
-    }
-
-    public void dispatch(@NonNull Runnable runnable) {
-        long now = System.currentTimeMillis();
-        if(this.targetTime > now) return;
-        this.targetTime = now + INTERVAL;
-        runnable.run();
-    }
-
-    public void dispatchFinal(@NonNull Runnable runnable) {
-        this.reset();
-        this.dispatch(runnable);
-        this.reset();
-    }
 
 }
