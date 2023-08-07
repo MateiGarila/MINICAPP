@@ -25,7 +25,10 @@ import android.widget.Toast;
 import com.example.mini_cap.R;
 import com.example.mini_cap.model.Preset;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class SessionActivity extends AppCompatActivity  {
     private EditText userInputEditText; // to simulate notification
@@ -46,8 +49,10 @@ public class SessionActivity extends AppCompatActivity  {
     //Countdown timer variables
     //For Testing purposes. This is 10 seconds
     private static final long START_TIME_IN_MILLIS = 10000;
+    private static final long DEFAULT_TIMER_IN_MILLIS = 1050000;
+
     private CountDownTimer countDownTimer;
-    private long timeLeftInMillis = START_TIME_IN_MILLIS;
+    private long timeLeftInMillis;
     
     private int notificationTier;
     private boolean isSessionStarted;
@@ -272,7 +277,6 @@ public class SessionActivity extends AppCompatActivity  {
 
         //Toast.makeText(this, "I got called from fragment: " + preset.getName(), Toast.LENGTH_SHORT).show();
         startSession(preset);
-
     }
 
     /**
@@ -294,6 +298,12 @@ public class SessionActivity extends AppCompatActivity  {
         isSessionStarted = true;
 
         //Third purpose of method
+        //For demo purposes remove this line (timer will be set to 10 seconds)
+        //TODO need to fix repetitive timers
+        timeLeftInMillis = timerDurationAlgo(ageParameter(preset.getAge()),
+                skinToneParameter(preset.getSkinTone()), uvParameter());
+
+
         countDownManager();
 
     }
@@ -466,62 +476,41 @@ public class SessionActivity extends AppCompatActivity  {
         double ageParam = 0.0;
 
         if(age < 13){
-
             ageParam = -2.0;
-
         }else if(age < 16){
-
             ageParam = -1.5;
-
         }else if(age < 19){
-
             ageParam = -1.0;
-
         }else if(age < 22){
-
             ageParam = -0.5;
-
         }else if(age < 25){
-
             ageParam = 0;
-
         }else if(age < 28){
-
             ageParam = 0.5;
-
         }else if(age < 59){
-
             ageParam = 1.0;
-
         }else if(age < 62){
-
             ageParam = 0.5;
-
         }else if(age < 65){
-
             ageParam = 0.0;
-
         }else if(age < 68){
-
             ageParam = -0.5;
-
         }else if(age < 71){
-
             ageParam = -1.0;
-
         }else if(age < 74){
-
             ageParam = -1.5;
-
         }else{
-
             ageParam = -2.0;
-
         }
 
         return ageParam;
     }
 
+    /**
+     * This method calculates the parameter obtained from the preset's skin tone
+     * @param skinTone The skin tone of the preset
+     * @return parameter used to calculate the timer
+     */
     private double skinToneParameter(String skinTone){
 
         double skinParam = 0.0;
@@ -543,5 +532,71 @@ public class SessionActivity extends AppCompatActivity  {
         }
 
         return skinParam;
+    }
+
+    private double uvParameter(){
+
+        dbHelper = new DBHelper(getBaseContext());
+        Date currentDate = new Date();
+        Calendar calendar = Calendar.getInstance();
+        TimeZone timeZone = calendar.getTimeZone();
+
+        int hours = calendar.get(Calendar.HOUR_OF_DAY);
+        int minutes = calendar.get(Calendar.MINUTE);
+
+        int avgUVIndex = (int) dbHelper.getMinuteAvg(new Day(currentDate), minutes, hours);
+        double uvParam = 0.0;
+
+        if(avgUVIndex == 0){
+            return 1;
+        }else if(avgUVIndex < 2){
+            uvParam = 0.5;
+        } else if(avgUVIndex < 4){
+            uvParam = 0.75;
+        }else if(avgUVIndex < 6){
+            uvParam = 1.0;
+        } else if(avgUVIndex < 8){
+            uvParam = 1.5;
+        }else if(avgUVIndex < 10){
+            uvParam = 1.75;
+        } else if(avgUVIndex < 12){
+            uvParam = 2.0;
+        }
+
+        return uvParam;
+    }
+
+    public long timerDurationAlgo(double age, double skin, double uvIndex){
+
+        long time = 0;
+        double presetParam = age + skin;
+
+        if(presetParam == 0.0){
+            return DEFAULT_TIMER_IN_MILLIS;
+        }
+
+        double timerSelector = presetParam * uvIndex;
+
+        if(timerSelector <= -6){
+            //this is 15 minutes
+            time = 900000;
+        }else if(timerSelector <= -4){
+            //this is 16 minutes
+            time = 960000;
+        }else if(timerSelector <= -2){
+            //this is 17 minutes
+            time = 1020000;
+        }else if(timerSelector <= 0){
+            //this is 17 minutes 30 seconds
+            time = DEFAULT_TIMER_IN_MILLIS;
+        }else if(timerSelector <= 2){
+            //this is 18 minutes
+            time = 1080000;
+        }else{
+            //this is 19 minutes
+            time = 1140000;
+        }
+
+        return time;
     }
 }

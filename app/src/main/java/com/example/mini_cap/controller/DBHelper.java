@@ -159,7 +159,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param presetId id of the fetched Preset
      * @return Preset object with the specified id
      */
-    public Preset getPreSet(int presetId) {
+    public Preset getPreset(int presetId) {
 
         SQLiteDatabase db = this.getReadableDatabase();
 

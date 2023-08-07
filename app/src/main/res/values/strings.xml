@@ -59,5 +59,8 @@
     <!--Below this line you will find all the strings related to the EditActivity-->
     <string name="edit_activity_header">Select a preset to edit</string>
 
+    <!--Below this line you will find all the strings related to teh SettingsActivity-->
+    <string name="connect_sensor">Connect to sensor</string>
+    <string name="disconnect_sensor">Disconnect from sensor</string>
 
 </resources>
