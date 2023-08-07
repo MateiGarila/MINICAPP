@@ -157,12 +157,11 @@ public class  StatsActivity extends AppCompatActivity implements IEventListener 
 
     // Event handler
     public void onWeekSelectionButtonClick(int weekOffset) {
+        if(weekOffset == 0) return;
         this.selectedWeek += weekOffset;
         this.updateDayOfWeekButtons();
-        if(this.selectedDayOfWeekButtonIndex != -1) {
-            String selectedDate = this.dayOfWeekStrings[this.selectedDayOfWeekButtonIndex];
-            this.renderDailyDetailChart(selectedDate);
-        }
+        if(weekOffset > 0) this.onDayOfWeekButtonClick(0);
+        else this.onDayOfWeekButtonClick(this.dayOfWeekButtons.length - 1);
     }
 
     // Event handler
