@@ -117,7 +117,7 @@
         android:layout_width="78dp"
         android:layout_height="75dp"
         android:background="@android:color/transparent"
-        android:src="@drawable/applogo"
+        android:src="@drawable/applogo_small"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.909"
