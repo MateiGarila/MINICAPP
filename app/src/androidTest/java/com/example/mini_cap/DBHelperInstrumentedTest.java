@@ -24,7 +24,7 @@ public class DBHelperInstrumentedTest {
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
-        dbHelper = new DBHelper(context);
+        dbHelper = DBHelper.get(context);
     }
 
     @After

@@ -56,7 +56,7 @@ public class PresetFragment extends DialogFragment implements AdapterView.OnItem
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_preset, container, false);
 
-        dbHelper = new DBHelper(getContext());
+        dbHelper = DBHelper.get(this.requireContext());
         boolean presetContext = false;
         int presetID = 0;
         presetTextView = view.findViewById(R.id.addPresetTextView);

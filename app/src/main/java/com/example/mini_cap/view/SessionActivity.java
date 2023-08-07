@@ -23,7 +23,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mini_cap.R;
-import com.example.mini_cap.controller.DBHelper;
 import com.example.mini_cap.model.Preset;
 
 import java.util.Locale;
@@ -38,7 +37,6 @@ public class SessionActivity extends AppCompatActivity  {
     protected Button startPauseBTN, addPresetBTN, editPresetBTN, endSessionBTN;
 
     //Needed
-    private DBHelper dbHelper;
     private final static String TAG = "SessionActivity";
     private final boolean isCreate = true;
     private static final String NOTIFICATION_CHANNEL_ID = "UV_INDEX_NOTIFICATION_CHANNEL";
@@ -67,8 +65,6 @@ public class SessionActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
-
-        dbHelper = new DBHelper(getBaseContext());
 
         //Attaching the UI elements to their respective objects
         //TextViews

@@ -9,11 +9,15 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.mini_cap.model.Day;
 import com.example.mini_cap.model.Preset;
 import com.example.mini_cap.model.Stats;
-import com.example.mini_cap.model.Day;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.data.optical.TimedOpticalRecord;
@@ -22,25 +26,32 @@ import app.uvtracker.sensor.pii.connection.application.event.SyncDataReceivedEve
 import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.IEventListener;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
-    private static final boolean DEBUG_READ_ALS = true;
+    private static final String TAG = "DBHelper";
+
+    private static final int INTERVAL = 10;
+
+    @SuppressLint("StaticFieldLeak")
+    private static DBHelper instance;
+
+    public static DBHelper get(@NonNull Context context) {
+        if(DBHelper.instance == null)
+            DBHelper.instance = new DBHelper(context);
+        return DBHelper.instance;
+    }
+
+    public static void release() {
+        DBHelper.instance = null;
+    }
 
     private final Context context;
-    private final String TAG = "DBHelper";
-
-    private static final int interval = 10;
-    private static final int offset = 8;
 
     /**
      * Database constructor
      * @param context
      */
-    public DBHelper(@Nullable Context context) {
+    private DBHelper(@Nullable Context context) {
         super(context, Dict.DATABASE_NAME, null, Dict.DATABASE_VERSION);
         this.context = context;
     }
@@ -331,7 +342,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param day must be in form "yyyy/mm/dd"
      * @return Stats object with data for timestamp entered
      */
-    public float getDailyAvg(Day day){
+    public float getDailyAvg(Day day, boolean getALS){
         Long dateLong = day.toDatabaseNumber();
         SQLiteDatabase db = this.getReadableDatabase();
         List<Stats> statsList = new ArrayList<>();
@@ -341,7 +352,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         try {
             // The SQL query to select all records where the date matches the given day
             cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS + " WHERE " + Dict.COLUMN_TIMESTAMP + " >= ? AND " + Dict.COLUMN_TIMESTAMP + " < ?",
-                    new String[]{String.valueOf(dateLong), String.valueOf(dateLong + (24 * 60 * 60 )/interval)});
+                    new String[]{String.valueOf(dateLong), String.valueOf(dateLong + (24 * 60 * 60 )/ INTERVAL)});
 
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
@@ -368,7 +379,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         for(Stats stats : statsList){
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
-                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+                sum += getALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
             }
         }
         int sampleCount = statsList.size();
@@ -418,84 +429,48 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param date is a date object, hour is concatenated to date string to create full timestamp
      * @return hourly avg exposure from 8 am to 6 pm
      */
-    public float getMinuteAvg(Day date, int minute, int hour){
-        int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float)interval);
-        int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float)interval);
+    public float getMinuteAvg(Day date, int minute, int hour, boolean getALS) {
+        int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float) INTERVAL);
+        int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float) INTERVAL);
 
-        Long timestamp1 = date.toDatabaseNumber() + minuteSample;
-        Long timestamp2 = date.toDatabaseNumber() + nextMinuteSample;
+        long timestamp1 = date.toDatabaseNumber() + minuteSample;
+        long timestamp2 = date.toDatabaseNumber() + nextMinuteSample;
 
         List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
 
-
-        // Calculate the average exposure for the given minute range if needed
-        float sum = 0.0f, avg;
-
+        float sum = 0.0f;
+        int counter = 0;
         for(Stats stats : statsList){
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
-                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+                sum += getALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+                counter++;
             }
         }
-        int sampleCount = statsList.size();
-        avg = sampleCount > 0 ? sum / sampleCount : 0.0f;
-
-        return avg;
+        if(counter == 0) return Float.NaN;
+        return sum / counter;
     }
 
-    public float getHourlyAvg(Day date, int hour) {
-        float hourlyAvg = 0.0f;
+    public float getHourlyAvg(Day date, int hour, boolean getALS) {
+        int hourSample = Math.round((float)(hour * 3600)/ (float)INTERVAL);
+        int nextHourSample = Math.round((float)((hour + 1) * 3600)/ (float)INTERVAL);
 
-        // Get hour sample numbers and query the DB
-
-        int nextHour = hour + 1;
-        int hourSample = (hour*3600)/interval;
-        int nextHourSample = (nextHour*3600)/interval;
-        Long timestamp1 = date.toDatabaseNumber() + hourSample;
-        Long timestamp2 = date.toDatabaseNumber() + nextHourSample;
-
-        Log.d("timestamp1", String.valueOf(timestamp1));
-        Log.d("timestamp2", String.valueOf(timestamp2));
+        long timestamp1 = date.toDatabaseNumber() + hourSample;
+        long timestamp2 = date.toDatabaseNumber() + nextHourSample;
 
         List<Stats> statsList = getStatsBetweenTimestamps(timestamp1, timestamp2);
 
-        // Calculate the average exposure for the given minute range if needed
-        float sum = 0.0f, avg;
-
+        float sum = 0.0f;
+        int counter = 0;
         for (Stats stats : statsList) {
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
-                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+                sum += getALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+                counter++;
             }
         }
-
-        int sampleCount = statsList.size();
-        avg = sampleCount > 0 ? sum / sampleCount : 0.0f;
-
-        return avg;
-    }
-
-
-    /**
-     * Function for returning the UV exposure for a specified day
-     * @param date must be in form "yyyy/MM/dd"
-     * @return array of hourly UV exposure floats for specified day from 8 am to 6 pm
-     */
-    public float[] getExposureForDay(Day date){
-
-        float[] dailyExposure = new float[11];
-
-        for (int i = 8; i < 19; i++) {
-            int index = i - 8;
-
-            dailyExposure[index] = getHourlyAvg(date, i);
-
-            Log.d("Call hourly avg", String.valueOf(date));
-
-        }
-
-        return dailyExposure;
-
+        if(counter == 0) return Float.NaN;
+        return sum / counter;
     }
 
     /**
@@ -514,14 +489,8 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
     }
     @EventHandler
-    public void syncDataReceived(SyncDataReceivedEvent syncDataReceivedEvent){
-        List<TimedOpticalRecord> data = syncDataReceivedEvent.getData();
-
-        if(data.size() == 0) Log.d(TAG, "[Sync] Data size: 0.");
-        else Log.d(TAG, String.format("[Sync] Data size: %d; first: %s; last: %s.", data.size(), data.get(0), data.get(data.size() - 1)));
-
-        insertStats(data);
-
+    public void syncDataReceived(SyncDataReceivedEvent event){
+        insertStats(event.getData());
     }
 
 }
