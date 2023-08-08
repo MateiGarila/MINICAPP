@@ -128,7 +128,7 @@ public class StatsActivity extends AppCompatActivity implements IEventListener {
                         .mapToObj(i -> new Pair<>(i, (Button)findViewById(buttonID[i])))
                         .map(p -> {
                             p.second.setOnClickListener(e ->
-                                    this.onDayOfWeekButtonClick(p.first));
+                                    this.onDayOfWeekButtonClick(p.first, false));
                             return p.second;
                         })
                         .toArray(Button[]::new);
@@ -137,6 +137,7 @@ public class StatsActivity extends AppCompatActivity implements IEventListener {
         // Current selected date text
         this.selectedDateTextView = this.findViewById(R.id.date_text_view);
         this.selectedDateTextView.setText(this.today.format(outputFormatter));
+        this.selectedDateTextView.setOnClickListener(v -> this.onReturnToToday());
 
 
         /* -------- Initialize UI components - content display switch -------- */
@@ -163,7 +164,7 @@ public class StatsActivity extends AppCompatActivity implements IEventListener {
         });
         this.lineChart.setPinchZoom(false); // Disable pinch zoom
         this.lineChart.setDoubleTapToZoomEnabled(false); // Disable double-tap zoom
-        this.onDayOfWeekButtonClick(this.today.getDayOfWeek().getValue() % 7); // Emulate a button click + refresh
+        this.onDayOfWeekButtonClick(this.today.getDayOfWeek().getValue() % 7, true); // Emulate a button click + refresh
 
 
         /* -------- Initialize UI components - real-time data displays -------- */
@@ -177,18 +178,24 @@ public class StatsActivity extends AppCompatActivity implements IEventListener {
 
     /* -------- Day of week menu methods -------- */
 
+    private void onReturnToToday() {
+        this.selectedWeek = 0;
+        this.updateDayOfWeekButtons();
+        this.onDayOfWeekButtonClick(this.today.getDayOfWeek().getValue() % 7, true);
+    }
+
     // Event handler
     private void onWeekSelectionButtonClick(int weekOffset) {
         if(weekOffset == 0) return;
         this.selectedWeek += weekOffset;
         this.updateDayOfWeekButtons();
-        if(weekOffset > 0) this.onDayOfWeekButtonClick(0);
-        else this.onDayOfWeekButtonClick(this.dayOfWeekButtons.length - 1);
+        if(weekOffset > 0) this.onDayOfWeekButtonClick(0, true);
+        else this.onDayOfWeekButtonClick(this.dayOfWeekButtons.length - 1, true);
     }
 
     // Event handler
-    private void onDayOfWeekButtonClick(int selectedIndex) {
-        if(this.selectedDayOfWeekButtonIndex == selectedIndex) return;
+    private void onDayOfWeekButtonClick(int selectedIndex, boolean force) {
+        if(!force && this.selectedDayOfWeekButtonIndex == selectedIndex) return;
         // Restore old button color
         if(this.selectedDayOfWeekButtonIndex != -1)
             this.dayOfWeekButtons[this.selectedDayOfWeekButtonIndex].setBackgroundColor(ContextCompat.getColor(this, R.color.button_grey));
