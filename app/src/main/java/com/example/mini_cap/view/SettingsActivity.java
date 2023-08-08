@@ -168,11 +168,11 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     private void handleWipeStats() {
         new AlertDialog.Builder(this)
                 .setTitle("Wipe table")
-                .setMessage("Are you sure? All past statistics will be removed.")
+                .setMessage("Are you sure? All local statistics will be removed. Data on the sensor won't be affected.")
                 .setPositiveButton("Yes", (d, w) -> {
                     d.dismiss();
                     DBHelper.get(this).wipeStatsTable();
-                    Snackbar.make(this.wipeStatsButton, "History values wiped.", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(this.wipeStatsButton, "History values wiped. Reconnect to the sensor for a full sync.", Snackbar.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("No", (d, w) -> d.dismiss())
                 .create()
