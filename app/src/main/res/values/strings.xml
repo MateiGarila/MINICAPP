@@ -34,7 +34,7 @@
     <string name="edit_preset">Edit a Preset</string>
     <string name="preset_name">Preset name</string>
     <string name="preset_age">Your age</string>
-    <string name="preset_skin_tone">Your preset skin tone</string>
+    <string name="preset_skin_tone">Your skin tone</string>
     <string-array name="skinTone_set">
         <item>Light, pale white</item>
         <item>White, fair</item>
