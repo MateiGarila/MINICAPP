@@ -181,7 +181,8 @@ public class SessionActivity extends AppCompatActivity  {
         // Schedule repeated notifications every 2 hours
         scheduleRepeatingNotifications();
 
-        this.restoreUI(SessionActivity.bundle);
+        //Is this how you would do it?
+        SessionActivityStorage.get().loadActivityState(SessionActivity.this);
     }
 
     @Override
@@ -189,20 +190,8 @@ public class SessionActivity extends AppCompatActivity  {
         // Unregister the broadcast receiver to avoid memory leaks
         unregisterReceiver(uvNotificationReceiver);
         super.onDestroy();
-        this.saveUI(SessionActivity.bundle);
-    }
-
-    private void saveUI(Bundle state){
-
-        state.putBoolean("Session_Start_Status", this.isSessionStarted);
-        state.putBoolean("Session_Paused_Status", this.isSessionPaused);
-        state.putBoolean("Session_is_Demo", this.isDemo);
-        state.putInt("Notification_tier", this.notificationTier);
-        state.putLong("Time_Left_In_Millis", this.timeLeftInMillis);
-    }
-
-    private void restoreUI(Bundle state){
-
+        //this.saveUI(SessionActivity.bundle);
+        SessionActivityStorage.get().saveActivityState(SessionActivity.this);
     }
 
     private boolean isValidInput(String input) {
@@ -321,6 +310,7 @@ public class SessionActivity extends AppCompatActivity  {
 
         //Second update variables
         isSessionStarted = true;
+        SessionActivityStorage.get().setLatestPreset(preset);
 
         //Third purpose of method
         //For demo purposes (timer will be set to 10 seconds)
@@ -661,28 +651,50 @@ public class SessionActivity extends AppCompatActivity  {
 
         @Nullable
         private Preset latestPreset;
-
         @Nullable
-        private String presetButtonSavedText;
+        private Boolean isSessionStarted;
+        @Nullable
+        private Boolean isSessionPaused;
+        @Nullable
+        private int notificationTier;
+        @Nullable
+        private long timeLeftInMillis;
 
-        public void setLatestPreset(Preset latestPreset) {
+        private void setLatestPreset(Preset latestPreset) {
             this.latestPreset = latestPreset;
         }
 
         @Nullable
-        public Preset getLatestPreset() {
+        private Preset getLatestPreset() {
             return this.latestPreset;
         }
 
         // Will be called: onDestroy()
-        public void saveActivityState(@NonNull SessionActivity activity) {
-            this.presetButtonSavedText = activity.addPresetBTN.getText().toString();
+        private void saveActivityState(@NonNull SessionActivity activity) {
+            //this.presetButtonSavedText = activity.addPresetBTN.getText().toString();
+            this.isSessionStarted = activity.isSessionStarted;
+            this.isSessionPaused = activity.isSessionPaused;
+            this.notificationTier = activity.notificationTier;
+            this.timeLeftInMillis = activity.timeLeftInMillis;
+
         }
 
         // Will be called: onCreate()
-        public void loadActivityState(@NonNull SessionActivity activity) {
-            if(this.presetButtonSavedText != null)
-                activity.addPresetBTN.setText(this.presetButtonSavedText);
+        private void loadActivityState(@NonNull SessionActivity activity) {
+            //if(this.presetButtonSavedText != null)
+            //    activity.addPresetBTN.setText(this.presetButtonSavedText);
+
+            if(this.isSessionStarted != null && this.isSessionStarted == true){
+
+
+                if(this.isSessionPaused != null && this.isSessionPaused == true){
+                    activity.pauseSession();
+                }else{
+                    activity.continueSession();
+                }
+
+            }
+
         }
 
     }
