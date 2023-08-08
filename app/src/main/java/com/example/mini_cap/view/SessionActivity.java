@@ -181,7 +181,7 @@ public class SessionActivity extends AppCompatActivity  {
         // Schedule repeated notifications every 2 hours
         scheduleRepeatingNotifications();
 
-        //Is this how you would do it?
+        //The singleton is not yet complete, still has bugs
         SessionActivityStorage.get().loadActivityState(SessionActivity.this);
     }
 
@@ -192,6 +192,7 @@ public class SessionActivity extends AppCompatActivity  {
         super.onDestroy();
         //this.saveUI(SessionActivity.bundle);
         SessionActivityStorage.get().saveActivityState(SessionActivity.this);
+        countDownTimer.cancel();
     }
 
     private boolean isValidInput(String input) {
@@ -290,7 +291,7 @@ public class SessionActivity extends AppCompatActivity  {
     public void fetchPresetStartSession(Preset preset){
 
         //Toast.makeText(this, "I got called from fragment: " + preset.getName(), Toast.LENGTH_SHORT).show();
-        startSession(preset);
+        startSession(preset, 0);
     }
 
     /**
@@ -298,7 +299,7 @@ public class SessionActivity extends AppCompatActivity  {
      * @param preset that has been selected for the session
      */
     @SuppressLint("SetTextI18n")
-    private void startSession(Preset preset){
+    private void startSession(Preset preset, long timeInMillis){
 
         //Toast.makeText(this, "Session Started", Toast.LENGTH_SHORT).show();
 
@@ -314,16 +315,23 @@ public class SessionActivity extends AppCompatActivity  {
 
         //Third purpose of method
         //For demo purposes (timer will be set to 10 seconds)
-        if(preset.getName().equalsIgnoreCase("Demo")){
-            timeLeftInMillis = START_TIME_IN_MILLIS;
-            isDemo = true;
+        if(timeInMillis == 0){
+
+            if(preset.getName().equalsIgnoreCase("Demo")){
+                timeLeftInMillis = START_TIME_IN_MILLIS;
+                isDemo = true;
+            }else{
+                calculatedTimer = timerDurationAlgo(ageParameter(preset.getAge()),
+                        skinToneParameter(preset.getSkinTone()), uvParameter());
+                timeLeftInMillis = calculatedTimer;
+            }
+
         }else{
-            calculatedTimer = timerDurationAlgo(ageParameter(preset.getAge()),
-                    skinToneParameter(preset.getSkinTone()), uvParameter());
-            timeLeftInMillis = calculatedTimer;
+            timeInMillis = timeLeftInMillis;
         }
 
-        countDownManager();
+
+        countDownManager(timeLeftInMillis);
 
     }
 
@@ -359,7 +367,7 @@ public class SessionActivity extends AppCompatActivity  {
         isSessionPaused = false;
 
         //Third purpose of method
-        countDownManager();
+        countDownManager(timeLeftInMillis);
 
     }
 
@@ -419,9 +427,9 @@ public class SessionActivity extends AppCompatActivity  {
      * This method manages the countdown. Since there is no countDownTimer.pause() each time the
      * timer is paused it needs to be reset at the timeLeftInMillis
      */
-    private void countDownManager(){
+    private void countDownManager(long timeInMillis){
 
-        countDownTimer = new CountDownTimer(timeLeftInMillis, 1000) {
+        countDownTimer = new CountDownTimer(timeInMillis, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 timeLeftInMillis = millisUntilFinished;
@@ -432,7 +440,7 @@ public class SessionActivity extends AppCompatActivity  {
             public void onFinish() {
 
                 String notificationMessage = notificationMessage(notificationTier);
-                Toast.makeText(getBaseContext(), notificationMessage, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getBaseContext(), notificationMessage, Toast.LENGTH_SHORT).show();
                 //Notifications go here
                 //-->
                 
@@ -442,7 +450,7 @@ public class SessionActivity extends AppCompatActivity  {
                     timeLeftInMillis = calculatedTimer;
                 }
 
-                countDownManager();
+                countDownManager(timeLeftInMillis);
             }
 
         }.start();
@@ -656,9 +664,12 @@ public class SessionActivity extends AppCompatActivity  {
         @Nullable
         private Boolean isSessionPaused;
         @Nullable
+        private Boolean isDemo;
+        @Nullable
         private int notificationTier;
         @Nullable
         private long timeLeftInMillis;
+
 
         private void setLatestPreset(Preset latestPreset) {
             this.latestPreset = latestPreset;
@@ -674,6 +685,7 @@ public class SessionActivity extends AppCompatActivity  {
             //this.presetButtonSavedText = activity.addPresetBTN.getText().toString();
             this.isSessionStarted = activity.isSessionStarted;
             this.isSessionPaused = activity.isSessionPaused;
+            this.isDemo = activity.isDemo;
             this.notificationTier = activity.notificationTier;
             this.timeLeftInMillis = activity.timeLeftInMillis;
 
@@ -681,11 +693,16 @@ public class SessionActivity extends AppCompatActivity  {
 
         // Will be called: onCreate()
         private void loadActivityState(@NonNull SessionActivity activity) {
-            //if(this.presetButtonSavedText != null)
-            //    activity.addPresetBTN.setText(this.presetButtonSavedText);
 
             if(this.isSessionStarted != null && this.isSessionStarted == true){
 
+                //activity.countDownManager(this.timeLeftInMillis);
+                activity.statusTextView.setText("Current session with preset: " + latestPreset.getName());
+                activity.notificationTierTextView.setText("Current notification tier: " + notificationTier);
+                //activity.updateCountDownText();
+                activity.startPauseBTN.setText(R.string.continue_session_text);
+                activity.endSessionBTN.setVisibility(View.VISIBLE);
+                Log.d(TAG, "TIME LEFT IN MILLI " + String.valueOf(this.timeLeftInMillis));
 
                 if(this.isSessionPaused != null && this.isSessionPaused == true){
                     activity.pauseSession();
@@ -694,6 +711,26 @@ public class SessionActivity extends AppCompatActivity  {
                 }
 
             }
+
+        }
+
+    }
+
+    /**
+     * This is NOT complete the timer NEEDS to be in it's own Singleton
+     */
+    private static class SessionTimerStorage{
+
+        private static SessionTimerStorage instance;
+
+        @NonNull
+        private static SessionTimerStorage get() {
+            if(SessionTimerStorage.instance == null)
+                SessionTimerStorage.instance = new SessionTimerStorage();
+            return SessionTimerStorage.instance;
+        }
+
+        private SessionTimerStorage() {
 
         }
 
