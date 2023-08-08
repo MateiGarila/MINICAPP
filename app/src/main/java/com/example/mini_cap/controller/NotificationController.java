@@ -49,6 +49,7 @@ public class NotificationController {
     private int tickCount;
     private int session;
     private boolean running;
+    private boolean enabled;
 
     @Nullable
     private Severity lastSeverity = Severity.LOW;
@@ -68,6 +69,19 @@ public class NotificationController {
         this.tickCount = 1;
         this.session = 0;
         this.running = false;
+        this.enabled = true;
+    }
+
+    public boolean isEnabled() {
+        return this.enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public boolean isRunning() {
+        return this.isRunning();
     }
 
     public void start() {
@@ -100,11 +114,12 @@ public class NotificationController {
 
         Log.d(TAG, "Tick: " + this.tickCount);
 
-        if(this.tickCount % TICKS_PER_REMINDER == 0)
-            if(this.reminderNotificationCallback != null)
-                this.reminderNotificationCallback.run();
-
-        this.checkUV();
+        if(this.enabled) {
+            if (this.tickCount % TICKS_PER_REMINDER == 0)
+                if (this.reminderNotificationCallback != null)
+                    this.reminderNotificationCallback.run();
+            this.checkUV();
+        }
 
         this.tickCount++;
         this.handler.postDelayed(() -> this.run(session), TICK_DELAY);

@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
+import com.example.mini_cap.controller.NotificationController;
 import com.example.mini_cap.controller.SensorController;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -37,6 +39,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
 
     // App configs
     private EditText cityNameText;
+    private Switch notificationSwitch;
 
     // Sensor configs
     private TextView sensorStatusText;
@@ -64,6 +67,9 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         // Initialize UI - App configurations
         this.cityNameText = this.findViewById(R.id.cityInput);
         this.findViewById(R.id.search).setOnClickListener(v -> this.handleSearchConfiguration());
+        this.notificationSwitch = this.findViewById(R.id.settings_notification_switch);
+        this.notificationSwitch.setOnClickListener(v -> this.handleNotificationSwitch());
+        this.updateNotificationSwitch();
 
         // Initialize UI - Sensor configurations
         this.sensorStatusText = this.findViewById(R.id.sensor_status_text);
@@ -72,8 +78,6 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         this.sensorConnectButton = findViewById(R.id.sensor_connect_button);
         this.sensorConnectButton.setOnClickListener((v) -> this.handleConnectButtonClick());
         this.restoreUI(SettingsActivity.bundle);
-
-        // Initialize state
     }
 
     @Override
@@ -136,6 +140,21 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
             setResult(Activity.RESULT_OK, intent);
             finish();
         }
+    }
+
+    /* -------- UI handlers - notification switch -------- */
+
+    // Event handler
+    void handleNotificationSwitch() {
+        NotificationController.get(this).setEnabled(this.notificationSwitch.isChecked());
+        this.updateNotificationSwitch();
+    }
+
+    // Render
+    void updateNotificationSwitch() {
+        boolean enabled = NotificationController.get(this).isEnabled();
+        this.notificationSwitch.setChecked(enabled);
+        this.notificationSwitch.setText(enabled ? "On" : "Off");
     }
 
 
