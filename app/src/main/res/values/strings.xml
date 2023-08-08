@@ -32,8 +32,9 @@
     <!--Below this line you will find all the Strings related to the PresetFragment-->
     <string name="create_preset">Create a Preset</string>
     <string name="edit_preset">Edit a Preset</string>
-    <string name="preset_name_hint">Preset name</string>
-    <string name="preset_age_hint">Your age</string>
+    <string name="preset_name">Preset name</string>
+    <string name="preset_age">Your age</string>
+    <string name="preset_skin_tone">Your skin tone</string>
     <string-array name="skinTone_set">
         <item>Light, pale white</item>
         <item>White, fair</item>
