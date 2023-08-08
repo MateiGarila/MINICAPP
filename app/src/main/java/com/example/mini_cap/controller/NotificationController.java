@@ -15,10 +15,8 @@ import androidx.annotation.Nullable;
 import com.example.mini_cap.R;
 import com.example.mini_cap.model.Day;
 
-import java.util.Arrays;
+import java.util.Date;
 import java.util.function.Consumer;
-
-import app.uvtracker.sensor.pii.event.EventRegistry;
 
 public class NotificationController {
 
@@ -76,7 +74,7 @@ public class NotificationController {
         if(this.running) return;
         this.running = true;
         int sessionCapture = this.session;
-        this.handler.postDelayed(() -> this.run(sessionCapture), TICK_DELAY);
+        this.handler.post(() -> this.run(sessionCapture));
     }
 
     public void stop() {
@@ -113,15 +111,19 @@ public class NotificationController {
     }
 
     private void checkUV() {
-        Calendar calendar = Calendar.getInstance();
-        int hours = calendar.get(Calendar.HOUR_OF_DAY);
-        int minutes = calendar.get(Calendar.MINUTE);
+        Date date = new Date();
+        Day day = new Day(date);
+        int hours = date.getHours();
+        int minutes = date.getMinutes();
 
         float sum = 0.0f;
         for(int i = 0; i < AVERAGEING; i++) {
-            float value = this.dbHelper.getMinuteAvg(new Day(calendar.getTime()), minutes - i, hours, false);
+            Log.d(TAG, "Querying database for " + hours + ":" + minutes);
+            float value = this.dbHelper.getMinuteAvg(day, minutes, hours, false);
+            minutes--;
             if(Float.isNaN(value)) {
                 Log.d(TAG, "There's a null in recent minute averages! " + i);
+                if(i == 0) continue;
                 return;
             }
             sum += value;

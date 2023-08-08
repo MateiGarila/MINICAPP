@@ -33,8 +33,6 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
 
     private static final int SETTINGS_REQUEST_CODE = 1;
 
-    private static final int NOTIFICATION_ID = 1;
-
     // Main activity UI components
     private TextView cityNameTV, temp, uvIndex, conditionTV;
     private ImageView currentWeather;
@@ -183,8 +181,8 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         });
 
         controller.registerReminderCallback(() -> {
-            // TODO
-
+            String message = "Please apply sunscreen.";
+            publisher.displayNotification(message);
         });
 
         controller.start();
