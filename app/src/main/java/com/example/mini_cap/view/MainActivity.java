@@ -179,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
 
         NotificationController controller = NotificationController.get(this);
 
-        controller.registerGenericNotificationCallback(controller::postNotification);
+        controller.registerGenericNotificationCallback(publisher::displayNotification);
 
         controller.registerSeverityCallback(severity -> {
             String notificationMessage;

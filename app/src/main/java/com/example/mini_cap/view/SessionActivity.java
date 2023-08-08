@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
+import com.example.mini_cap.controller.NotificationController;
 import com.example.mini_cap.model.Day;
 import com.example.mini_cap.model.Preset;
 
@@ -137,7 +138,9 @@ public class SessionActivity extends AppCompatActivity  {
         });
 
         //The singleton is not yet complete, still has bugs
-        SessionActivityStorage.get().loadActivityState(SessionActivity.this);
+
+        // TODO: properly handle state storage
+        //SessionActivityStorage.get().loadActivityState(SessionActivity.this);
     }
 
     @Override
@@ -325,6 +328,9 @@ public class SessionActivity extends AppCompatActivity  {
                 }else{
                     timeLeftInMillis = calculatedTimer;
                 }
+
+
+                NotificationController.get(SessionActivity.this).postNotification(notificationMessage);
 
                 countDownManager(timeLeftInMillis);
             }
