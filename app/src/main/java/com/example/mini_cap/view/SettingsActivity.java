@@ -44,6 +44,9 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     private ProgressBar sensorProgressBar;
     private Button sensorConnectButton;
 
+    // Sensor controller
+    private SensorController sensorController;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,8 +57,9 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
             SettingsActivity.bundle = new Bundle();
 
         // Initialize sensor controller
-        SensorController.get(this).registerListenerClass(DBHelper.get(this));
-        SensorController.get(this).registerListenerClass(this);
+        this.sensorController = SensorController.get(this);
+        this.sensorController.registerListenerClass(DBHelper.get(this));
+        this.sensorController.registerListenerClass(this);
 
         // Initialize UI - App configurations
         this.cityNameText = this.findViewById(R.id.cityInput);
@@ -85,8 +89,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     }
 
     private void restoreUI(Bundle state) {
-        SensorController controller = SensorController.get(this);
-        if(!(controller.isConnecting() || controller.isConnected())) {
+        if(!(this.sensorController.isConnecting() || this.sensorController.isConnected())) {
             this.initiateSensorConnectionUI();
             return;
         }
@@ -95,7 +98,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         String UI_SensorBattery_Text        = state.getString("UI_SensorBattery_Text",       defaultText);
         String UI_SensorConnectButton_Text  = state.getString("UI_SensorConnectButton_Text", defaultText);
 
-        if(controller.isSyncing()) UI_SensorStatus_Text = this.getString(R.string.sensor_status_connected);
+        if(this.sensorController.isSyncing()) UI_SensorStatus_Text = this.getString(R.string.sensor_status_connected);
 
         this.sensorStatusText.setText   (UI_SensorStatus_Text);
         this.sensorBatteryText.setText  (UI_SensorBattery_Text);
@@ -118,6 +121,10 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     /* -------- UI handlers - search -------- */
 
     private void handleSearchConfiguration() {
+        if(this.sensorController.isConnecting()) {
+            this.showBusyPrompt();
+            return;
+        }
         String city = this.cityNameText.getText().toString();
         if(city.isEmpty()) {
             Toast.makeText(this, "Please enter a city name", Toast.LENGTH_SHORT ).show();
@@ -135,22 +142,21 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     /* -------- UI handlers - sensor -------- */
 
     private void handleConnectButtonClick() {
-        SensorController controller = SensorController.get(this);
-        if(controller.isConnecting()) {
+        if(this.sensorController.isConnecting()) {
             this.showBusyPrompt();
             return;
         }
-        if(!controller.isConnected()) {
-            controller.connectToAnySensor(this);
+        if(!this.sensorController.isConnected()) {
+            this.sensorController.connectToAnySensor(this);
         }
         else {
-            controller.disconnectFromSensor();
+            this.sensorController.disconnectFromSensor();
         }
     }
 
     @Override
     public void onBackPressed() {
-        if(SensorController.get(this).isConnecting()) {
+        if(this.sensorController.isConnecting()) {
             this.showBusyPrompt();
             return;
         }
@@ -186,7 +192,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
                 this.sensorConnectButton.setText(R.string.sensor_button_connecting);
 
                 String name = null;
-                ISensor sensor = SensorController.get(this).getSensor();
+                ISensor sensor = this.sensorController.getSensor();
                 if(sensor != null) {
                     name = sensor.getName();
                     if(name.equals("null")) name = null;
@@ -215,7 +221,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     private void updateSensorConnectionUI(@NonNull ConnectionStateChangeEvent event) {
         switch(event.getStage()) {
             case CONNECTING: {
-                if(SensorController.get(this).getSensor() == null) {
+                if(this.sensorController.getSensor() == null) {
                     Log.d(TAG, "Received " + event.getStage() + " when there's no sensor! Glitched?");
                     break;
                 }
@@ -228,12 +234,12 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
                 break;
             }
             case ESTABLISHED: {
-                if(SensorController.get(this).getSensor() == null) {
+                if(this.sensorController.getSensor() == null) {
                     Log.d(TAG, "Received " + event.getStage() + " when there's no sensor! Glitched?");
                     break;
                 }
                 String name = null;
-                ISensor sensor = SensorController.get(this).getSensor();
+                ISensor sensor = this.sensorController.getSensor();
                 if(sensor != null) {
                     name = sensor.getName();
                     if(name.equals("null")) name = null;
@@ -283,7 +289,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
 
     @EventHandler
     protected void updateSensorConnectionUI(@NonNull SyncProgressChangedEvent event) {
-        if(!SensorController.get(this).isConnected()) return;
+        if(!this.sensorController.isConnected()) return;
         switch(event.getStage()) {
             case PROCESSING: {
                 this.sensorStatusText.setText(R.string.sensor_status_downloading);
@@ -304,7 +310,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
 
     @EventHandler
     protected void updateSensorConnectionUI(@NonNull NewBatteryInfoReceivedEvent event) {
-        if(!SensorController.get(this).isConnected()) return;
+        if(!this.sensorController.isConnected()) return;
         BatteryRecord record = event.getRecord();
         switch(record.chargingStatus) {
             default:
