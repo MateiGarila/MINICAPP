@@ -44,7 +44,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="Periodic notifications:"
+        android:text="Push notifications:"
         android:textSize="18dp"
         app:layout_constraintStart_toStartOf="@+id/cityInput"
         app:layout_constraintTop_toBottomOf="@+id/cityInput" />
@@ -115,10 +115,11 @@
         android:id="@+id/settings_notification_switch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
         android:text="Switch"
         app:layout_constraintBottom_toBottomOf="@+id/textView8"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.75"
+        app:layout_constraintStart_toEndOf="@+id/textView8"
         app:layout_constraintTop_toTopOf="@+id/textView8" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

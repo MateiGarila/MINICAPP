@@ -148,6 +148,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     void handleNotificationSwitch() {
         NotificationController.get(this).setEnabled(this.notificationSwitch.isChecked());
         this.updateNotificationSwitch();
+        NotificationController.get(this).saveEnabledPersistent(this);
     }
 
     // Render
