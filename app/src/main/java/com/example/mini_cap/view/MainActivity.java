@@ -19,6 +19,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.mini_cap.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
@@ -53,11 +54,9 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnItemSelectedListener(this);
 
-        refresh.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getWeatherInfo(currentCity);
-            }
+        refresh.setOnClickListener(v -> {
+            getWeatherInfo(currentCity);
+            Snackbar.make(refresh, "Weather refreshed.", Snackbar.LENGTH_SHORT).show();
         });
 
 
