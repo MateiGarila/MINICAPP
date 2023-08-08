@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
 
     private static final String DEFAULT_CITY = "Montreal";
 
+    private static final String API_KEY = "d868a85293a44ef8bb5184707230108";
     private static final int SETTINGS_REQUEST_CODE = 1;
 
     private TextView cityNameTextView;
@@ -39,7 +40,6 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
     private ImageView weatherTextView;
 
     private String currentlySelectedCity;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,25 +51,23 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         bottomNavigationView.setOnItemSelectedListener(this);
 
         // Weather UI component initialization
-        // Main activity UI components
-        cityNameTextView = findViewById(R.id.cityName);
-        temperatureTextView = findViewById(R.id.temp);
-        uvIndexTextView = findViewById(R.id.uvIndex);
-        weatherTextView = findViewById(R.id.currentWeather);
-        weatherConditionTextView = findViewById(R.id.condition);
-
-        this.currentlySelectedCity = DEFAULT_CITY;
-        getWeatherInfo(DEFAULT_CITY);
+        this.cityNameTextView = findViewById(R.id.cityName);
+        this.temperatureTextView = findViewById(R.id.temp);
+        this.uvIndexTextView = findViewById(R.id.uvIndex);
+        this.weatherTextView = findViewById(R.id.currentWeather);
+        this.weatherConditionTextView = findViewById(R.id.condition);
 
         ImageView refresh = findViewById(R.id.refresh);
         refresh.setOnClickListener(v -> {
-            getWeatherInfo(currentlySelectedCity);
+            this.refreshWeatherDisplay();
             Snackbar.make(refresh, "Weather refreshed.", Snackbar.LENGTH_SHORT).show();
         });
 
         // Notification initialization
         this.initializeNotificationServices();
 
+        // Refresh UI
+        this.setWeatherDisplayCity(DEFAULT_CITY);
     }
 
 
@@ -117,24 +115,24 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1) {
-            if (resultCode == Activity.RESULT_OK) {
-                // Retrieve the city name from the SettingsActivity
-                String city = data.getStringExtra("CITY_NAME");
-                if (city != null) {
-                    // Update the cityNameTV text view with the city name
-                    currentlySelectedCity = city;
-                    cityNameTextView.setText(city); 
-                    getWeatherInfo(city);
-                }
-            }
-        }
+        if(requestCode != SETTINGS_REQUEST_CODE) return;
+        if(resultCode != Activity.RESULT_OK) return;
+        String city = data.getStringExtra("CITY_NAME");
+        if(city == null) return;
+        // TODO: validate city (here or in settings activity)
+        this.setWeatherDisplayCity(city);
     }
 
+    // Helper
+    private void setWeatherDisplayCity(String city) {
+        this.currentlySelectedCity = city;
+        this.cityNameTextView.setText(city);
+        this.refreshWeatherDisplay();
+    }
 
     // Render
-    private void getWeatherInfo(String city){
-        String url = "https://api.weatherapi.com/v1/current.json?key=d868a85293a44ef8bb5184707230108&q=" + city + "&aqi=no";
+    private void refreshWeatherDisplay(){
+        String url = "https://api.weatherapi.com/v1/current.json?key=" + API_KEY + "&q=" + this.currentlySelectedCity + "&aqi=no";
         Log.d("WeatherAPI", "URL: " + url); // Print URL to logcat
         RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
 
