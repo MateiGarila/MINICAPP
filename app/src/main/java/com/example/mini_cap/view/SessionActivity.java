@@ -10,13 +10,19 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.DBHelper;
+import com.example.mini_cap.model.Day;
 import com.example.mini_cap.model.Preset;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class SessionActivity extends AppCompatActivity  {
 
@@ -28,13 +34,17 @@ public class SessionActivity extends AppCompatActivity  {
     //Needed
     private DBHelper dbHelper;
     private final static String TAG = "SessionActivity";
+    private static Bundle bundle;
     private final boolean isCreate = true;
+    private boolean isDemo = false;
     private static final String NOTIFICATION_CHANNEL_ID = "UV_INDEX_NOTIFICATION_CHANNEL";
     private static final int MAX_TIER = 5;
 
     //Countdown timer variables
     //For Testing purposes. This is 10 seconds
     private static final long START_TIME_IN_MILLIS = 10000;
+    private static final long DEFAULT_TIMER_IN_MILLIS = 1050000;
+    private static long calculatedTimer;
     private CountDownTimer countDownTimer;
     private long timeLeftInMillis = START_TIME_IN_MILLIS;
 
@@ -47,7 +57,9 @@ public class SessionActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
-        dbHelper = new DBHelper(getBaseContext());
+        // Initialize local bundle
+        if(SessionActivity.bundle == null)
+            SessionActivity.bundle = new Bundle();
 
         //Attaching the UI elements to their respective objects
         //TextViews
@@ -123,6 +135,26 @@ public class SessionActivity extends AppCompatActivity  {
 
             }
         });
+
+        //The singleton is not yet complete, still has bugs
+        SessionActivityStorage.get().loadActivityState(SessionActivity.this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //this.saveUI(SessionActivity.bundle);
+        SessionActivityStorage.get().saveActivityState(SessionActivity.this);
+        if(countDownTimer != null) countDownTimer.cancel();
+    }
+
+    private boolean isValidInput(String input) {
+        try {
+            int number = Integer.parseInt(input);
+            return number >= 1;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     /**
@@ -133,8 +165,7 @@ public class SessionActivity extends AppCompatActivity  {
     public void fetchPresetStartSession(Preset preset){
 
         //Toast.makeText(this, "I got called from fragment: " + preset.getName(), Toast.LENGTH_SHORT).show();
-        startSession(preset);
-
+        startSession(preset, 0);
     }
 
     /**
@@ -142,7 +173,7 @@ public class SessionActivity extends AppCompatActivity  {
      * @param preset that has been selected for the session
      */
     @SuppressLint("SetTextI18n")
-    private void startSession(Preset preset){
+    private void startSession(Preset preset, long timeInMillis){
 
         //Toast.makeText(this, "Session Started", Toast.LENGTH_SHORT).show();
 
@@ -154,9 +185,27 @@ public class SessionActivity extends AppCompatActivity  {
 
         //Second update variables
         isSessionStarted = true;
+        SessionActivityStorage.get().setLatestPreset(preset);
 
         //Third purpose of method
-        countDownManager();
+        //For demo purposes (timer will be set to 10 seconds)
+        if(timeInMillis == 0){
+
+            if(preset.getName().equalsIgnoreCase("Demo")){
+                timeLeftInMillis = START_TIME_IN_MILLIS;
+                isDemo = true;
+            }else{
+                calculatedTimer = timerDurationAlgo(ageParameter(preset.getAge()),
+                        skinToneParameter(preset.getSkinTone()), uvParameter());
+                timeLeftInMillis = calculatedTimer;
+            }
+
+        }else{
+            timeInMillis = timeLeftInMillis;
+        }
+
+
+        countDownManager(timeLeftInMillis);
 
     }
 
@@ -175,7 +224,7 @@ public class SessionActivity extends AppCompatActivity  {
         isSessionPaused = true;
 
         //Third purpose of method
-        countDownTimer.cancel();
+        if(countDownTimer != null) countDownTimer.cancel();
 
     }
 
@@ -193,7 +242,7 @@ public class SessionActivity extends AppCompatActivity  {
         isSessionPaused = false;
 
         //Third purpose of method
-        countDownManager();
+        countDownManager(timeLeftInMillis);
 
     }
 
@@ -214,7 +263,7 @@ public class SessionActivity extends AppCompatActivity  {
         notificationTier = 0;
 
         //Third purpose of method
-        countDownTimer.cancel();
+        if(countDownTimer != null) countDownTimer.cancel();
         timerTextView.setText(R.string.default_clock);
     }
 
@@ -253,9 +302,10 @@ public class SessionActivity extends AppCompatActivity  {
      * This method manages the countdown. Since there is no countDownTimer.pause() each time the
      * timer is paused it needs to be reset at the timeLeftInMillis
      */
-    private void countDownManager(){
+    private void countDownManager(long timeInMillis){
+        if(timeInMillis == 0) return;
 
-        countDownTimer = new CountDownTimer(timeLeftInMillis, 1000) {
+        countDownTimer = new CountDownTimer(timeInMillis, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 timeLeftInMillis = millisUntilFinished;
@@ -266,12 +316,17 @@ public class SessionActivity extends AppCompatActivity  {
             public void onFinish() {
 
                 String notificationMessage = notificationMessage(notificationTier);
-                Toast.makeText(getBaseContext(), notificationMessage, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getBaseContext(), notificationMessage, Toast.LENGTH_SHORT).show();
                 //Notifications go here
                 //-->
+                
+                if(isDemo){
+                    timeLeftInMillis = START_TIME_IN_MILLIS;
+                }else{
+                    timeLeftInMillis = calculatedTimer;
+                }
 
-                timeLeftInMillis = START_TIME_IN_MILLIS;
-                countDownManager();
+                countDownManager(timeLeftInMillis);
             }
 
         }.start();
@@ -406,4 +461,177 @@ public class SessionActivity extends AppCompatActivity  {
 
         return skinParam;
     }
+
+    /**
+     * This method calculates the parameter obtained from the average UV index over a minute
+     * @return the multiplier parameter used in the timer algorithm
+     */
+    private double uvParameter(){
+
+        DBHelper dbHelper = DBHelper.get(this);
+        Date currentDate = new Date();
+        Calendar calendar = Calendar.getInstance();
+        TimeZone timeZone = calendar.getTimeZone();
+
+        int hours = calendar.get(Calendar.HOUR_OF_DAY);
+        int minutes = calendar.get(Calendar.MINUTE);
+
+        int avgUVIndex = (int) dbHelper.getMinuteAvg(new Day(currentDate), minutes, hours, false);
+        double uvParam = 0.0;
+
+        if(avgUVIndex == 0){
+            return 1;
+        }else if(avgUVIndex < 2){
+            uvParam = 0.5;
+        } else if(avgUVIndex < 4){
+            uvParam = 0.75;
+        }else if(avgUVIndex < 6){
+            uvParam = 1.0;
+        } else if(avgUVIndex < 8){
+            uvParam = 1.5;
+        }else if(avgUVIndex < 10){
+            uvParam = 1.75;
+        } else if(avgUVIndex < 12){
+            uvParam = 2.0;
+        }
+
+        return uvParam;
+    }
+
+    /**
+     * This method determines the duration of the timer based off 3 parameters
+     * @param age parameter, obtained from the preset
+     * @param skin parameter, obtained from the preset
+     * @param uvIndex parameter, obtained from the minute average
+     * @return timer duration
+     */
+    public long timerDurationAlgo(double age, double skin, double uvIndex){
+
+        long time = 0;
+        double presetParam = age + skin;
+
+        if(presetParam == 0.0){
+            return DEFAULT_TIMER_IN_MILLIS;
+        }
+
+        double timerSelector = presetParam * uvIndex;
+
+        if(timerSelector <= -6){
+            //this is 15 minutes
+            time = 900000;
+        }else if(timerSelector <= -4){
+            //this is 16 minutes
+            time = 960000;
+        }else if(timerSelector <= -2){
+            //this is 17 minutes
+            time = 1020000;
+        }else if(timerSelector <= 0){
+            //this is 17 minutes 30 seconds
+            time = DEFAULT_TIMER_IN_MILLIS;
+        }else if(timerSelector <= 2){
+            //this is 18 minutes
+            time = 1080000;
+        }else{
+            //this is 19 minutes
+            time = 1140000;
+        }
+
+        return time;
+    }
+
+    private static class SessionActivityStorage {
+
+        private static SessionActivityStorage instance;
+
+        @NonNull
+        private static SessionActivityStorage get() {
+            if(SessionActivityStorage.instance == null)
+                SessionActivityStorage.instance = new SessionActivityStorage();
+            return SessionActivityStorage.instance;
+        }
+
+        private SessionActivityStorage() {
+
+        }
+
+        @Nullable
+        private Preset latestPreset;
+        @Nullable
+        private Boolean isSessionStarted;
+        @Nullable
+        private Boolean isSessionPaused;
+        @Nullable
+        private Boolean isDemo;
+        @Nullable
+        private int notificationTier;
+        @Nullable
+        private long timeLeftInMillis;
+
+
+        private void setLatestPreset(Preset latestPreset) {
+            this.latestPreset = latestPreset;
+        }
+
+        @Nullable
+        private Preset getLatestPreset() {
+            return this.latestPreset;
+        }
+
+        // Will be called: onDestroy()
+        private void saveActivityState(@NonNull SessionActivity activity) {
+            //this.presetButtonSavedText = activity.addPresetBTN.getText().toString();
+            this.isSessionStarted = activity.isSessionStarted;
+            this.isSessionPaused = activity.isSessionPaused;
+            this.isDemo = activity.isDemo;
+            this.notificationTier = activity.notificationTier;
+            this.timeLeftInMillis = activity.timeLeftInMillis;
+
+        }
+
+        // Will be called: onCreate()
+        private void loadActivityState(@NonNull SessionActivity activity) {
+
+            if(this.isSessionStarted != null && this.isSessionStarted == true){
+
+                //activity.countDownManager(this.timeLeftInMillis);
+                activity.statusTextView.setText("Current session with preset: " + latestPreset.getName());
+                activity.notificationTierTextView.setText("Current notification tier: " + notificationTier);
+                //activity.updateCountDownText();
+                activity.startPauseBTN.setText(R.string.continue_session_text);
+                activity.endSessionBTN.setVisibility(View.VISIBLE);
+                Log.d(TAG, "TIME LEFT IN MILLI " + String.valueOf(this.timeLeftInMillis));
+                activity.timeLeftInMillis = this.timeLeftInMillis;
+                if(this.isSessionPaused != null && this.isSessionPaused == true){
+                    activity.pauseSession();
+                }else{
+                    activity.continueSession();
+                }
+
+            }
+
+        }
+
+    }
+
+    /**
+     * This is NOT complete the timer NEEDS to be in it's own Singleton
+     */
+    private static class SessionTimerStorage{
+
+        private static SessionTimerStorage instance;
+
+        @NonNull
+        private static SessionTimerStorage get() {
+            if(SessionTimerStorage.instance == null)
+                SessionTimerStorage.instance = new SessionTimerStorage();
+            return SessionTimerStorage.instance;
+        }
+
+        private SessionTimerStorage() {
+
+        }
+
+    }
 }
+
+
