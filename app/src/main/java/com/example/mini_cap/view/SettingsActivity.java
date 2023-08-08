@@ -125,7 +125,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
             this.showBusyPrompt();
             return;
         }
-        String city = this.cityNameText.getText().toString();
+        String city = this.cityNameText.getText().toString().trim();
         if(city.isEmpty()) {
             Toast.makeText(this, "Please enter a city name", Toast.LENGTH_SHORT ).show();
         }

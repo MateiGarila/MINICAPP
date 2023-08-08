@@ -3,7 +3,6 @@ package com.example.mini_cap.view;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -13,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.mini_cap.R;
@@ -23,6 +22,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import app.uvtracker.sensor.pii.event.IEventListener;
 
@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
     private TextView uvIndexTextView;
     private TextView weatherConditionTextView;
     private ImageView weatherTextView;
+    private ImageView refreshIcon;
 
     private String currentlySelectedCity;
 
@@ -57,17 +58,14 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         this.weatherTextView = findViewById(R.id.currentWeather);
         this.weatherConditionTextView = findViewById(R.id.condition);
 
-        ImageView refresh = findViewById(R.id.refresh);
-        refresh.setOnClickListener(v -> {
-            this.refreshWeatherDisplay();
-            Snackbar.make(refresh, "Weather refreshed.", Snackbar.LENGTH_SHORT).show();
-        });
+        this.refreshIcon = findViewById(R.id.refresh);
+        this.refreshIcon.setOnClickListener(v -> this.refreshWeatherDisplay());
 
         // Notification initialization
         this.initializeNotificationServices();
 
         // Refresh UI
-        this.setWeatherDisplayCity(DEFAULT_CITY);
+        this.refreshWeatherDisplay(DEFAULT_CITY);
     }
 
 
@@ -119,41 +117,58 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         if(resultCode != Activity.RESULT_OK) return;
         String city = data.getStringExtra("CITY_NAME");
         if(city == null) return;
-        // TODO: validate city (here or in settings activity)
-        this.setWeatherDisplayCity(city);
-    }
-
-    // Helper
-    private void setWeatherDisplayCity(String city) {
-        this.currentlySelectedCity = city;
-        this.cityNameTextView.setText(city);
-        this.refreshWeatherDisplay();
+        this.refreshWeatherDisplay(city);
     }
 
     // Render
-    private void refreshWeatherDisplay(){
-        String url = "https://api.weatherapi.com/v1/current.json?key=" + API_KEY + "&q=" + this.currentlySelectedCity + "&aqi=no";
-        Log.d("WeatherAPI", "URL: " + url); // Print URL to logcat
-        RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
+    private void refreshWeatherDisplay() {
+        this.refreshWeatherDisplay(this.currentlySelectedCity);
+    }
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, response -> {
-            Log.d("WeatherAPI", "API Response: " + response.toString());
-            try{
-                String temperature = response.getJSONObject("current").getString("temp_c");
-                temperatureTextView.setText(temperature+"°C");
-                String condition = response.getJSONObject("current").getJSONObject("condition").getString("text");
-                weatherConditionTextView.setText(condition);
-                String conditionIcon = response.getJSONObject("current").getJSONObject("condition").getString("icon");
-                Picasso.get().load("https:".concat(conditionIcon)).into(weatherTextView);
-                String uv = response.getJSONObject("current").getString("uv");
-                uvIndexTextView.setText("UV index: "+uv);
+    // Render
+    private void refreshWeatherDisplay(String city){
+        String requestURL = "https://api.weatherapi.com/v1/current.json?key=" + API_KEY + "&q=" + city + "&aqi=no";
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                Request.Method.GET,
+                requestURL,
+                null,
+                this::handleWeatherAPIResponse,
+                this::handleWeatherAPIException
+        );
+        Volley.newRequestQueue(MainActivity.this).add(jsonObjectRequest);
+    }
 
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
+    private void handleWeatherAPIResponse(JSONObject response) {
+        try {
+            String temperature = response.getJSONObject("current").getString("temp_c");
+            String condition = response.getJSONObject("current").getJSONObject("condition").getString("text");
+            String uv = response.getJSONObject("current").getString("uv");
+            String conditionIcon = response.getJSONObject("current").getJSONObject("condition").getString("icon");
+            String city = response.getJSONObject("location").getString("name");
 
-        }, error -> Toast.makeText(MainActivity.this, "Please enter valid city name", Toast.LENGTH_SHORT).show());
-        requestQueue.add(jsonObjectRequest);
+            this.temperatureTextView.setText(temperature + "°C");
+            this.weatherConditionTextView.setText(condition);
+            this.uvIndexTextView.setText("UV index: " + uv);
+            Picasso.get().load("https:".concat(conditionIcon)).into(this.weatherTextView);
+
+            String oldCity = this.currentlySelectedCity;
+            this.currentlySelectedCity = city;
+            this.cityNameTextView.setText(city);
+
+            if(oldCity == null) return;
+
+            String message;
+            if(oldCity.equalsIgnoreCase(city)) message = "Weather refreshed.";
+            else message = "Weather updated.";
+            Snackbar.make(this.refreshIcon, message, Snackbar.LENGTH_SHORT).show();
+        }
+        catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void handleWeatherAPIException(VolleyError errorIgnored) {
+        Snackbar.make(this.refreshIcon, "City name is not valid.", Snackbar.LENGTH_SHORT).show();
     }
 
 
