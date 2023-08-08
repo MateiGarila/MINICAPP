@@ -1,18 +1,9 @@
 package com.example.mini_cap.view;
 
-import android.app.Activity;
-import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.icu.util.Calendar;
-import android.icu.util.TimeZone;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -28,58 +19,57 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.mini_cap.R;
-import com.example.mini_cap.controller.DBHelper;
-import com.example.mini_cap.controller.SensorController;
-import com.example.mini_cap.controller.UVIndexService;
-import com.example.mini_cap.model.Day;
+import com.example.mini_cap.controller.NotificationController;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 
-public class MainActivity extends AppCompatActivity implements INavigationBar, BottomNavigationView.OnItemSelectedListener {
+import app.uvtracker.sensor.pii.event.IEventListener;
 
-    //Declaration of all UI elements
+public class MainActivity extends AppCompatActivity implements INavigationBar, BottomNavigationView.OnItemSelectedListener, IEventListener {
 
+    private static final String DEFAULT_CITY = "Montreal";
+
+    private static final int SETTINGS_REQUEST_CODE = 1;
+
+    private static final int NOTIFICATION_ID = 1;
+
+    // Main activity UI components
     private TextView cityNameTV, temp, uvIndex, conditionTV;
     private ImageView currentWeather;
-    private String defaultCity = "Montreal"; // Default city
-    private static final int SETTINGS_REQUEST_CODE = 1;
-    private SensorController sensorController;
 
-    private static final String UV_INDEX_NOTIFICATION_CHANNEL_ID = "UV_INDEX_NOTIFICATION_CHANNEL";
-    private static final int UV_INDEX_NOTIFICATION_ID = 1;
-    private static final int NOTIFICATION_ID = 1;
-    private DBHelper dbHelper;
+
+/*
     private BroadcastReceiver uvNotificationReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             checkAndSendUVNotification();
         }
     };
+*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        this.sensorController = SensorController.get(this);
+        // Navigation bar UI component initialization
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        bottomNavigationView.setOnItemSelectedListener(this);
 
-        //Attaching the UI elements to their respective objects
-
+        // Weather UI component initialization
         cityNameTV = findViewById(R.id.cityName);
         temp = findViewById(R.id.temp);
         uvIndex = findViewById(R.id.uvIndex);
         currentWeather = findViewById(R.id.currentWeather);
         conditionTV = findViewById(R.id.condition);
+        getWeatherInfo(DEFAULT_CITY);
 
-        getWeatherInfo(defaultCity);
+        // Notification initialization
+        this.initializeNotificationServices();
 
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        bottomNavigationView.setOnItemSelectedListener(this);
-
-        dbHelper = new DBHelper(this); //notifications
-
+/*
         createNotificationChannel();
         registerReceiver(uvNotificationReceiver, new IntentFilter("UV_NOTIFICATION_ACTION"));
 
@@ -88,28 +78,17 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
 
         // Schedule repeated notifications every 2 hours
         scheduleRepeatingNotifications();
+
+ */
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1) {
-            if (resultCode == Activity.RESULT_OK) {
-                // Retrieve the city name from the SettingsActivity
-                String city = data.getStringExtra("CITY_NAME");
-                if (city != null) {
-                    // Update the cityNameTV text view with the city name
-                    cityNameTV.setText(city);
-                    getWeatherInfo(city);
-                }
-            }
-        }
-    }
 
+    /* -------- Navigation bar component -------- */
+
+    // Event handler
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-
         if (itemId == R.id.button_stats) {
             toStatsActivity();
             return true;
@@ -120,27 +99,31 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
             toSettingsActivity();
             return true;
         }
-
         return false;
-
     }
 
+    // Helper
     private void toSessionActivity(){
         Intent intent = new Intent(this, SessionActivity.class);
         startActivity(intent);
     }
 
+    // Helper
     private void toStatsActivity(){
         Intent intent = new Intent(this, StatsActivity.class);
         startActivity(intent);
     }
 
-
+    // Helper
     private void toSettingsActivity(){
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivityForResult(intent, SETTINGS_REQUEST_CODE);
     }
 
+
+    /* -------- Weather component --------*/
+
+    // Render
     private void getWeatherInfo(String city){
         String url = "https://api.weatherapi.com/v1/current.json?key=d868a85293a44ef8bb5184707230108&q=" + city + "&aqi=no";
         Log.d("WeatherAPI", "URL: " + url); // Print URL to logcat
@@ -167,22 +150,49 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
     }
 
 
-    @Override
-    protected void onDestroy() {
-        unregisterReceiver(uvNotificationReceiver);
-        super.onDestroy();
+    /* -------- Notifications --------*/
+
+    private void initializeNotificationServices() {
+        NotificationController.NotificationPublisher publisher = new NotificationController.NotificationPublisher(this);
+
+        NotificationController controller = NotificationController.get(this);
+
+        controller.registerGenericNotificationCallback(controller::postNotification);
+
+        controller.registerSeverityCallback(severity -> {
+            String notificationMessage;
+            switch(severity) {
+                default:
+                case LOW:
+                    notificationMessage = "Low risk of UV exposure, don't forget to wear sunscreen.";
+                    break;
+                case MEDIUM:
+                    notificationMessage = "Moderate risk of UV exposure. Please wear sunscreen.";
+                    break;
+                case HIGH:
+                    notificationMessage = "High risk of skin damage. Wear sunscreen and seek shade.";
+                    break;
+                case VERY_HIGH:
+                    notificationMessage = "Very High Risk! Wear sunscreen, seek shade or stay indoors.";
+                    break;
+                case EXTREME:
+                    notificationMessage = "Extreme Risk! Stay indoors. If not possible then wear protective clothing, sunscreen and sunglasses, and seek shade.";
+                    break;
+            }
+            publisher.displayNotification(notificationMessage);
+        });
+
+        controller.registerReminderCallback(() -> {
+            // TODO
+
+        });
+
+        controller.start();
     }
 
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(UV_INDEX_NOTIFICATION_CHANNEL_ID, "UV Index Notifications", NotificationManager.IMPORTANCE_DEFAULT);
-            channel.setDescription("Notifications about UV index changes");
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(channel);
-            }
-        }
-    }
+
+/*
+
     private void checkAndSendUVNotification() {
         // Get the current time
         DBHelper dbHelper = DBHelper.get(this);
@@ -227,6 +237,31 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
             notificationManager.notify(UV_INDEX_NOTIFICATION_ID, notification);
         }
     }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if (resultCode == Activity.RESULT_OK) {
+                // Retrieve the city name from the SettingsActivity
+                String city = data.getStringExtra("CITY_NAME");
+                if (city != null) {
+                    // Update the cityNameTV text view with the city name
+                    cityNameTV.setText(city);
+                    getWeatherInfo(city);
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        unregisterReceiver(uvNotificationReceiver);
+        super.onDestroy();
+    }
+
+
     private void scheduleRepeatingNotifications() {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent notificationIntent = new Intent(this, UVNotificationReceiver.class);
@@ -249,5 +284,9 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
             );
         }
     }
+
+     */
+
+
 }
 
