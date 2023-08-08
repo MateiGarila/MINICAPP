@@ -1,10 +1,79 @@
 <resources>
-    <string name="app_name">MINI-CAP</string>
+    <string name="app_name">Sun-Buddy</string>
+
+    <!--General purpose Strings-->
+    <string name="backBTN">Back</string>
+    <string name="confirmBTN">Confirm</string>
+    <string name="cancelBTN">Cancel</string>
+    <string name="deleteBTN">Delete</string>
+    <string name="saveBTN">Save</string>
+
+    <!--Below this line you will find all the Strings related to the SessionActivity-->
     <string name="session_activity">Session Activity</string>
     <string name="session_status_not_started">Currently no session started</string>
-    <string name="session_status_started_no_number_user">Current session of</string>
+    <string name="notification_tier">Current notification tier:</string>
     <string name="start_session_text">Start session</string>
     <string name="end_session_text">End session</string>
-    <string name="add_user_text">Add User</string>
-    <string name="edit_user_text">Edit User</string>
+    <string name="pause_session_text">Pause session</string>
+    <string name="continue_session_text">Continue session</string>
+    <string name="time_remaining">Time remaining in current tier:</string>
+
+    <string name="add_preset_text">Add Preset</string>
+    <string name="edit_preset_text">Edit Preset</string>
+    <string name="select_preset_title">Select a preset</string>
+
+    <string name="default_clock">00:00</string>
+
+
+    <!--Below this line you will find all the strings related to device connection-->
+    <string name="sensor_bluetooth_exception">Bluetooth is off or unsupported.</string>
+    <string name="sensor_bluetooth_permission_request">Please try again after allowing permissions.</string>
+
+    <!--Below this line you will find all the Strings related to the PresetFragment-->
+    <string name="create_preset">Create a Preset</string>
+    <string name="edit_preset">Edit a Preset</string>
+    <string name="preset_name_hint">Preset name</string>
+    <string name="preset_age_hint">Your age</string>
+    <string-array name="skinTone_set">
+        <item>Light, pale white</item>
+        <item>White, fair</item>
+        <item>Medium white to light brown</item>
+        <item>Olive, moderate brown</item>
+        <item>Brown, dark brown</item>
+        <item>Very dark brown to black</item>
+    </string-array>
+
+    <!--Below this line you will find all the strings related to the EditActivity-->
+    <string name="edit_activity_header">Select a preset to edit</string>
+
+    <!--Below this line you will find all the strings related to the SettingsActivity-->
+    <string name="sensor_status_not_connected">No sensor connected.</string>
+    <string name="sensor_status_scanning">Scanning for sensor..</string>
+    <string name="sensor_status_connecting">Initiating connection..</string>
+    <string name="sensor_status_scan_timeout">No sensor found.</string>
+    <string name="sensor_status_connected">Connection established.</string>
+    <string name="sensor_status_disconnecting">Disconnecting..</string>
+    <string name="sensor_status_disconnected">Disconnected.</string>
+    <string name="sensor_status_failed_retry">Connection lost. Please retry.</string>
+    <string name="sensor_status_failed_noretry">Hardware is not compatible.</string>
+    <string name="sensor_status_downloading">Syncing data from sensor..</string>
+    <string name="sensor_status_downloaded">Data sync up-to-date.</string>
+
+    <string name="sensor_button_connect">Connect to sensor</string>
+    <string name="sensor_button_scanning">Scanning..</string>
+    <string name="sensor_button_connecting">Connecting..</string>
+    <string name="sensor_button_retry">Retry connection</string>
+    <string name="sensor_button_disconnect">Disconnect from sensor</string>
+    <string name="sensor_button_disconnect_from">Disconnect from %1$s</string>
+    <string name="sensor_button_disconnecting">Disconnecting..</string>
+
+    <string name="sensor_battery_discharging">Battery: %d%%</string>
+    <string name="sensor_battery_charging">Charging, %d%%</string>
+    <string name="sensor_battery_charged">Fully charged.</string>
+
+    <string name="sensor_activity_busy">App busy, please wait..</string>
+    <string name="sensor_activity_found">Found sensor %1$s</string>
+    <string name="sensor_activity_found_noname">Found a sensor (why it has no name?)</string>
+
+
 </resources>

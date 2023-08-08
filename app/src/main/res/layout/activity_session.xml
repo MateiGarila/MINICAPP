@@ -7,6 +7,16 @@
     android:windowSoftInputMode="adjustResize"
     tools:context=".view.SessionActivity">
 
+    <Button
+        android:id="@+id/endSessionBTN"
+        android:layout_width="170dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="32dp"
+        android:text="@string/end_session_text"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <TextView
         android:id="@+id/sessionActivityTextView"
         android:layout_width="match_parent"
@@ -34,51 +44,82 @@
         app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView"
         app:layout_constraintTop_toBottomOf="@+id/sessionActivityTextView" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/sessionUserDisplayRV"
-        android:layout_width="360dp"
-        android:layout_height="580dp"
-        app:layout_constraintBottom_toTopOf="@+id/startStopSessionBTN"
-        app:layout_constraintEnd_toEndOf="@+id/sessionStatusTextView"
-        app:layout_constraintHorizontal_bias="0.49"
-        app:layout_constraintStart_toStartOf="@+id/sessionStatusTextView"
-        app:layout_constraintTop_toBottomOf="@+id/sessionStatusTextView"
-        app:layout_constraintVertical_bias="0.0" />
+    <TextView
+        android:id="@+id/timeRemainingTV"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="148dp"
+        android:layout_marginEnd="8dp"
+        android:minHeight="48dp"
+        android:text="@string/time_remaining"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/sessionActivityTextView"
+        app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView"
+        app:layout_constraintTop_toBottomOf="@+id/sessionActivityTextView" />
+
+    <TextView
+        android:id="@+id/notificationTierTV"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="48dp"
+        android:layout_marginEnd="8dp"
+        android:minHeight="48dp"
+        android:text="@string/notification_tier"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/sessionActivityTextView"
+        app:layout_constraintHorizontal_bias="0.937"
+        app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView"
+        app:layout_constraintTop_toBottomOf="@+id/sessionActivityTextView" />
 
     <Button
-        android:id="@+id/startStopSessionBTN"
-        android:layout_width="270dp"
+        android:id="@+id/startPauseSessionBTN"
+        android:layout_width="170dp"
         android:layout_height="60dp"
-        android:layout_marginTop="584dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="32dp"
         android:text="@string/start_session_text"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/sessionActivityTextView"
-        app:layout_constraintHorizontal_bias="0.496"
-        app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView"
-        app:layout_constraintTop_toBottomOf="@+id/sessionActivityTextView"
-        app:layout_constraintVertical_bias="0.824" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/endSessionBTN" />
 
     <Button
         android:id="@+id/editUserBTN"
         android:layout_width="170dp"
         android:layout_height="60dp"
-        android:text="@string/edit_user_text"
-        app:layout_constraintBottom_toTopOf="@+id/startStopSessionBTN"
-        app:layout_constraintEnd_toEndOf="@+id/sessionActivityTextView"
-        app:layout_constraintHorizontal_bias="0.892"
-        app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView"
-        app:layout_constraintTop_toBottomOf="@+id/sessionUserDisplayRV"
-        app:layout_constraintVertical_bias="0.51" />
+        android:layout_marginStart="36dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="24dp"
+        android:text="@string/edit_preset_text"
+        app:layout_constraintBottom_toTopOf="@+id/startPauseSessionBTN"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/addPresetBTN" />
 
     <Button
-        android:id="@+id/addUserBTN"
+        android:id="@+id/addPresetBTN"
         android:layout_width="170dp"
         android:layout_height="60dp"
-        android:text="@string/add_user_text"
-        app:layout_constraintBottom_toTopOf="@+id/startStopSessionBTN"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="24dp"
+        android:text="@string/add_preset_text"
+        app:layout_constraintBottom_toTopOf="@+id/startPauseSessionBTN"
         app:layout_constraintEnd_toEndOf="@+id/sessionActivityTextView"
-        app:layout_constraintHorizontal_bias="0.103"
-        app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView"
-        app:layout_constraintTop_toBottomOf="@+id/sessionUserDisplayRV"
-        app:layout_constraintVertical_bias="0.51" />
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/sessionActivityTextView" />
+
+
+    <TextView
+        android:id="@+id/countdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/default_clock"
+        android:textColor="@color/black"
+        android:textSize="60sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/timeRemainingTV" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

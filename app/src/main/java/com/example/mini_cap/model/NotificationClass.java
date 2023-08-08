@@ -15,11 +15,11 @@ public class NotificationClass {
 
     NotificationManagerCompat notificationManagerCompat;
     Notification notification;
-    private Context context;
+    private final Context context;
 
     public NotificationClass(Context context){
         this.context = context;
-    };
+    }
 
     public void create_notification(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){

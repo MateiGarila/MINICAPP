@@ -11,5 +11,16 @@ public class Dict {
     public static final String COLUMN_USER_NAME = "name";
     public static final String COLUMN_USER_AGE = "age";
     public static final String COLUMN_USER_SKINTONE = "skinTone";
+    public static final String TABLE_STATS = "stats";
+    public static final String COLUMN_LOGID = "logID";
+    public static final String COLUMN_TIMESTAMP = "timestamp";
+    public static final String COLUMN_UVINDEX = "uvIndex";
+    public static final String COLUMN_ILLUMINANCE = "illuminance";
+
+    public static final String TABLE_PRESET = "user";
+    public static final String COLUMN_PRESET_ID = "userID";
+    public static final String COLUMN_PRESET_NAME = "name";
+    public static final String COLUMN_PRESET_AGE = "age";
+    public static final String COLUMN_PRESET_SKINTONE = "skinTone";
 
 }
