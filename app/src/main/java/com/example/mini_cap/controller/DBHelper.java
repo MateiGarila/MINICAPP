@@ -6,18 +6,16 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.icu.util.Calendar;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.mini_cap.model.Day;
 import com.example.mini_cap.model.Preset;
 import com.example.mini_cap.model.Stats;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.example.mini_cap.model.Day;
 
 import app.uvtracker.data.optical.OpticalRecord;
 import app.uvtracker.data.optical.TimedOpticalRecord;
@@ -26,11 +24,20 @@ import app.uvtracker.sensor.pii.connection.application.event.SyncDataReceivedEve
 import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.IEventListener;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+
 public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
-    private static final String TAG = "DBHelper";
-
+    private static final boolean DEBUG_READ_ALS = true;
     private static final int INTERVAL = 10;
+    private final Context context;
+    private final String TAG = "DBHelper";
+
+    private static final int interval = 10;
+    private static final int offset = 8;
 
     @SuppressLint("StaticFieldLeak")
     private static DBHelper instance;
@@ -45,13 +52,11 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         DBHelper.instance = null;
     }
 
-    private final Context context;
-
     /**
      * Database constructor
      * @param context
      */
-    private DBHelper(@Nullable Context context) {
+    public DBHelper(@Nullable Context context) {
         super(context, Dict.DATABASE_NAME, null, Dict.DATABASE_VERSION);
         this.context = context;
     }
@@ -159,7 +164,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param presetId id of the fetched Preset
      * @return Preset object with the specified id
      */
-    public Preset getPreset(int presetId) {
+    public Preset getPreSet(int presetId) {
 
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -298,7 +303,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * Function for returning Stats for a given hour on a given date
      * @param timestamp must be in form "yyyy/mm/dd-sampleNumber"
      * @return Stats object with data for timestamp entered
-      */
+     */
     public Stats getStats(Long timestamp) {
 
         SQLiteDatabase db = this.getReadableDatabase();
@@ -342,7 +347,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
      * @param day must be in form "yyyy/mm/dd"
      * @return Stats object with data for timestamp entered
      */
-    public float getDailyAvg(Day day, boolean getALS){
+    public float getDailyAvg(Day day){
         Long dateLong = day.toDatabaseNumber();
         SQLiteDatabase db = this.getReadableDatabase();
         List<Stats> statsList = new ArrayList<>();
@@ -352,7 +357,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         try {
             // The SQL query to select all records where the date matches the given day
             cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS + " WHERE " + Dict.COLUMN_TIMESTAMP + " >= ? AND " + Dict.COLUMN_TIMESTAMP + " < ?",
-                    new String[]{String.valueOf(dateLong), String.valueOf(dateLong + (24 * 60 * 60 )/ INTERVAL)});
+                    new String[]{String.valueOf(dateLong), String.valueOf(dateLong + (24 * 60 * 60 )/interval)});
 
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
@@ -379,7 +384,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         for(Stats stats : statsList){
             OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
             if (opticalRecord != null) {
-                sum += getALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
+                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
             }
         }
         int sampleCount = statsList.size();
@@ -473,6 +478,35 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         return sum / counter;
     }
 
+
+    /**
+     * Function for returning the UV exposure for a specified day
+     * @param date must be in form "yyyy/MM/dd"
+     * @return array of hourly UV exposure floats for specified day from 8 am to 6 pm
+     */
+    public float[] getExposureForDay(Day date){
+
+        float[] dailyExposure = new float[11];
+        Calendar calendar = Calendar.getInstance();//
+
+        for (int i = 8; i < 19; i++) {
+            int index = i - 8;
+
+            calendar.set(Calendar.HOUR_OF_DAY, i); //
+
+            // Get the current date from the calendar
+            Date currentDate = calendar.getTime();//
+
+            dailyExposure[index] = getHourlyAvg(date, i,false);
+            Log.d("Call hourly avg", String.format("Date: %s, Hour: %d, Exposure: %f", date.toString(), i, dailyExposure[index]));
+            //Log.d("Call hourly avg", String.valueOf(date));
+
+        }
+
+        return dailyExposure;
+
+    }
+
     /**
      * This method is called when upgrading the database
      * @param db The database.
@@ -489,8 +523,13 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
     }
     @EventHandler
-    public void syncDataReceived(SyncDataReceivedEvent event){
-        insertStats(event.getData());
-    }
+    public void syncDataReceived(SyncDataReceivedEvent syncDataReceivedEvent){
+        List<TimedOpticalRecord> data = syncDataReceivedEvent.getData();
 
+        if(data.size() == 0) Log.d(TAG, "[Sync] Data size: 0.");
+        else Log.d(TAG, String.format("[Sync] Data size: %d; first: %s; last: %s.", data.size(), data.get(0), data.get(data.size() - 1)));
+
+        insertStats(data);
+
+    }
 }
