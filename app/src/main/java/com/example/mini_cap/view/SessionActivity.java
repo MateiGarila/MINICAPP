@@ -192,7 +192,7 @@ public class SessionActivity extends AppCompatActivity  {
         super.onDestroy();
         //this.saveUI(SessionActivity.bundle);
         SessionActivityStorage.get().saveActivityState(SessionActivity.this);
-        countDownTimer.cancel();
+        if(countDownTimer != null) countDownTimer.cancel();
     }
 
     private boolean isValidInput(String input) {
@@ -349,7 +349,7 @@ public class SessionActivity extends AppCompatActivity  {
         isSessionPaused = true;
 
         //Third purpose of method
-        countDownTimer.cancel();
+        if(countDownTimer != null) countDownTimer.cancel();
 
     }
 
@@ -388,7 +388,7 @@ public class SessionActivity extends AppCompatActivity  {
         notificationTier = 0;
 
         //Third purpose of method
-        countDownTimer.cancel();
+        if(countDownTimer != null) countDownTimer.cancel();
         timerTextView.setText(R.string.default_clock);
     }
 
@@ -428,6 +428,7 @@ public class SessionActivity extends AppCompatActivity  {
      * timer is paused it needs to be reset at the timeLeftInMillis
      */
     private void countDownManager(long timeInMillis){
+        if(timeInMillis == 0) return;
 
         countDownTimer = new CountDownTimer(timeInMillis, 1000) {
             @Override
@@ -703,7 +704,7 @@ public class SessionActivity extends AppCompatActivity  {
                 activity.startPauseBTN.setText(R.string.continue_session_text);
                 activity.endSessionBTN.setVisibility(View.VISIBLE);
                 Log.d(TAG, "TIME LEFT IN MILLI " + String.valueOf(this.timeLeftInMillis));
-
+                activity.timeLeftInMillis = this.timeLeftInMillis;
                 if(this.isSessionPaused != null && this.isSessionPaused == true){
                     activity.pauseSession();
                 }else{
