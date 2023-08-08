@@ -3,10 +3,11 @@ package com.example.mini_cap.view;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,6 +28,8 @@ import org.json.JSONObject;
 import app.uvtracker.sensor.pii.event.IEventListener;
 
 public class MainActivity extends AppCompatActivity implements INavigationBar, BottomNavigationView.OnItemSelectedListener, IEventListener {
+
+    public static final String SHARED_PREF_NAME = "APP_SETTINGS";
 
     private static final String DEFAULT_CITY = "Montreal";
 
@@ -65,9 +68,15 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         this.initializeNotificationServices();
 
         // Refresh UI
-        this.refreshWeatherDisplay(DEFAULT_CITY);
+        this.refreshWeatherDisplay(this.getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE).getString("WEATHER_CITY", DEFAULT_CITY));
     }
 
+    private void saveCityPersistent(String city) {
+        this.getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE)
+                .edit()
+                .putString("WEATHER_CITY", city)
+                .apply();
+    }
 
     /* -------- Navigation bar component -------- */
 
@@ -154,6 +163,8 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
             String oldCity = this.currentlySelectedCity;
             this.currentlySelectedCity = city;
             this.cityNameTextView.setText(city);
+
+            new Handler(Looper.getMainLooper()).post(() -> this.saveCityPersistent(city));
 
             if(oldCity == null) return;
 
