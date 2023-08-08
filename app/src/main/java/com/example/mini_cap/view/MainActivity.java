@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,7 +20,6 @@ import com.android.volley.toolbox.Volley;
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.NotificationController;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.snackbar.Snackbar;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
     private TextView uvIndexTextView;
     private TextView weatherConditionTextView;
     private ImageView weatherTextView;
-    private ImageView refreshIcon;
 
     private String currentlySelectedCity;
 
@@ -60,9 +59,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         this.uvIndexTextView = findViewById(R.id.uvIndex);
         this.weatherTextView = findViewById(R.id.currentWeather);
         this.weatherConditionTextView = findViewById(R.id.condition);
-
-        this.refreshIcon = findViewById(R.id.refresh);
-        this.refreshIcon.setOnClickListener(v -> this.refreshWeatherDisplay());
+        findViewById(R.id.refresh).setOnClickListener(v -> this.refreshWeatherDisplay());
 
         // Notification initialization
         this.initializeNotificationServices();
@@ -171,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
             String message;
             if(oldCity.equalsIgnoreCase(city)) message = "Weather refreshed.";
             else message = "Weather updated.";
-            Snackbar.make(this.refreshIcon, message, Snackbar.LENGTH_SHORT).show();
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         }
         catch (JSONException e) {
             throw new RuntimeException(e);
@@ -179,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
     }
 
     private void handleWeatherAPIException(VolleyError errorIgnored) {
-        Snackbar.make(this.refreshIcon, "City name is not valid.", Snackbar.LENGTH_SHORT).show();
+        Toast.makeText(this, "City name is not valid.", Toast.LENGTH_SHORT).show();
     }
 
 
