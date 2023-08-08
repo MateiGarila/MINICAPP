@@ -1,6 +1,7 @@
 package com.example.mini_cap.view;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -40,6 +41,7 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     // App configs
     private EditText cityNameText;
     private Switch notificationSwitch;
+    private Button wipeStatsButton;
 
     // Sensor configs
     private TextView sensorStatusText;
@@ -70,6 +72,8 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
         this.notificationSwitch = this.findViewById(R.id.settings_notification_switch);
         this.notificationSwitch.setOnClickListener(v -> this.handleNotificationSwitch());
         this.updateNotificationSwitch();
+        this.wipeStatsButton = this.findViewById(R.id.settings_wipe_stats);
+        this.wipeStatsButton.setOnClickListener(v -> this.handleWipeStats());
 
         // Initialize UI - Sensor configurations
         this.sensorStatusText = this.findViewById(R.id.sensor_status_text);
@@ -145,17 +149,34 @@ public class SettingsActivity extends AppCompatActivity implements IEventListene
     /* -------- UI handlers - notification switch -------- */
 
     // Event handler
-    void handleNotificationSwitch() {
+    private void handleNotificationSwitch() {
         NotificationController.get(this).setEnabled(this.notificationSwitch.isChecked());
         this.updateNotificationSwitch();
         NotificationController.get(this).saveEnabledPersistent(this);
     }
 
     // Render
-    void updateNotificationSwitch() {
+    private void updateNotificationSwitch() {
         boolean enabled = NotificationController.get(this).isEnabled();
         this.notificationSwitch.setChecked(enabled);
         this.notificationSwitch.setText(enabled ? "On" : "Off");
+    }
+
+
+    /* -------- UI handlers - wipe stats table -------- */
+
+    private void handleWipeStats() {
+        new AlertDialog.Builder(this)
+                .setTitle("Wipe table")
+                .setMessage("Are you sure? All past statistics will be removed.")
+                .setPositiveButton("Yes", (d, w) -> {
+                    d.dismiss();
+                    DBHelper.get(this).wipeStatsTable();
+                    Snackbar.make(this.wipeStatsButton, "History values wiped.", Snackbar.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("No", (d, w) -> d.dismiss())
+                .create()
+                .show();
     }
 
 
