@@ -3,6 +3,8 @@ package com.example.mini_cap.view;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -18,7 +20,6 @@ import com.android.volley.toolbox.Volley;
 import com.example.mini_cap.R;
 import com.example.mini_cap.controller.NotificationController;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.snackbar.Snackbar;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
@@ -27,6 +28,8 @@ import org.json.JSONObject;
 import app.uvtracker.sensor.pii.event.IEventListener;
 
 public class MainActivity extends AppCompatActivity implements INavigationBar, BottomNavigationView.OnItemSelectedListener, IEventListener {
+
+    public static final String SHARED_PREF_NAME = "APP_SETTINGS";
 
     private static final String DEFAULT_CITY = "Montreal";
 
@@ -38,7 +41,6 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
     private TextView uvIndexTextView;
     private TextView weatherConditionTextView;
     private ImageView weatherTextView;
-    private ImageView refreshIcon;
 
     private String currentlySelectedCity;
 
@@ -57,17 +59,21 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         this.uvIndexTextView = findViewById(R.id.uvIndex);
         this.weatherTextView = findViewById(R.id.currentWeather);
         this.weatherConditionTextView = findViewById(R.id.condition);
-
-        this.refreshIcon = findViewById(R.id.refresh);
-        this.refreshIcon.setOnClickListener(v -> this.refreshWeatherDisplay());
+        findViewById(R.id.refresh).setOnClickListener(v -> this.refreshWeatherDisplay());
 
         // Notification initialization
         this.initializeNotificationServices();
 
         // Refresh UI
-        this.refreshWeatherDisplay(DEFAULT_CITY);
+        this.refreshWeatherDisplay(this.getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE).getString("WEATHER_CITY", DEFAULT_CITY));
     }
 
+    private void saveCityPersistent(String city) {
+        this.getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE)
+                .edit()
+                .putString("WEATHER_CITY", city)
+                .apply();
+    }
 
     /* -------- Navigation bar component -------- */
 
@@ -155,12 +161,14 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
             this.currentlySelectedCity = city;
             this.cityNameTextView.setText(city);
 
+            new Handler(Looper.getMainLooper()).post(() -> this.saveCityPersistent(city));
+
             if(oldCity == null) return;
 
             String message;
             if(oldCity.equalsIgnoreCase(city)) message = "Weather refreshed.";
             else message = "Weather updated.";
-            Snackbar.make(this.refreshIcon, message, Snackbar.LENGTH_SHORT).show();
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         }
         catch (JSONException e) {
             throw new RuntimeException(e);
@@ -168,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
     }
 
     private void handleWeatherAPIException(VolleyError errorIgnored) {
-        Snackbar.make(this.refreshIcon, "City name is not valid.", Snackbar.LENGTH_SHORT).show();
+        Toast.makeText(this, "City name is not valid.", Toast.LENGTH_SHORT).show();
     }
 
 

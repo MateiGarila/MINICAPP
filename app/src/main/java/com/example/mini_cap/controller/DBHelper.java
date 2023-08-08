@@ -259,6 +259,12 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         return rowsDeleted;
     }
 
+    public void wipeStatsTable() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE from " + Dict.TABLE_STATS);
+        db.close();
+    }
+
     /**
      * Function for inserting new stats into the db
      * @param records

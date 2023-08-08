@@ -4,7 +4,6 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.icu.util.Calendar;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -14,6 +13,7 @@ import androidx.annotation.Nullable;
 
 import com.example.mini_cap.R;
 import com.example.mini_cap.model.Day;
+import com.example.mini_cap.view.MainActivity;
 
 import java.util.Date;
 import java.util.function.Consumer;
@@ -22,9 +22,11 @@ public class NotificationController {
 
     private static final String TAG = NotificationController.class.getSimpleName();
 
+    private static final String NOTIFICATION_ENABLE_CONFIG = "NOTIFICATION_ENABLE";
+
     private static final int TICK_DELAY = 60000;
     private static final int TICKS_PER_REMINDER = 5;
-    private static final int AVERAGEING = 2;
+    private static final int AVERAGING = 2;
 
 
     private static NotificationController instance;
@@ -49,6 +51,7 @@ public class NotificationController {
     private int tickCount;
     private int session;
     private boolean running;
+    private boolean enabled;
 
     @Nullable
     private Severity lastSeverity = Severity.LOW;
@@ -68,6 +71,26 @@ public class NotificationController {
         this.tickCount = 1;
         this.session = 0;
         this.running = false;
+        this.enabled = context.getSharedPreferences(MainActivity.SHARED_PREF_NAME, Context.MODE_PRIVATE).getBoolean(NOTIFICATION_ENABLE_CONFIG, true);
+    }
+
+    public void saveEnabledPersistent(@NonNull Context context) {
+        context.getSharedPreferences(MainActivity.SHARED_PREF_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(NOTIFICATION_ENABLE_CONFIG, this.enabled)
+                .apply();
+    }
+
+    public boolean isEnabled() {
+        return this.enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public boolean isRunning() {
+        return this.isRunning();
     }
 
     public void start() {
@@ -100,11 +123,12 @@ public class NotificationController {
 
         Log.d(TAG, "Tick: " + this.tickCount);
 
-        if(this.tickCount % TICKS_PER_REMINDER == 0)
-            if(this.reminderNotificationCallback != null)
-                this.reminderNotificationCallback.run();
-
-        this.checkUV();
+        if(this.enabled) {
+            if (this.tickCount % TICKS_PER_REMINDER == 0)
+                if (this.reminderNotificationCallback != null)
+                    this.reminderNotificationCallback.run();
+            this.checkUV();
+        }
 
         this.tickCount++;
         this.handler.postDelayed(() -> this.run(session), TICK_DELAY);
@@ -117,7 +141,7 @@ public class NotificationController {
         int minutes = date.getMinutes();
 
         float sum = 0.0f;
-        for(int i = 0; i < AVERAGEING; i++) {
+        for(int i = 0; i < AVERAGING; i++) {
             Log.d(TAG, "Querying database for " + hours + ":" + minutes);
             float value = this.dbHelper.getMinuteAvg(day, minutes, hours, false);
             minutes--;
@@ -128,7 +152,7 @@ public class NotificationController {
             }
             sum += value;
         }
-        sum /= AVERAGEING;
+        sum /= AVERAGING;
         Log.d(TAG, "Notification controller obtained " + sum);
         Severity severity = Severity.getFromIndex(sum);
 
@@ -142,6 +166,7 @@ public class NotificationController {
     }
 
     public void postNotification(@NonNull String message) {
+        if(!this.enabled) return;
         if(this.genericNotificationCallback != null)
             this.genericNotificationCallback.accept(message);
     }
