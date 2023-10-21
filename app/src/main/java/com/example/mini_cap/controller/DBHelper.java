@@ -6,7 +6,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.icu.util.Calendar;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -25,19 +24,13 @@ import app.uvtracker.sensor.pii.event.EventHandler;
 import app.uvtracker.sensor.pii.event.IEventListener;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
-    private static final boolean DEBUG_READ_ALS = true;
     private static final int INTERVAL = 10;
     private final Context context;
     private final String TAG = "DBHelper";
-
-    private static final int interval = 10;
-    private static final int offset = 8;
 
     @SuppressLint("StaticFieldLeak")
     private static DBHelper instance;
@@ -52,19 +45,11 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         DBHelper.instance = null;
     }
 
-    /**
-     * Database constructor
-     * @param context
-     */
     public DBHelper(@Nullable Context context) {
         super(context, Dict.DATABASE_NAME, null, Dict.DATABASE_VERSION);
         this.context = context;
     }
 
-    /**
-     * onCreate method which creates the "preset" table for this application
-     * @param db The database.
-     */
     @Override
     public void onCreate(SQLiteDatabase db) {
 
@@ -90,11 +75,6 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
     }
 
-    /**
-     * Method for inserting a preset in the database
-     * @param preset
-     * @return
-     */
     public long insertPreset(Preset preset){
 
         //Anything goes wrong and we see -1. It means that Preset was not inserted
@@ -119,72 +99,24 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         return id;
     }
 
-    /**
-     * Method used to fetch all presets stored in the database
-     * @return ArrayList<Preset> of all available Presets
-     */
     public ArrayList<Preset> getAllPresets(){
 
         ArrayList<Preset> presets = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursor = null;
-
-        try{
+        try (SQLiteDatabase db = this.getReadableDatabase()) {
+            Cursor cursor;
 
             cursor = db.query(Dict.TABLE_PRESET, null, null, null, null, null, null);
 
-            if(cursor != null){
-                if(cursor.moveToFirst()){
-                    do{
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    do {
                         @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_PRESET_ID));
                         @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_PRESET_NAME));
                         @SuppressLint("Range") int age = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_PRESET_AGE));
                         @SuppressLint("Range") String skinTone = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_PRESET_SKINTONE));
 
                         presets.add(new Preset(id, name, age, skinTone));
-
-                    }while(cursor.moveToNext());
-                }
-
-                cursor.close();
-            }
-
-        }catch (Exception e){
-            Toast.makeText(context, "DB Fetch Error @ getAllPresets(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }finally {
-            db.close();
-        }
-
-        return presets;
-    }
-
-    /**
-     * Method used to fetch a specific Preset from the database
-     * @param presetId id of the fetched Preset
-     * @return Preset object with the specified id
-     */
-    public Preset getPreSet(int presetId) {
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        Cursor cursor = null;
-        Preset preset = null;
-
-        try {
-
-            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_PRESET + " WHERE " + Dict.COLUMN_PRESET_ID + " = ?", new String[]{String.valueOf(presetId)});
-
-            if (cursor != null) {
-                if (cursor.moveToFirst()) {
-                    do {
-
-                        @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_PRESET_ID));
-                        @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_PRESET_NAME));
-                        @SuppressLint("Range") int age = cursor.getInt(cursor.getColumnIndex(Dict.COLUMN_PRESET_AGE));
-                        @SuppressLint("Range") String skinTone = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_PRESET_SKINTONE));
-
-                        preset = new Preset(id,name, age, skinTone);
 
                     } while (cursor.moveToNext());
                 }
@@ -193,20 +125,12 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
             }
 
         } catch (Exception e) {
-            Toast.makeText(context, "DB Fetch Error @ getPreSet(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        } finally {
-            db.close();
+            Toast.makeText(context, "DB Fetch Error @ getAllPresets(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
 
-        return preset;
+        return presets;
     }
 
-    /**
-     * Method used to update a specific preset from the database
-     * @param presetId the ID of the preset to be updated
-     * @param updatedPreset new values for the updated preset
-     * @return
-     */
     public int updatePreset(int presetId, Preset updatedPreset) {
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -234,11 +158,6 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
 
     }
 
-    /**
-     * This method is used to remove a preset from the database
-     * @param presetId the ID of the preset about to be deleted
-     * @return
-     */
     public int deletePreset(int presetId) {
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -265,11 +184,6 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         db.close();
     }
 
-    /**
-     * Function for inserting new stats into the db
-     * @param records
-     * @return
-     */
     public long insertStats(List<TimedOpticalRecord> records) {
         // If -1 is returned, function did not insert stats into db.
         long id = -1;
@@ -303,100 +217,6 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         }
 
         return id;
-    }
-
-    /**
-     * Function for returning Stats for a given hour on a given date
-     * @param timestamp must be in form "yyyy/mm/dd-sampleNumber"
-     * @return Stats object with data for timestamp entered
-     */
-    public Stats getStats(Long timestamp) {
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        Cursor cursor = null;
-        Stats stats = null;
-
-        try{
-            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS + " WHERE " + Dict.COLUMN_TIMESTAMP + " = ?", new String[]{String.valueOf(timestamp)});
-
-            if (cursor != null){
-                if (cursor.moveToFirst()){
-                    do{
-                        @SuppressLint("Range") String exposure = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
-
-                        stats = new Stats(exposure, timestamp);
-                    } while(cursor.moveToNext());
-                }
-
-                cursor.close();
-            }
-
-            // Check if the cursor is empty, set stats to zero if no records are found.
-            if (stats == null) {
-                // Assuming the Stats constructor takes 0 values for id and exposure as well.
-                stats = new Stats("0", timestamp);
-            }
-
-        }catch (Exception e){
-            Toast.makeText(context, "DB Fetch Error @ getStatsForHour(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }finally{
-            db.close();
-        }
-
-        return stats;
-
-    }
-
-    /**
-     * Function for returning Stats for a given day
-     * @param day must be in form "yyyy/mm/dd"
-     * @return Stats object with data for timestamp entered
-     */
-    public float getDailyAvg(Day day){
-        Long dateLong = day.toDatabaseNumber();
-        SQLiteDatabase db = this.getReadableDatabase();
-        List<Stats> statsList = new ArrayList<>();
-
-        Cursor cursor;
-
-        try {
-            // The SQL query to select all records where the date matches the given day
-            cursor = db.rawQuery("SELECT * FROM " + Dict.TABLE_STATS + " WHERE " + Dict.COLUMN_TIMESTAMP + " >= ? AND " + Dict.COLUMN_TIMESTAMP + " < ?",
-                    new String[]{String.valueOf(dateLong), String.valueOf(dateLong + (24 * 60 * 60 )/interval)});
-
-            if (cursor != null) {
-                if (cursor.moveToFirst()) {
-                    do {
-                        @SuppressLint("Range") long timestamp = cursor.getLong(cursor.getColumnIndex(Dict.COLUMN_TIMESTAMP));
-                        @SuppressLint("Range") String exposure = cursor.getString(cursor.getColumnIndex(Dict.COLUMN_UVINDEX));
-
-                        // Create a Stats object and add it to the list
-                        statsList.add(new Stats(exposure, timestamp));
-                    } while (cursor.moveToNext());
-                }
-
-                cursor.close();
-            }
-
-        } catch (Exception e) {
-            Toast.makeText(context, "DB Fetch Error @ getStatsForDay(): " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        } finally {
-            db.close();
-        }
-
-        float sum = 0.0f, avg;
-
-        for(Stats stats : statsList){
-            OpticalRecord opticalRecord = OpticalRecord.unflatten(stats.getExposure());
-            if (opticalRecord != null) {
-                sum += DEBUG_READ_ALS ? opticalRecord.illuminance : opticalRecord.uvIndex;
-            }
-        }
-        int sampleCount = statsList.size();
-        avg = sum/sampleCount;
-
-        return avg;
     }
 
     public List<Stats> getStatsBetweenTimestamps(long timestamp1, long timestamp2) {
@@ -433,13 +253,6 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         return statsList;
     }
 
-
-
-    /**
-     * Function for returning the UV exposure for a specified day
-     * @param date is a date object, hour is concatenated to date string to create full timestamp
-     * @return hourly avg exposure from 8 am to 6 pm
-     */
     public float getMinuteAvg(Day date, int minute, int hour, boolean getALS) {
         int minuteSample = Math.round((float)(3600 * hour + 60 * minute) / (float) INTERVAL);
         int nextMinuteSample = Math.round((float)(3600 * hour + 60 * (minute+1))/ (float) INTERVAL);
@@ -484,41 +297,6 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         return sum / counter;
     }
 
-
-    /**
-     * Function for returning the UV exposure for a specified day
-     * @param date must be in form "yyyy/MM/dd"
-     * @return array of hourly UV exposure floats for specified day from 8 am to 6 pm
-     */
-    public float[] getExposureForDay(Day date){
-
-        float[] dailyExposure = new float[11];
-        Calendar calendar = Calendar.getInstance();//
-
-        for (int i = 8; i < 19; i++) {
-            int index = i - 8;
-
-            calendar.set(Calendar.HOUR_OF_DAY, i); //
-
-            // Get the current date from the calendar
-            Date currentDate = calendar.getTime();//
-
-            dailyExposure[index] = getHourlyAvg(date, i,false);
-            Log.d("Call hourly avg", String.format("Date: %s, Hour: %d, Exposure: %f", date.toString(), i, dailyExposure[index]));
-            //Log.d("Call hourly avg", String.valueOf(date));
-
-        }
-
-        return dailyExposure;
-
-    }
-
-    /**
-     * This method is called when upgrading the database
-     * @param db The database.
-     * @param oldVersion The old database version.
-     * @param newVersion The new database version.
-     */
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
@@ -528,6 +306,7 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
         onCreate(db);
 
     }
+
     @EventHandler
     public void syncDataReceived(SyncDataReceivedEvent syncDataReceivedEvent){
         List<TimedOpticalRecord> data = syncDataReceivedEvent.getData();
