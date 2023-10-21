@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -13,6 +14,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.ClientError;
+import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -175,8 +178,15 @@ public class MainActivity extends AppCompatActivity implements INavigationBar, B
         }
     }
 
-    private void handleWeatherAPIException(VolleyError errorIgnored) {
-        Toast.makeText(this, "City name is not valid.", Toast.LENGTH_SHORT).show();
+    private void handleWeatherAPIException(VolleyError error) {
+        String message;
+        if(error instanceof ClientError)
+            message = "City name is not valid.";
+        else if(error instanceof NoConnectionError)
+            message = "Network unavailable.";
+        else
+            message = "Unexpected WeatherAPI error.";
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
 
