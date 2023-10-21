@@ -26,11 +26,13 @@ import app.uvtracker.sensor.pii.event.IEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DBHelper extends SQLiteOpenHelper implements IEventListener{
+public class DBHelper extends SQLiteOpenHelper implements IEventListener {
 
-    private static final int INTERVAL = 10;
-    private final Context context;
-    private final String TAG = "DBHelper";
+    private static final String TAG = "DBHelper";
+
+    // Sample interval, should agree with device
+    // 60 seconds for production, 10 seconds for demo
+    private static final int INTERVAL = 60;
 
     @SuppressLint("StaticFieldLeak")
     private static DBHelper instance;
@@ -44,6 +46,8 @@ public class DBHelper extends SQLiteOpenHelper implements IEventListener{
     public static void release() {
         DBHelper.instance = null;
     }
+
+    private final Context context;
 
     public DBHelper(@Nullable Context context) {
         super(context, Dict.DATABASE_NAME, null, Dict.DATABASE_VERSION);
